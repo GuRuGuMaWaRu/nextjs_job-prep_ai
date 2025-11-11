@@ -5,12 +5,13 @@ import arcjet, {
   tokenBucket,
 } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { env } from "./data/env/server";
 
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/"]);
 
 const aj = arcjet({
   // TODO: add ts for env vars
-  key: process.env.ARCJET_KEY!,
+  key: env.ARCJET_KEY,
   rules: [
     // Shield protects your app from common attacks e.g. SQL injection
     shield({ mode: "LIVE" }),
