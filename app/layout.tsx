@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 
 import { ClerkProvider } from "@/services/clerk/components/ClerkProvider";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const geistSans = Outfit({
+  variable: "--font-outfit-sans",
   subsets: ["latin"],
 });
 
@@ -26,10 +23,19 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          {children}
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${geistSans.variable} antialiased font-sans`}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableColorScheme
+            disableTransitionOnChange
+            value={{ light: "light", dark: "dark" }}>
+            <header className="flex justify-end p-4">
+              <ThemeToggle />
+            </header>
+            {children}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
