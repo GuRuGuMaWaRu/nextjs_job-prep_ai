@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { Navbar } from "./_Navbar";
 
 export default async function AppLayout({

@@ -1,6 +1,6 @@
 "use client";
 
-import { getUser } from "@/features/users/actions";
+import { getUser } from "@/core/features/users/actions";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

@@ -10,10 +10,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import ThemeToggle from "@/components/ThemeToggle";
-import UserAvatar from "@/features/users/components/UserAvatar";
-import { Button } from "@/components/ui/button";
+} from "@core/components/ui/dropdown-menu";
+import ThemeToggle from "@core/components/ThemeToggle";
+import UserAvatar from "@/core/features/users/components/UserAvatar";
+import { Button } from "@core/components/ui/button";
 
 export function Navbar() {
   const { userId } = useAuth();

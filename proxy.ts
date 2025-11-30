@@ -5,7 +5,7 @@ import arcjet, {
   tokenBucket,
 } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { env } from "./data/env/server";
+import { env } from "./core/data/env/server";
 
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",

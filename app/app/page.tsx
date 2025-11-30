@@ -4,21 +4,21 @@ import { desc, eq } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import Link from "next/link";
 
-import { db } from "@/drizzle/db";
-import { JobInfoTable } from "@/drizzle/schema";
-import { getCurrentUser } from "@/services/clerk/lib/getCurrentUser";
-import { getJobInfoIdTag } from "@/features/jobInfos/dbCache";
-import JobInfoForm from "@/features/jobInfos/components/JobInfoForm";
-import { formatExperienceLevel } from "@/features/jobInfos/lib/formatters";
+import { db } from "@/core/drizzle/db";
+import { JobInfoTable } from "@/core/drizzle/schema";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
+import JobInfoForm from "@/core/features/jobInfos/components/JobInfoForm";
+import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@core/components/ui/card";
+import { Button } from "@core/components/ui/button";
+import { Badge } from "@core/components/ui/badge";
 
 export default function AppPage() {
   return (
