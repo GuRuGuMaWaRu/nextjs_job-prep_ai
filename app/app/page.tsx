@@ -1,15 +1,11 @@
 import { Suspense } from "react";
 import { ArrowRightIcon, Loader2Icon, PlusIcon } from "lucide-react";
-import { desc, eq } from "drizzle-orm";
-import { cacheTag } from "next/cache";
 import Link from "next/link";
 
-import { db } from "@/core/drizzle/db";
-import { JobInfoTable } from "@/core/drizzle/schema";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import JobInfoForm from "@/core/features/jobInfos/components/JobInfoForm";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
+import { getJobInfos } from "@/core/features/jobInfos/db";
 import {
   Card,
   CardContent,
@@ -121,14 +117,4 @@ function NoJobInfos() {
       </Card>
     </div>
   );
-}
-
-async function getJobInfos(userId: string) {
-  "use cache";
-  cacheTag(getJobInfoIdTag(userId));
-
-  return db.query.JobInfoTable.findMany({
-    where: eq(JobInfoTable.userId, userId),
-    orderBy: desc(JobInfoTable.updatedAt),
-  });
 }

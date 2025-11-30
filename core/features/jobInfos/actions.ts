@@ -1,16 +1,15 @@
 "use server";
 
 import z from "zod";
-import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 
-import { db } from "@/core/drizzle/db";
-import { JobInfoTable } from "@/core/drizzle/schema";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { insertJobInfo, updateJobInfo as updateJobInfoDb } from "./db";
+import {
+  getJobInfo,
+  insertJobInfo,
+  updateJobInfo as updateJobInfoDb,
+} from "./db";
 import { jobInfoSchema } from "./schemas";
-import { getJobInfoIdTag } from "./dbCache";
 
 export async function createJobInfo(unsafeData: z.infer<typeof jobInfoSchema>) {
   const { userId } = await getCurrentUser();
@@ -65,13 +64,4 @@ export async function updateJobInfo(
   const jobInfo = await updateJobInfoDb(id, data);
 
   redirect(`/app/job-infos/${jobInfo.id}`);
-}
-
-async function getJobInfo(id: string, userId: string) {
-  "use cache";
-  cacheTag(getJobInfoIdTag(id));
-
-  return db.query.JobInfoTable.findFirst({
-    where: and(eq(JobInfoTable.id, id), eq(JobInfoTable.userId, userId)),
-  });
 }

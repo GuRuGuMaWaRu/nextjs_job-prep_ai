@@ -1,7 +1,8 @@
 import { db } from "@/core/drizzle/db";
 import { JobInfoTable } from "@/core/drizzle/schema";
-import { revalidateJobInfoCache } from "./dbCache";
-import { eq } from "drizzle-orm";
+import { getJobInfoIdTag, revalidateJobInfoCache } from "./dbCache";
+import { and, desc, eq } from "drizzle-orm";
+import { cacheTag } from "next/cache";
 
 export async function insertJobInfo(jobInfo: typeof JobInfoTable.$inferInsert) {
   const [newJobInfo] = await db.insert(JobInfoTable).values(jobInfo).returning({
@@ -30,4 +31,23 @@ export async function updateJobInfo(
   revalidateJobInfoCache(updatedJobInfo);
 
   return updatedJobInfo;
+}
+
+export async function getJobInfo(id: string, userId: string) {
+  "use cache";
+  cacheTag(getJobInfoIdTag(id));
+
+  return db.query.JobInfoTable.findFirst({
+    where: and(eq(JobInfoTable.id, id), eq(JobInfoTable.userId, userId)),
+  });
+}
+
+export async function getJobInfos(userId: string) {
+  "use cache";
+  cacheTag(getJobInfoIdTag(userId));
+
+  return db.query.JobInfoTable.findMany({
+    where: eq(JobInfoTable.userId, userId),
+    orderBy: desc(JobInfoTable.updatedAt),
+  });
 }
