@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { SignOutButton, useAuth, useClerk } from "@clerk/nextjs";
 import { BrainCircuitIcon, LogOut, User } from "lucide-react";
@@ -13,11 +12,10 @@ import {
 } from "@core/components/ui/dropdown-menu";
 import ThemeToggle from "@core/components/ThemeToggle";
 import UserAvatar from "@/core/features/users/components/UserAvatar";
-import { Button } from "@core/components/ui/button";
 
-export function Navbar() {
+export function Navbar({ user }: { user: { name: string; image: string } }) {
   const { userId } = useAuth();
-  const { user, openUserProfile } = useClerk();
+  const { openUserProfile } = useClerk();
 
   const handleProfile = () => {
     openUserProfile();
@@ -37,10 +35,8 @@ export function Navbar() {
 
         {userId && (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="rounded-full p-0">
-                <UserAvatar user={user} />
-              </Button>
+            <DropdownMenuTrigger>
+              <UserAvatar user={user} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleProfile}>

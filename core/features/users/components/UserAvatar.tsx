@@ -1,4 +1,4 @@
-import type { UserResource } from "@clerk/types";
+import { ComponentProps } from "react";
 
 import {
   Avatar,
@@ -8,16 +8,19 @@ import {
 
 export default function UserAvatar({
   user,
+  ...props
 }: {
-  user: UserResource | null | undefined;
-}) {
-  const initials = user
-    ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`
-    : "?";
+  user: { name: string; image: string };
+} & ComponentProps<typeof Avatar>) {
+  const initials = user.name
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join("");
 
   return (
-    <Avatar>
-      <AvatarImage src={user?.imageUrl} alt={user?.fullName || ""} />
+    <Avatar {...props}>
+      <AvatarImage src={user.image} alt={user.name} />
       <AvatarFallback className="uppercase">{initials}</AvatarFallback>
     </Avatar>
   );

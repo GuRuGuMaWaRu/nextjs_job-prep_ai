@@ -15,7 +15,7 @@ export default async function AppLayout({
 
   return (
     <>
-      <Navbar />
+      <Navbar user={user} />
       {children}
     </>
   );
