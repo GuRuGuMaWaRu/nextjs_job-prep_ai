@@ -3,7 +3,6 @@
 import { cacheTag } from "next/cache";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { getJobInfoDb } from "@/core/features/jobInfos/db";
 import {
   getInterviewByIdDb,
   insertInterviewDb,
@@ -11,6 +10,7 @@ import {
 } from "@/core/features/interviews/db";
 import { getInterviewIdTag } from "@/core/features/interviews/dbCache";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
+import { getJobInfo } from "@/core/features/jobInfos/actions";
 
 type CreateInterviewReturn = Promise<
   | {
@@ -40,7 +40,7 @@ export async function createInterview({
   // TODO: Permissions
   // TODO: Rate limit
 
-  const jobInfo = await getJobInfoDb(jobInfoId, userId);
+  const jobInfo = await getJobInfo(jobInfoId, userId);
   if (jobInfo == null) {
     return {
       error: true,
