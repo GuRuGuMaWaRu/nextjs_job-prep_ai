@@ -1,9 +1,28 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { Loader2Icon } from "lucide-react";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { Navbar } from "./_Navbar";
 
-export default async function AppLayout({
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen-header flex items-center justify-center">
+          <Loader2Icon className="animate-spin size-24" />
+        </div>
+      }>
+      <AuthCheckAndNavbar>{children}</AuthCheckAndNavbar>
+    </Suspense>
+  );
+}
+
+async function AuthCheckAndNavbar({
   children,
 }: {
   children: React.ReactNode;
