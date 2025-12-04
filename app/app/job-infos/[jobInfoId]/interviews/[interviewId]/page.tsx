@@ -84,14 +84,14 @@ export default async function InterviewPage({
         </div>
         <Suspense
           fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}>
-          <Messages interview={interview} />
+          <SuspendedMessages interview={interview} />
         </Suspense>
       </div>
     </div>
   );
 }
 
-async function Messages({
+async function SuspendedMessages({
   interview,
 }: {
   interview: Promise<{ humeChatId: string | null }>;
