@@ -1,18 +1,10 @@
 import { eq } from "drizzle-orm";
-import { cacheTag } from "next/cache";
 
 import { db } from "@/core/drizzle/db";
 import { InterviewTable } from "@/core/drizzle/schema";
-import {
-  getInterviewIdTag,
-  revalidateInterviewCache,
-} from "@/core/features/interviews/dbCache";
-import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
+import { revalidateInterviewCache } from "@/core/features/interviews/dbCache";
 
-export async function getInterviewByIdDb(id: string, userId: string) {
-  "use cache";
-  cacheTag(getInterviewIdTag(id));
-
+export async function getInterviewByIdDb(id: string) {
   const interview = await db.query.InterviewTable.findFirst({
     where: eq(InterviewTable.id, id),
     with: {
@@ -25,12 +17,6 @@ export async function getInterviewByIdDb(id: string, userId: string) {
       },
     },
   });
-
-  if (interview == null) return null;
-
-  cacheTag(getJobInfoIdTag(interview.jobInfo.id));
-
-  if (interview.jobInfo.userId !== userId) return null;
 
   return interview;
 }

@@ -1,5 +1,7 @@
 "use server";
 
+import { cacheTag } from "next/cache";
+
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { getJobInfoDb } from "@/core/features/jobInfos/db";
 import {
@@ -7,6 +9,8 @@ import {
   insertInterviewDb,
   updateInterviewDb,
 } from "@/core/features/interviews/db";
+import { getInterviewIdTag } from "@/core/features/interviews/dbCache";
+import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 
 type CreateInterviewReturn = Promise<
   | {
@@ -67,7 +71,7 @@ export async function updateInterview(
     };
   }
 
-  const foundInterview = await getInterviewByIdDb(id, userId);
+  const foundInterview = await getInterviewByIdDb(id);
   if (foundInterview == null) {
     return {
       error: true,
@@ -78,4 +82,17 @@ export async function updateInterview(
   await updateInterviewDb(id, interview);
 
   return { error: false };
+}
+
+export async function getInterviewById(id: string, userId: string) {
+  "use cache";
+  cacheTag(getInterviewIdTag(id));
+
+  const foundInterview = await getInterviewByIdDb(id);
+  if (foundInterview == null) return null;
+
+  cacheTag(getJobInfoIdTag(foundInterview.jobInfo.id));
+
+  if (foundInterview.jobInfo.userId !== userId) return null;
+  return foundInterview;
 }
