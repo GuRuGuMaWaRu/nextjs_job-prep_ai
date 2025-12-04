@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import JobInfoForm from "@/core/features/jobInfos/components/JobInfoForm";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
-import { getJobInfosDb } from "@/core/features/jobInfos/db";
+import { getJobInfos } from "@/core/features/jobInfos/actions";
 import {
   Card,
   CardContent,
@@ -33,7 +33,7 @@ async function JobInfos() {
   const { userId, redirectToSignIn } = await getCurrentUser();
   if (userId == null) return redirectToSignIn();
 
-  const jobInfos = await getJobInfosDb(userId);
+  const jobInfos = await getJobInfos(userId);
 
   if (jobInfos.length === 0) {
     return <NoJobInfos />;

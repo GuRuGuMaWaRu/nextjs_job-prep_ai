@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Loader2Icon } from "lucide-react";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { notFound } from "next/navigation";
-import { getJobInfoDb } from "@/core/features/jobInfos/db";
+import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { fetchAccessToken } from "hume";
 import { VoiceProvider } from "@humeai/voice-react";
 import { env } from "@/core/data/env/server";
@@ -33,7 +33,7 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
   });
   if (userId == null || user == null) return redirectToSignIn();
 
-  const jobInfo = await getJobInfoDb(jobInfoId, userId);
+  const jobInfo = await getJobInfo(jobInfoId, userId);
   if (jobInfo == null) return notFound();
 
   const accessToken = await fetchAccessToken({

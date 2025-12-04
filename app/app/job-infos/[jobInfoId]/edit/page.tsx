@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Card, CardContent } from "@/core/components/ui/card";
 import JobInfoBackLink from "@/core/features/jobInfos/components/JobInfoBackLink";
 import JobInfoForm from "@/core/features/jobInfos/components/JobInfoForm";
-import { getJobInfoDb } from "@/core/features/jobInfos/db";
+import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { Loader2 } from "lucide-react";
 
@@ -36,7 +36,7 @@ async function SuspendedForm({ jobInfoId }: { jobInfoId: string }) {
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      const jobInfo = await getJobInfoDb(jobInfoId, userId);
+      const jobInfo = await getJobInfo(jobInfoId, userId);
       if (jobInfo == null) return notFound();
 
       return jobInfo;

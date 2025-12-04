@@ -2,14 +2,18 @@
 
 import z from "zod";
 import { redirect } from "next/navigation";
+import { cacheTag } from "next/cache";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import {
   getJobInfoDb,
-  insertJobInfoDb,
+  createJobInfoDb,
   updateJobInfoDb,
+  getJobInfoByIdDb,
+  getJobInfosDb,
 } from "@/core/features/jobInfos/db";
 import { jobInfoSchema } from "@/core/features/jobInfos/schemas";
+import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 
 export async function createJobInfo(unsafeData: z.infer<typeof jobInfoSchema>) {
   const { userId } = await getCurrentUser();
@@ -28,7 +32,7 @@ export async function createJobInfo(unsafeData: z.infer<typeof jobInfoSchema>) {
     };
   }
 
-  const jobInfo = await insertJobInfoDb({ ...data, userId });
+  const jobInfo = await createJobInfoDb({ ...data, userId });
 
   redirect(`/app/job-infos/${jobInfo.id}`);
 }
@@ -64,4 +68,25 @@ export async function updateJobInfo(
   const jobInfo = await updateJobInfoDb(id, data);
 
   redirect(`/app/job-infos/${jobInfo.id}`);
+}
+
+export async function getJobInfo(id: string, userId: string) {
+  "use cache";
+  cacheTag(getJobInfoIdTag(id));
+
+  return await getJobInfoDb(id, userId);
+}
+
+export async function getJobInfoById(id: string) {
+  "use cache";
+  cacheTag(getJobInfoIdTag(id));
+
+  return await getJobInfoByIdDb(id);
+}
+
+export async function getJobInfos(userId: string) {
+  "use cache";
+  cacheTag(getJobInfoIdTag(userId));
+
+  return await getJobInfosDb(userId);
 }
