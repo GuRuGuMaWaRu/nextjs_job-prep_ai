@@ -6,7 +6,7 @@ import {
   AvatarImage,
 } from "@core/components/ui/avatar";
 
-export default function UserAvatar({
+export function UserAvatar({
   user,
   ...props
 }: {

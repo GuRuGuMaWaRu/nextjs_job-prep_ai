@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { SunIcon, MoonIcon, LaptopIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -9,7 +11,6 @@ import {
   DropdownMenuItem,
 } from "@core/components/ui/dropdown-menu";
 import { Button } from "@core/components/ui/button";
-import { SunIcon, MoonIcon, LaptopIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 
 const themes = [
@@ -30,7 +31,7 @@ const themes = [
   },
 ] as const;
 
-export default function ThemeToggle() {
+export function ThemeToggle() {
   const { theme, setTheme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 

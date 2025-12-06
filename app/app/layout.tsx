@@ -3,13 +3,10 @@ import { redirect } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+
 import { Navbar } from "./_Navbar";
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense
       fallback={
@@ -22,11 +19,7 @@ export default function AppLayout({
   );
 }
 
-async function AuthCheckAndNavbar({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+async function AuthCheckAndNavbar({ children }: { children: React.ReactNode }) {
   const { userId, user } = await getCurrentUser({ allData: true });
 
   if (userId == null) return redirect("/");

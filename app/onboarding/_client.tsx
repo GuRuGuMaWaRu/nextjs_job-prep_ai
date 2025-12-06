@@ -1,9 +1,10 @@
 "use client";
 
-import { getUser } from "@/core/features/users/actions";
-import { Loader2Icon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2Icon } from "lucide-react";
+
+import { getUser } from "@/core/features/users/actions";
 
 export function OnboardingClient({ userId }: { userId: string }) {
   const router = useRouter();

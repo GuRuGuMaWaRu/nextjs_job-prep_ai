@@ -26,13 +26,14 @@ import {
 import { Button } from "@core/components/ui/button";
 import { LoadingSwap } from "@core/components/ui/loading-swap";
 import { experienceLevels, JobInfoTable } from "@/core/drizzle/schema";
+
 import { jobInfoSchema } from "../schemas";
 import { formatExperienceLevel } from "../lib/formatters";
 import { createJobInfo, updateJobInfo } from "../actions";
 
 type JobInfoFormData = z.infer<typeof jobInfoSchema>;
 
-export default function JobInfoForm({
+export function JobInfoForm({
   jobInfo,
 }: {
   jobInfo?: Pick<

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { BackLink } from "@/core/components/BackLink";
 import { getJobInfoById } from "@/core/features/jobInfos/actions";
 
-export default function JobInfoBackLink({ jobInfoId }: { jobInfoId: string }) {
+export function JobInfoBackLink({ jobInfoId }: { jobInfoId: string }) {
   return (
     <BackLink href={`/app/job-infos/${jobInfoId}`}>
       <Suspense fallback="Back to Job Info Details">

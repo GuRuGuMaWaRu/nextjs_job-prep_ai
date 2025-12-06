@@ -18,9 +18,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@core/components/ui/dropdown-menu";
-import ThemeToggle from "@core/components/ThemeToggle";
-import UserAvatar from "@/core/features/users/components/UserAvatar";
+import { ThemeToggle } from "@core/components/ThemeToggle";
 import { Button } from "@/core/components/ui/button";
+import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
 const navLinks = [
   { name: "Interviews", href: "interviews", Icon: SpeechIcon },

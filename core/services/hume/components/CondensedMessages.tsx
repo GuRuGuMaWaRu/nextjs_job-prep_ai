@@ -1,7 +1,7 @@
 import { BrainCircuitIcon } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import UserAvatar from "@/core/features/users/components/UserAvatar";
+import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
 export function CondensedMessages({
   messages,

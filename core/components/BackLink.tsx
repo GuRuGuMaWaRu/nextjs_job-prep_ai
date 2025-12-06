@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { MoveLeftIcon } from "lucide-react";
 
 import { cn } from "@core/lib/utils";
+
 import { Button } from "./ui/button";
-import { ArrowLeftIcon, MoveLeftIcon } from "lucide-react";
 
 export function BackLink({
   href,
