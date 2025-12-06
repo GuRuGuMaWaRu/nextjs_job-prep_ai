@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 import { BackLink } from "@/core/components/BackLink";
@@ -26,11 +26,6 @@ export default async function InterviewPage({
   params: Promise<{ jobInfoId: string; interviewId: string }>;
 }) {
   const { jobInfoId, interviewId } = await params;
-
-  //** Redirect "new" to the new interview page to prevent it from being treated as an interviewId
-  if (interviewId === "new") {
-    redirect(`/app/job-infos/${jobInfoId}/interviews/new`);
-  }
 
   const interview = getCurrentUser().then(
     async ({ userId, redirectToSignIn }) => {
