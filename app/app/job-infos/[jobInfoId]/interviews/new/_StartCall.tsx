@@ -13,6 +13,7 @@ import { createInterview } from "@/core/features/interviews/actions";
 import { errorToast } from "@/core/lib/errorToast";
 import { updateInterview } from "@/core/features/interviews/actions";
 import { useRouter } from "next/navigation";
+import { BackLink } from "@/core/components/BackLink";
 
 export function StartCall({
   accessToken,
@@ -77,8 +78,14 @@ export function StartCall({
 
   if (readyState === VoiceReadyState.IDLE) {
     return (
-      <div className="flex justify-center items-center h-screen-header">
+      <div className="h-screen-header container py-4 flex flex-col">
+        <BackLink
+          href={`/app/job-infos/${jobInfo.id}/interviews`}
+          className="self-start">
+          Back To Interviews
+        </BackLink>
         <Button
+          className="w-fit self-center my-auto"
           size="lg"
           onClick={async () => {
             const res = await createInterview({ jobInfoId: jobInfo.id });
