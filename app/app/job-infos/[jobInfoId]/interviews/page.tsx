@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { cacheTag } from "next/cache";
-import { redirect } from "next/navigation";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { ArrowRightIcon, Loader2Icon, PlusIcon } from "lucide-react";
 
@@ -17,9 +16,11 @@ import {
 import { Button } from "@/core/components/ui/button";
 import { getInterviewJobInfoTag } from "@/core/features/interviews/dbCache";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
-import JobInfoBackLink from "@/core/features/jobInfos/components/JobInfoBackLink";
+import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { formatDateTime } from "@/core/lib/formatters";
+
+import { PermissionCheckedLink } from "./_PermissionCheckedLink";
 
 export default async function InterviewsPage({
   params,
@@ -46,24 +47,21 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
 
   const interviews = await getInterviews(jobInfoId, userId);
 
-  if (interviews.length === 0) {
-    return redirect(`/app/job-infos/${jobInfoId}/interviews/new`);
-  }
-
   return (
     <div className="space-y-6 w-full">
       <div className="flex gap-2 justify-between">
         <h1 className="text-3xl md:text-4xl lg:text-5xl">Interviews</h1>
         <Button asChild>
-          <Link href={`/app/job-infos/${jobInfoId}/interviews/new`}>
+          <PermissionCheckedLink
+            href={`/app/job-infos/${jobInfoId}/interviews/new`}>
             <PlusIcon />
             New Interview
-          </Link>
+          </PermissionCheckedLink>
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
-        <Link
+        <PermissionCheckedLink
           className="transition-opacity"
           href={`/app/job-infos/${jobInfoId}/interviews/new`}>
           <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
@@ -72,7 +70,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
               New Interview
             </div>
           </Card>
-        </Link>
+        </PermissionCheckedLink>
 
         {interviews.map((interview) => (
           <Link

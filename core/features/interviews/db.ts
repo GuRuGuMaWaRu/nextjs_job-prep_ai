@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, count, eq, isNotNull } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
-import { InterviewTable } from "@/core/drizzle/schema";
+import { InterviewTable, JobInfoTable } from "@/core/drizzle/schema";
 import { revalidateInterviewCache } from "@/core/features/interviews/dbCache";
 
 export async function getInterviewByIdDb(id: string) {
@@ -53,4 +53,16 @@ export async function updateInterviewDb(
   });
 
   return updatedInterview;
+}
+
+export async function getInterviewCountDb(userId: string) {
+  const [{ count: interviewCount }] = await db
+    .select({ count: count() })
+    .from(InterviewTable)
+    .innerJoin(JobInfoTable, eq(InterviewTable.jobInfoId, JobInfoTable.id))
+    .where(
+      and(eq(JobInfoTable.userId, userId), isNotNull(InterviewTable.humeChatId))
+    );
+
+  return interviewCount;
 }

@@ -9,8 +9,10 @@ import {
   updateInterviewDb,
 } from "@/core/features/interviews/db";
 import { getInterviewIdTag } from "@/core/features/interviews/dbCache";
+import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 
 type CreateInterviewReturn = Promise<
   | {
@@ -29,7 +31,6 @@ export async function createInterview({
   jobInfoId: string;
 }): CreateInterviewReturn {
   const { userId } = await getCurrentUser();
-
   if (userId == null) {
     return {
       error: true,
@@ -37,7 +38,14 @@ export async function createInterview({
     };
   }
 
-  // TODO: Permissions
+  const permitted = await checkInterviewPermission();
+  if (!permitted) {
+    return {
+      error: true,
+      message: PLAN_LIMIT_MESSAGE,
+    };
+  }
+
   // TODO: Rate limit
 
   const jobInfo = await getJobInfo(jobInfoId, userId);
@@ -102,4 +110,8 @@ export async function getInterviewById(id: string, userId: string) {
 
   if (foundInterview.jobInfo.userId !== userId) return null;
   return foundInterview;
+}
+
+export async function canCreateInterview(): Promise<boolean> {
+  return await checkInterviewPermission();
 }

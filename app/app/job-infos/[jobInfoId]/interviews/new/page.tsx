@@ -1,11 +1,14 @@
 import { Suspense } from "react";
-import { Loader2Icon } from "lucide-react";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { notFound } from "next/navigation";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { notFound, redirect } from "next/navigation";
 import { fetchAccessToken } from "hume";
 import { VoiceProvider } from "@humeai/voice-react";
+import { Loader2Icon } from "lucide-react";
+
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { env } from "@/core/data/env/server";
+import { canCreateInterview } from "@/core/features/interviews/actions";
+
 import { StartCall } from "./_StartCall";
 
 export default async function NewInterviewPage({
@@ -32,6 +35,11 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
     allData: true,
   });
   if (userId == null || user == null) return redirectToSignIn();
+
+  const hasPermission = await canCreateInterview();
+  if (!hasPermission) {
+    redirect(`/app/job-infos/${jobInfoId}/interviews`);
+  }
 
   const jobInfo = await getJobInfo(jobInfoId, userId);
   if (jobInfo == null) return notFound();
