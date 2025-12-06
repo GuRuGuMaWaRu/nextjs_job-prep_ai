@@ -33,7 +33,6 @@ export default async function InterviewPage({
 
       const interview = await getInterviewById(interviewId, userId);
 
-      await new Promise((resolve) => setTimeout(resolve, 3000));
       if (interview == null) return notFound();
       return interview;
     }
