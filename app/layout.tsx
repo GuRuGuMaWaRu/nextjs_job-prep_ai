@@ -32,7 +32,7 @@ export default function RootLayout({
             disableTransitionOnChange
             value={{ light: "light", dark: "dark" }}>
             {children}
-            <Toaster position="top-right" />
+            <Toaster position="bottom-right" />
           </ThemeProvider>
         </body>
       </html>
