@@ -63,7 +63,9 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
         </Button>
       </div>
 
-      {!hasPermissionForInterviews ? <PlanLimitAlert /> : null}
+      {!hasPermissionForInterviews ? (
+        <PlanLimitAlert hasRedirectButton={true} />
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
         {hasPermissionForInterviews ? (
