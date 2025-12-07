@@ -1,14 +1,9 @@
-import { AlertTriangle } from "lucide-react";
+import { Suspense } from "react";
 
 import { BackLink } from "@/core/components/BackLink";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/core/components/ui/alert";
-import { PricingTable } from "@/core/services/clerk/components/ClerkPricingTable";
+import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { canCreateInterview } from "@/core/features/interviews/actions";
-import { Suspense } from "react";
+import { PricingTable } from "@/core/services/clerk/components/ClerkPricingTable";
 
 export default function UpgradePage() {
   return (
@@ -21,7 +16,6 @@ export default function UpgradePage() {
         <Suspense fallback={null}>
           <SuspendedAlert />
         </Suspense>
-
         <PricingTable />
       </div>
     </div>
@@ -29,18 +23,9 @@ export default function UpgradePage() {
 }
 
 async function SuspendedAlert() {
-  const hasPermission = await canCreateInterview();
+  const hasPermissionForInterviews = !(await canCreateInterview());
 
-  if (hasPermission) return null;
+  if (hasPermissionForInterviews) return null;
 
-  return (
-    <Alert variant="warning">
-      <AlertTriangle />
-      <AlertTitle>Plan Limit Reached</AlertTitle>
-      <AlertDescription>
-        You have reached the limit of your current plan. Please upgrade to
-        continue using all features.
-      </AlertDescription>
-    </Alert>
-  );
+  return <PlanLimitAlert />;
 }

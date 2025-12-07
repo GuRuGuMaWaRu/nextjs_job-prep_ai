@@ -14,7 +14,9 @@ import {
   CardTitle,
 } from "@/core/components/ui/card";
 import { Button } from "@/core/components/ui/button";
+import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { getInterviewJobInfoTag } from "@/core/features/interviews/dbCache";
+import { canCreateInterview } from "@/core/features/interviews/actions";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
@@ -46,6 +48,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
   if (userId == null) return redirectToSignIn();
 
   const interviews = await getInterviews(jobInfoId, userId);
+  const hasPermissionForInterviews = !(await canCreateInterview());
 
   return (
     <div className="space-y-6 w-full">
@@ -60,17 +63,21 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
         </Button>
       </div>
 
+      {!hasPermissionForInterviews ? <PlanLimitAlert /> : null}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
-        <PermissionCheckedLink
-          className="transition-opacity"
-          href={`/app/job-infos/${jobInfoId}/interviews/new`}>
-          <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
-            <div className="text-lg flex items-center gap-2">
-              <PlusIcon className="size-6" />
-              New Interview
-            </div>
-          </Card>
-        </PermissionCheckedLink>
+        {hasPermissionForInterviews ? (
+          <PermissionCheckedLink
+            className="transition-opacity"
+            href={`/app/job-infos/${jobInfoId}/interviews/new`}>
+            <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
+              <div className="text-lg flex items-center gap-2">
+                <PlusIcon className="size-6" />
+                New Interview
+              </div>
+            </Card>
+          </PermissionCheckedLink>
+        ) : null}
 
         {interviews.map((interview) => (
           <Link
