@@ -23,8 +23,7 @@ export default function UpgradePage() {
 }
 
 async function SuspendedAlert() {
-  const hasPermissionForInterviews = !(await canCreateInterview());
-
+  const hasPermissionForInterviews = await canCreateInterview();
   if (hasPermissionForInterviews) return null;
 
   return <PlanLimitAlert />;

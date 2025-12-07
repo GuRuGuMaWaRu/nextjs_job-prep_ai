@@ -36,8 +36,8 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
   });
   if (userId == null || user == null) return redirectToSignIn();
 
-  const hasPermission = await canCreateInterview();
-  if (!hasPermission) {
+  const hasPermissionForInterviews = await canCreateInterview();
+  if (!hasPermissionForInterviews) {
     redirect(`/app/job-infos/${jobInfoId}/interviews`);
   }
 

@@ -48,7 +48,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
   if (userId == null) return redirectToSignIn();
 
   const interviews = await getInterviews(jobInfoId, userId);
-  const hasPermissionForInterviews = !(await canCreateInterview());
+  const hasPermissionForInterviews = await canCreateInterview();
 
   return (
     <div className="space-y-6 w-full">
