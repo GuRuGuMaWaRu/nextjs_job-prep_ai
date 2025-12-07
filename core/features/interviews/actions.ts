@@ -1,6 +1,7 @@
 "use server";
 
 import { cacheTag } from "next/cache";
+import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import {
@@ -12,7 +13,21 @@ import { getInterviewIdTag } from "@/core/features/interviews/dbCache";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
-import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { env } from "@/core/data/env/server";
+
+const aj = arcjet({
+  characteristics: ["userId"],
+  key: env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 12,
+      refillRate: 4,
+      interval: "1d",
+      mode: "LIVE",
+    }),
+  ],
+});
 
 type CreateInterviewReturn = Promise<
   | {
@@ -46,7 +61,16 @@ export async function createInterview({
     };
   }
 
-  // TODO: Rate limit
+  const decision = await aj.protect(await request(), {
+    userId,
+    requested: 1,
+  });
+  if (decision.isDenied()) {
+    return {
+      error: true,
+      message: RATE_LIMIT_MESSAGE,
+    };
+  }
 
   const jobInfo = await getJobInfo(jobInfoId, userId);
   if (jobInfo == null) {
