@@ -7,6 +7,9 @@ import {
   AlertTitle,
 } from "@/core/components/ui/alert";
 import { PricingTable } from "@/core/services/clerk/components/ClerkPricingTable";
+import { canCreateInterview } from "@/core/features/interviews/actions";
+import { Skeleton } from "@/core/components/Skeleton";
+import { Suspense } from "react";
 
 export default function UpgradePage() {
   return (
@@ -16,17 +19,29 @@ export default function UpgradePage() {
       </div>
 
       <div className="space-y-16">
-        <Alert variant="warning">
-          <AlertTriangle />
-          <AlertTitle>Plan Limit Reached</AlertTitle>
-          <AlertDescription>
-            You have reached the limit of your current plan. Please upgrade to
-            continue using all features.
-          </AlertDescription>
-        </Alert>
+        <Suspense fallback={null}>
+          <SuspendedAlert />
+        </Suspense>
 
         <PricingTable />
       </div>
     </div>
+  );
+}
+
+async function SuspendedAlert() {
+  const hasPermission = await canCreateInterview();
+
+  if (hasPermission) return null;
+
+  return (
+    <Alert variant="warning">
+      <AlertTriangle />
+      <AlertTitle>Plan Limit Reached</AlertTitle>
+      <AlertDescription>
+        You have reached the limit of your current plan. Please upgrade to
+        continue using all features.
+      </AlertDescription>
+    </Alert>
   );
 }
