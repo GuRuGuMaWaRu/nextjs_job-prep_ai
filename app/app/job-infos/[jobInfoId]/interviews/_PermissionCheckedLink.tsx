@@ -31,9 +31,8 @@ export function PermissionCheckedLink({
     setIsChecking(true);
 
     try {
-      const hasPermission = await canCreateInterview();
-
-      if (!hasPermission) {
+      const hasPermissionForInterviews = await canCreateInterview();
+      if (!hasPermissionForInterviews) {
         errorToast(PLAN_LIMIT_MESSAGE);
         return;
       }
