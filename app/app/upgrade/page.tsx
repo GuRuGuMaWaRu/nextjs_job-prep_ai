@@ -8,7 +8,6 @@ import {
 } from "@/core/components/ui/alert";
 import { PricingTable } from "@/core/services/clerk/components/ClerkPricingTable";
 import { canCreateInterview } from "@/core/features/interviews/actions";
-import { Skeleton } from "@/core/components/Skeleton";
 import { Suspense } from "react";
 
 export default function UpgradePage() {
