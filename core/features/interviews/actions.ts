@@ -6,10 +6,14 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import {
   getInterviewByIdDb,
+  getInterviewsDb,
   insertInterviewDb,
   updateInterviewDb,
 } from "@/core/features/interviews/db";
-import { getInterviewIdTag } from "@/core/features/interviews/dbCache";
+import {
+  getInterviewIdTag,
+  getInterviewJobInfoTag,
+} from "@/core/features/interviews/dbCache";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
@@ -138,4 +142,12 @@ export async function getInterviewById(id: string, userId: string) {
 
 export async function canCreateInterview(): Promise<boolean> {
   return await checkInterviewPermission();
+}
+
+export async function getInterviews(jobInfoId: string, userId: string) {
+  "use cache";
+  cacheTag(getInterviewJobInfoTag(jobInfoId));
+  cacheTag(getJobInfoIdTag(jobInfoId));
+
+  return await getInterviewsDb(jobInfoId, userId);
 }

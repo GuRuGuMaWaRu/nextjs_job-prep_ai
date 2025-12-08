@@ -1,11 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { cacheTag } from "next/cache";
-import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { ArrowRightIcon, Loader2Icon, PlusIcon } from "lucide-react";
 
-import { db } from "@/core/drizzle/db";
-import { InterviewTable } from "@/core/drizzle/schema";
 import {
   Card,
   CardContent,
@@ -15,9 +11,10 @@ import {
 } from "@/core/components/ui/card";
 import { Button } from "@/core/components/ui/button";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
-import { getInterviewJobInfoTag } from "@/core/features/interviews/dbCache";
-import { canCreateInterview } from "@/core/features/interviews/actions";
-import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
+import {
+  canCreateInterview,
+  getInterviews,
+} from "@/core/features/interviews/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { formatDateTime } from "@/core/lib/formatters";
@@ -104,21 +101,4 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
       </div>
     </div>
   );
-}
-
-async function getInterviews(jobInfoId: string, userId: string) {
-  "use cache";
-  cacheTag(getInterviewJobInfoTag(jobInfoId));
-  cacheTag(getJobInfoIdTag(jobInfoId));
-
-  const data = await db.query.InterviewTable.findMany({
-    where: and(
-      eq(InterviewTable.jobInfoId, jobInfoId),
-      isNotNull(InterviewTable.humeChatId)
-    ),
-    with: { jobInfo: { columns: { userId: true } } },
-    orderBy: desc(InterviewTable.updatedAt),
-  });
-
-  return data.filter((interview) => interview.jobInfo.userId === userId);
 }

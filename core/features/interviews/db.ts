@@ -1,4 +1,4 @@
-import { and, count, eq, isNotNull } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
 import { InterviewTable, JobInfoTable } from "@/core/drizzle/schema";
@@ -65,4 +65,17 @@ export async function getInterviewCountDb(userId: string) {
     );
 
   return interviewCount;
+}
+
+export async function getInterviewsDb(jobInfoId: string, userId: string) {
+  const data = await db.query.InterviewTable.findMany({
+    where: and(
+      eq(InterviewTable.jobInfoId, jobInfoId),
+      isNotNull(InterviewTable.humeChatId)
+    ),
+    with: { jobInfo: { columns: { userId: true } } },
+    orderBy: desc(InterviewTable.updatedAt),
+  });
+
+  return data.filter((interview) => interview.jobInfo.userId === userId);
 }
