@@ -1,9 +1,4 @@
-import arcjet, {
-  detectBot,
-  shield,
-  slidingWindow,
-  tokenBucket,
-} from "@arcjet/next";
+import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { env } from "./core/data/env/server";
 
@@ -40,6 +35,7 @@ const aj = arcjet({
 });
 
 export default clerkMiddleware(async (auth, req) => {
+  // TODO: the proposed idea is not to call arcJet when we try to create a new interview
   const decision = await aj.protect(req);
 
   if (decision.isDenied()) {

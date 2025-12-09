@@ -3,7 +3,6 @@
 import { cacheTag } from "next/cache";
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import {
   getInterviewByIdDb,
   getInterviewsDb,
@@ -19,6 +18,8 @@ import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/server";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
 
 const aj = arcjet({
   characteristics: ["userId"],
@@ -150,4 +151,46 @@ export async function getInterviews(jobInfoId: string, userId: string) {
   cacheTag(getJobInfoIdTag(jobInfoId));
 
   return await getInterviewsDb(jobInfoId, userId);
+}
+
+export async function generateInterviewFeedback(interviewId: string) {
+  const { userId, user } = await getCurrentUser({ allData: true });
+  if (userId == null || user == null) {
+    return {
+      error: true,
+      message: "You don't have permission to do this",
+    };
+  }
+
+  const interview = await getInterviewById(interviewId, userId);
+  if (interview == null) {
+    return {
+      error: true,
+      message: "You don't have permission to do this",
+    };
+  }
+
+  if (interview.humeChatId == null) {
+    return {
+      error: true,
+      message: "Interview has not been completed yet",
+    };
+  }
+
+  const feedback = await generateAiInterviewFeedback({
+    humeChatId: interview.humeChatId,
+    jobInfo: interview.jobInfo,
+    userName: user.name,
+  });
+
+  if (feedback == null) {
+    return {
+      error: true,
+      message: "Failed to generate feedback",
+    };
+  }
+
+  await updateInterviewDb(interviewId, { feedback });
+
+  return { error: false };
 }

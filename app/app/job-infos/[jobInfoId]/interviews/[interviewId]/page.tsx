@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 import { BackLink } from "@/core/components/BackLink";
-import { getInterviewById } from "@/core/features/interviews/actions";
+import {
+  generateInterviewFeedback,
+  getInterviewById,
+} from "@/core/features/interviews/actions";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton, SkeletonButton } from "@/core/components/Skeleton";
@@ -19,6 +22,7 @@ import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
+import { ActionButton } from "@/core/components/ui/action-button";
 
 export default async function InterviewPage({
   params,
@@ -66,15 +70,20 @@ export default async function InterviewPage({
           <SuspendedItem
             item={interview}
             fallback={<SkeletonButton className="w-32" />}
-            result={(i) =>
-              i.feedback == null ? null : ( // TODO: Add a placeholder for the feedback
+            result={(intv) =>
+              intv.feedback == null ? (
+                <ActionButton
+                  action={generateInterviewFeedback.bind(null, intv.id)}>
+                  Generate Feedback
+                </ActionButton>
+              ) : (
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button>View Feedback</Button>
                   </DialogTrigger>
                   <DialogContent className="md:max-w-3xl lg:max-w-4xl max-h-[calc(100%-2rem)] overflow-y-auto flex flex-col">
                     <DialogTitle>Feedback</DialogTitle>
-                    <MarkdownRenderer>{i.feedback}</MarkdownRenderer>
+                    <MarkdownRenderer>{intv.feedback}</MarkdownRenderer>
                   </DialogContent>
                 </Dialog>
               )

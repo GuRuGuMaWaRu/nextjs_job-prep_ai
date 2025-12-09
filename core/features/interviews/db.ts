@@ -13,6 +13,8 @@ export async function getInterviewByIdDb(id: string) {
           id: true,
           userId: true,
           title: true,
+          description: true,
+          experienceLevel: true,
         },
       },
     },
