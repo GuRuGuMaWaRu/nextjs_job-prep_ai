@@ -49,16 +49,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
 
   return (
     <div className="space-y-6 w-full">
-      <div className="flex gap-2 justify-between">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl">Interviews</h1>
-        <Button asChild>
-          <PermissionCheckedLink
-            href={`/app/job-infos/${jobInfoId}/interviews/new`}>
-            <PlusIcon />
-            New Interview
-          </PermissionCheckedLink>
-        </Button>
-      </div>
+      <h1 className="text-3xl md:text-4xl lg:text-5xl">Interviews</h1>
 
       {!hasPermissionForInterviews ? (
         <PlanLimitAlert hasRedirectButton={true} />
