@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/core/components/ui/card";
-import { Button } from "@/core/components/ui/button";
+import { Badge } from "@/core/components/ui/badge";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import {
   canCreateInterview,
@@ -75,8 +75,12 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
             <Card className="h-full">
               <div className="flex items-center justify-between h-full">
                 <CardHeader className="gap-1 grow">
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-lg flex gap-4">
                     {formatDateTime(interview.createdAt)}
+                    <Badge
+                      variant={interview.feedback ? "primary" : "destructive"}>
+                      {interview.feedback ? "With feedback" : "No feedback"}
+                    </Badge>
                   </CardTitle>
                   <CardDescription>{interview.duration}</CardDescription>
                 </CardHeader>

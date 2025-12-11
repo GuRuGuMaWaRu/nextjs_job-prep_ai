@@ -7,6 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-white: var(--white);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-outfit-sans), sans-serif;
@@ -42,6 +43,7 @@
   --color-card: var(--card);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-positive-badge-background: var(--positive-badge-background);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -76,7 +78,7 @@
 }
 
 :root {
-  --radius: 0.5rem;
+  --white: oklch(100% 0.00011 271.152);
   --background: oklch(0.9911 0 0);
   --foreground: oklch(0.2046 0 0);
   --card: oklch(0.9911 0 0);
@@ -102,6 +104,7 @@
   --chart-3: oklch(0.6056 0.2189 292.7172);
   --chart-4: oklch(0.7686 0.1647 70.0804);
   --chart-5: oklch(0.6959 0.1491 162.4796);
+  --positive-badge-background: oklch(0.6231 0.188 259.8145);
   --sidebar: oklch(0.9911 0 0);
   --sidebar-foreground: oklch(0.5452 0 0);
   --sidebar-primary: oklch(0.8348 0.1302 160.908);
@@ -111,6 +114,7 @@
   --sidebar-border: oklch(0.9037 0 0);
   --sidebar-ring: oklch(0.8348 0.1302 160.908);
   --destructive-foreground: oklch(0.9934 0.0032 17.2118);
+  --radius: 0.5rem;
   --font-sans: sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: monospace;
@@ -139,6 +143,7 @@
 }
 
 .dark {
+  --white: oklch(100% 0.00011 271.152);
   --background: oklch(0.1822 0 0);
   --foreground: oklch(0.9288 0.0126 255.5078);
   --card: oklch(0.2046 0 0);
@@ -164,6 +169,7 @@
   --chart-3: oklch(0.709 0.1592 293.5412);
   --chart-4: oklch(0.8369 0.1644 84.4286);
   --chart-5: oklch(0.7845 0.1325 181.912);
+  --positive-badge-background: oklch(63.214% 0.14472 255.012);
   --sidebar: oklch(0.1822 0 0);
   --sidebar-foreground: oklch(0.6301 0 0);
   --sidebar-primary: oklch(0.4365 0.1044 156.7556);
