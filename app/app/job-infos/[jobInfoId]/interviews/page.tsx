@@ -67,30 +67,41 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
           </Card>
         </PermissionCheckedLink>
 
-        {interviews.map((interview) => (
-          <Link
-            className="hover:scale-[1.02] transition-[transform_opacity]"
-            href={`/app/job-infos/${jobInfoId}/interviews/${interview.id}`}
-            key={interview.id}>
-            <Card className="h-full">
-              <div className="flex items-center justify-between h-full">
-                <CardHeader className="gap-1 grow">
-                  <CardTitle className="text-lg flex gap-4">
-                    {formatDateTime(interview.createdAt)}
-                    <Badge
-                      variant={interview.feedback ? "primary" : "destructive"}>
-                      {interview.feedback ? "With feedback" : "No feedback"}
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription>{interview.duration}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ArrowRightIcon className="size-6" />
-                </CardContent>
-              </div>
-            </Card>
-          </Link>
-        ))}
+        {interviews.map((interview) => {
+          const match = interview.feedback?.match(
+            /Overall Rating:\s*(\d+)\/10/i
+          );
+          const rating = match ? Number(match[1]) : 0;
+
+          return (
+            <Link
+              className="hover:scale-[1.02] transition-[transform_opacity]"
+              href={`/app/job-infos/${jobInfoId}/interviews/${interview.id}`}
+              key={interview.id}>
+              <Card className="h-full">
+                <div className="flex items-center justify-between h-full">
+                  <CardHeader className="gap-1 grow">
+                    <CardTitle className="text-lg flex gap-4">
+                      {formatDateTime(interview.createdAt)}
+                      <Badge
+                        variant={
+                          interview.feedback ? "primary" : "destructive"
+                        }>
+                        {interview.feedback
+                          ? `With feedback - ${rating}/10`
+                          : "No feedback"}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>{interview.duration}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ArrowRightIcon className="size-6" />
+                  </CardContent>
+                </div>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
