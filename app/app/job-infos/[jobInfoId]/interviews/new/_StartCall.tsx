@@ -37,7 +37,6 @@ export function StartCall({
   user: { name: string; image: string };
 }) {
   const router = useRouter();
-
   const {
     connect,
     disconnect,
@@ -46,8 +45,8 @@ export function StartCall({
     chatMetadata,
     callDurationTimestamp,
   } = useVoice();
-  const [interviewId, setInterviewId] = useState<string | null>(null);
   const durationRef = useRef(callDurationTimestamp);
+  const [interviewId, setInterviewId] = useState<string | null>(null);
 
   //** Sync chat id */
   useEffect(() => {
@@ -174,7 +173,9 @@ function Controls({
   const { isMuted, mute, unmute, micFft, callDurationTimestamp, readyState } =
     useVoice();
 
-  const beforeInterview = readyState === VoiceReadyState.IDLE;
+  const beforeInterview =
+    readyState === VoiceReadyState.IDLE ||
+    readyState === VoiceReadyState.CLOSED;
   const interviewIsActive = readyState === VoiceReadyState.OPEN;
 
   const handleMuteUnmute = () => {
