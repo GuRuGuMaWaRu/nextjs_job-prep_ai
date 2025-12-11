@@ -177,37 +177,31 @@ function Controls({
   const beforeInterview = readyState === VoiceReadyState.IDLE;
   const interviewIsActive = readyState === VoiceReadyState.OPEN;
 
+  const handleMuteUnmute = () => {
+    if (isMuted) {
+      unmute();
+    } else {
+      mute();
+    }
+  };
+
   return (
     <div className="flex gap-5 rounded border px-4 py-2 w-fit sticky bottom-6 bg-background items-center">
       <Button
         variant="ghost"
         size="icon"
-        className={cn(
-          "-mx-3",
-          !beforeInterview && "opacity-50 cursor-not-allowed"
-        )}
-        onClick={() => {
-          if (!beforeInterview) return;
-          onStartInterview();
-        }}>
+        className="-mx-3"
+        onClick={onStartInterview}
+        disabled={!beforeInterview}>
         <PhoneCallIcon className="size-4 text-primary" />
         <span className="sr-only">Start Interview</span>
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className={cn(
-          "-mx-3",
-          !interviewIsActive && "opacity-50 cursor-not-allowed"
-        )}
-        onClick={() => {
-          if (!interviewIsActive) return;
-          if (isMuted) {
-            unmute();
-          } else {
-            mute();
-          }
-        }}>
+        className="-mx-3"
+        onClick={handleMuteUnmute}
+        disabled={!interviewIsActive}>
         {isMuted ? <MicOffIcon className="text-destructive" /> : <MicIcon />}
         <span className="sr-only">{isMuted ? "Unmute" : "Mute"}</span>
       </Button>
@@ -220,14 +214,9 @@ function Controls({
       <Button
         variant="ghost"
         size="icon"
-        className={cn(
-          "-mx-3",
-          !interviewIsActive && "opacity-50 cursor-not-allowed"
-        )}
-        onClick={() => {
-          if (!interviewIsActive) return;
-          onEndInterview();
-        }}>
+        className="-mx-3"
+        onClick={onEndInterview}
+        disabled={!interviewIsActive}>
         <PhoneOffIcon className="text-destructive" />
         <span className="sr-only">End Call</span>
       </Button>
