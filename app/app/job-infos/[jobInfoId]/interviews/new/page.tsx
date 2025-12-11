@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { fetchAccessToken } from "hume";
-import { VoiceProvider } from "@humeai/voice-react";
 import { Loader2Icon } from "lucide-react";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
@@ -10,6 +9,7 @@ import { env } from "@/core/data/env/server";
 import { canCreateInterview } from "@/core/features/interviews/actions";
 
 import { StartCall } from "./_StartCall";
+import { InterviewVoiceBoundary } from "./_InterviewVoiceBoundary";
 
 export default async function NewInterviewPage({
   params,
@@ -50,8 +50,8 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
   });
 
   return (
-    <VoiceProvider>
+    <InterviewVoiceBoundary>
       <StartCall accessToken={accessToken} jobInfo={jobInfo} user={user} />
-    </VoiceProvider>
+    </InterviewVoiceBoundary>
   );
 }

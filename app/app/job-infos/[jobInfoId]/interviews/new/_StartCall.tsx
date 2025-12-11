@@ -22,7 +22,6 @@ import {
   updateInterview,
 } from "@/core/features/interviews/actions";
 import { errorToast, HUME_UNAVAILABLE_MESSAGE } from "@/core/lib/errorToast";
-import { cn } from "@/core/lib/utils";
 
 export function StartCall({
   accessToken,
