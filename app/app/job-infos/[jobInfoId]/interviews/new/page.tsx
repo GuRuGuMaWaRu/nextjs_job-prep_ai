@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { fetchAccessToken } from "hume";
-import { Loader2Icon } from "lucide-react";
 
+import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
-import { env } from "@/core/data/env/server";
 import { canCreateInterview } from "@/core/features/interviews/actions";
+import { env } from "@/core/data/env/server";
 
 import { StartCall } from "./_StartCall";
 import { InterviewVoiceBoundary } from "./_InterviewVoiceBoundary";
@@ -19,12 +19,7 @@ export default async function NewInterviewPage({
   const { jobInfoId } = await params;
 
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen-header flex items-center justify-center">
-          <Loader2Icon className="animate-spin size-24" />
-        </div>
-      }>
+    <Suspense fallback={<FullScreenLoader />}>
       <SuspendedComponent jobInfoId={jobInfoId} />
     </Suspense>
   );

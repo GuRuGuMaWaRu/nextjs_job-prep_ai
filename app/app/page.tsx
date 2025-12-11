@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRightIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import { ArrowRightIcon, PlusIcon } from "lucide-react";
 
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import {
@@ -12,18 +12,14 @@ import {
 } from "@core/components/ui/card";
 import { Button } from "@core/components/ui/button";
 import { Badge } from "@core/components/ui/badge";
+import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { getJobInfos } from "@/core/features/jobInfos/actions";
 
 export default function AppPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen-header flex items-center justify-center">
-          <Loader2Icon className="animate-spin size-24" />
-        </div>
-      }>
+    <Suspense fallback={<FullScreenLoader />}>
       <JobInfos />
     </Suspense>
   );
