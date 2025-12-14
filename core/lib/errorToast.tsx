@@ -6,6 +6,9 @@ import { Button } from "@core/components/ui/button";
 export const PLAN_LIMIT_MESSAGE = "PLAN_LIMIT";
 export const RATE_LIMIT_MESSAGE = "RATE_LIMIT";
 export const HUME_UNAVAILABLE_MESSAGE = "HUME_UNAVAILABLE_MESSAGE";
+export const FILE_SIZE_TOO_LARGE_MESSAGE = "FILE_SIZE_TOO_LARGE_MESSAGE";
+export const FILE_TYPE_NOT_SUPPORTED_MESSAGE =
+  "FILE_TYPE_NOT_SUPPORTED_MESSAGE";
 
 export async function errorToast(message: string) {
   if (message === PLAN_LIMIT_MESSAGE) {
@@ -35,6 +38,20 @@ export async function errorToast(message: string) {
     toast.error("Ooopsie!", {
       description:
         "Interviews are currently unavailable due to overwhelming demand.",
+    });
+    return;
+  }
+
+  if (message === FILE_SIZE_TOO_LARGE_MESSAGE) {
+    toast.error("File size is too large", {
+      description: "Please upload a file smaller than 10MB.",
+    });
+    return;
+  }
+
+  if (message === FILE_TYPE_NOT_SUPPORTED_MESSAGE) {
+    toast.error("File type not supported", {
+      description: "Please upload a file with a supported type.",
     });
     return;
   }
