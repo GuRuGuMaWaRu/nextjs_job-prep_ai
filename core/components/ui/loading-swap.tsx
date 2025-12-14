@@ -7,10 +7,12 @@ export function LoadingSwap({
   isLoading,
   children,
   className,
+  loadingIconClassName,
 }: {
   isLoading: boolean;
   children: ReactNode;
   className?: string;
+  loadingIconClassName?: string;
 }) {
   return (
     <div className="grid grid-cols-1 items-center justify-items-center">
@@ -28,7 +30,7 @@ export function LoadingSwap({
           isLoading ? "visible" : "invisible",
           className
         )}>
-        <Loader2Icon className="animate-spin" />
+        <Loader2Icon className={cn("animate-spin", loadingIconClassName)} />
       </div>
     </div>
   );
