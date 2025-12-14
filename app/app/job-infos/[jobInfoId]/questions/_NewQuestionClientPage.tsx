@@ -8,7 +8,6 @@ import {
   questionDifficulties,
   QuestionDifficulty,
 } from "@/core/drizzle/schema";
-import { BackLink } from "@/core/components/BackLink";
 import { Button } from "@/core/components/ui/button";
 import {
   ResizableHandle,
@@ -67,42 +66,34 @@ export function NewQuestionClientPage({
 
   return (
     <div className="flex flex-col gap-4 items-center grow h-screen-header w-full mx-auto max-w-[2000px]">
-      <div className="container flex gap-4 mt-4 items-center">
-        <div className="grow basis-0">
-          <BackLink href={`/app/job-infos/${jobInfo.id}`}>
-            Back to {jobInfo.name}
-          </BackLink>
-        </div>
-        <Controls
-          answerBtnDisabled={
-            answer == null || answer.trim() === "" || questionId == null
+      <Controls
+        answerBtnDisabled={
+          answer == null || answer.trim() === "" || questionId == null
+        }
+        isLoading={isGeneratingQuestion || isGeneratingFeedback}
+        status={status}
+        generateQuestion={(difficulty) => {
+          setQuestion("");
+          setFeedback("");
+          setAnswer(null);
+          generateQuestion(difficulty, { body: { jobInfoId: jobInfo.id } });
+        }}
+        generateFeedback={() => {
+          if (answer == null || answer.trim() === "" || questionId == null) {
+            return;
           }
-          isLoading={isGeneratingQuestion || isGeneratingFeedback}
-          status={status}
-          generateQuestion={(difficulty) => {
-            setQuestion("");
-            setFeedback("");
-            setAnswer(null);
-            generateQuestion(difficulty, { body: { jobInfoId: jobInfo.id } });
-          }}
-          generateFeedback={() => {
-            if (answer == null || answer.trim() === "" || questionId == null) {
-              return;
-            }
 
-            generateFeedback(answer?.trim(), {
-              body: { questionId },
-            });
-          }}
-          reset={() => {
-            setStatus("init");
-            setQuestion("");
-            setFeedback("");
-            setAnswer(null);
-          }}
-        />
-        <div className="grow hidden md:block" />
-      </div>
+          generateFeedback(answer?.trim(), {
+            body: { questionId },
+          });
+        }}
+        reset={() => {
+          setStatus("init");
+          setQuestion("");
+          setFeedback("");
+          setAnswer(null);
+        }}
+      />
       <QuestionContainer
         question={question}
         feedback={feedback}
@@ -188,7 +179,7 @@ function Controls({
   reset: () => void;
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 md:self-end">
       {status === "awaiting-answer" ? (
         <>
           <Button

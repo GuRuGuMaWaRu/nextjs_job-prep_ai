@@ -7,6 +7,7 @@ import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 
 import { NewQuestionClientPage } from "./_NewQuestionClientPage";
+import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 
 export default async function QuestionsPage({
   params,
@@ -16,9 +17,12 @@ export default async function QuestionsPage({
   const { jobInfoId } = await params;
 
   return (
-    <Suspense fallback={<FullScreenLoader />}>
-      <SuspendedComponent jobInfoId={jobInfoId} />
-    </Suspense>
+    <div className="container max-w-5xl my-4 space-y-4">
+      <JobInfoBackLink jobInfoId={jobInfoId} />
+      <Suspense fallback={<FullScreenLoader />}>
+        <SuspendedComponent jobInfoId={jobInfoId} />
+      </Suspense>
+    </div>
   );
 }
 
