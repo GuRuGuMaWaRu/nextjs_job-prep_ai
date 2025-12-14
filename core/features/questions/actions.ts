@@ -30,9 +30,9 @@ export async function insertQuestion(
   });
 }
 
-export async function getQuestionById(questionId: string) {
+export async function getQuestionById(questionId: string, userId: string) {
   "use cache";
   cacheTag(getQuestionIdTag(questionId));
 
-  return await getQuestionByIdDb(questionId);
+  return await getQuestionByIdDb(questionId, userId);
 }

@@ -1,11 +1,7 @@
 import { and, asc, count, eq } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
-import {
-  QuestionTable,
-  JobInfoTable,
-  QuestionDifficulty,
-} from "@/core/drizzle/schema";
+import { QuestionTable, JobInfoTable } from "@/core/drizzle/schema";
 import { revalidateQuestionCache } from "@/core/features/questions/dbCache";
 
 export async function getQuestionCountDb(userId: string) {
@@ -44,8 +40,17 @@ export async function insertQuestionDb(
   return newQuestion;
 }
 
-export async function getQuestionByIdDb(questionId: string) {
-  return db.query.QuestionTable.findFirst({
+export async function getQuestionByIdDb(questionId: string, userId: string) {
+  const question = await db.query.QuestionTable.findFirst({
     where: eq(QuestionTable.id, questionId),
+    with: {
+      jobInfo: { columns: { id: true, userId: true } },
+    },
   });
+
+  if (question == null) return null;
+
+  if (question.jobInfo.userId !== userId) return null;
+
+  return question;
 }
