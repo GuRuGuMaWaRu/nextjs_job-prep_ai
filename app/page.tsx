@@ -20,27 +20,9 @@ import { ThemeToggle } from "@/core/components/ThemeToggle";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar */}
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-6 py-20 md:py-32">
-        <div className="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
-            Master Your Job Interview with{" "}
-            <span className="text-primary">AI-Powered</span> Preparation
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl">
-            Practice interviews, get tailored resume suggestions, and deeply
-            understand job descriptions—all powered by cutting-edge AI.
-          </p>
-          <ClerkSignUpButton>
-            <Button size="lg" className="text-base h-12">
-              Get Started for Free
-            </Button>
-          </ClerkSignUpButton>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Features Section */}
       <section className="container mx-auto px-6 py-16 md:py-24">
@@ -159,5 +141,29 @@ async function SignInButton() {
     <ClerkSignInButton forceRedirectUrl="/app">
       <Button variant="outline">Sign In</Button>
     </ClerkSignInButton>
+  );
+}
+
+function HeroSection() {
+  return (
+    <section className="container px-6 py-20 md:py-32 flex flex-col items-center text-center gap-8 max-w-4xl">
+      <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+        Master Your Job Interview with{" "}
+        <span className="bg-linear-to-r from-primary to-primary/70 text-transparent bg-clip-text text-nowrap">
+          AI-Powered
+        </span>{" "}
+        Preparation
+      </h1>
+      <p className="text-xl text-muted-foreground max-w-2xl">
+        Accelerate your job search with personalized AI-powered tools. Get
+        feedback on your resume, practice with mock interviews, and understand
+        job descriptions like a pro.
+      </p>
+      <ClerkSignUpButton>
+        <Button size="lg" className="text-base h-12">
+          Get Started for Free
+        </Button>
+      </ClerkSignUpButton>
+    </section>
   );
 }
