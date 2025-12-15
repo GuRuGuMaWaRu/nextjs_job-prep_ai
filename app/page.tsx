@@ -129,22 +129,20 @@ export default function LandingPage() {
 
 function Navbar() {
   return (
-    <nav className="border-b">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <p className="text-2xl font-bold tracking-tight">Landr</p>
+    <nav className="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50">
+      <div className="px-6 py-4 flex items-center justify-between">
+        <p className="text-2xl font-bold tracking-tight">Landr</p>
 
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Suspense
-              fallback={
-                <ClerkSignInButton forceRedirectUrl="/app">
-                  <Button variant="outline">Sign In</Button>
-                </ClerkSignInButton>
-              }>
-              <SignInButton />
-            </Suspense>
-          </div>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Suspense
+            fallback={
+              <ClerkSignInButton forceRedirectUrl="/app">
+                <Button variant="outline">Sign In</Button>
+              </ClerkSignInButton>
+            }>
+            <SignInButton />
+          </Suspense>
         </div>
       </div>
     </nav>
