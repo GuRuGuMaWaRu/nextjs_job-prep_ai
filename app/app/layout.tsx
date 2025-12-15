@@ -8,7 +8,7 @@ import { Navbar } from "./_Navbar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense fallback={<FullScreenLoader className="m-auto h-screen" />}>
       <AuthCheckAndNavbar>{children}</AuthCheckAndNavbar>
     </Suspense>
   );
