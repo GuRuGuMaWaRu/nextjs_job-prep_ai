@@ -1,6 +1,10 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import {
+  SignInButton as ClerkSignInButton,
+  SignUpButton as ClerkSignUpButton,
+} from "@clerk/nextjs";
 import { Mic, FileText, Search } from "lucide-react";
 
 import { Button } from "@/core/components/ui/button";
@@ -13,12 +17,7 @@ import {
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
 
-export default async function LandingPage() {
-  const { userId } = await getCurrentUser();
-  const isUserLoggedIn = userId != null;
-
-  if (isUserLoggedIn) return redirect("/app");
-
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
@@ -35,11 +34,11 @@ export default async function LandingPage() {
             Practice interviews, get tailored resume suggestions, and deeply
             understand job descriptions—all powered by cutting-edge AI.
           </p>
-          <SignUpButton>
+          <ClerkSignUpButton>
             <Button size="lg" className="text-base h-12">
               Get Started for Free
             </Button>
-          </SignUpButton>
+          </ClerkSignUpButton>
         </div>
       </section>
 
@@ -137,12 +136,30 @@ function Navbar() {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <SignInButton>
-              <Button variant="outline">Sign In</Button>
-            </SignInButton>
+            <Suspense
+              fallback={
+                <ClerkSignInButton forceRedirectUrl="/app">
+                  <Button variant="outline">Sign In</Button>
+                </ClerkSignInButton>
+              }>
+              <SignInButton />
+            </Suspense>
           </div>
         </div>
       </div>
     </nav>
+  );
+}
+
+async function SignInButton() {
+  const { userId } = await getCurrentUser();
+  const isUserLoggedIn = userId != null;
+
+  if (isUserLoggedIn) return redirect("/app");
+
+  return (
+    <ClerkSignInButton forceRedirectUrl="/app">
+      <Button variant="outline">Sign In</Button>
+    </ClerkSignInButton>
   );
 }
