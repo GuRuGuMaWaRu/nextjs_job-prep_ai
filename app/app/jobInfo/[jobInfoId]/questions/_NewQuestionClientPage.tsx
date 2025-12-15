@@ -14,7 +14,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/core/components/ui/resizable";
-import { ScrollArea } from "@/core/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/core/components/ui/scroll-area";
 import { Textarea } from "@/core/components/ui/textarea";
 import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
 import { LoadingSwap } from "@/core/components/ui/loading-swap";
@@ -141,10 +141,11 @@ function QuestionContainer({
             <>
               <ResizableHandle withHandle />
               <ResizablePanel id="feedback" defaultSize={75} minSize={5}>
-                <ScrollArea className="h-full min-w-48">
+                <ScrollArea className="h-full">
                   <MarkdownRenderer className="p-6">
                     {feedback}
                   </MarkdownRenderer>
+                  <ScrollBar orientation="horizontal" />
                 </ScrollArea>
               </ResizablePanel>
             </>
