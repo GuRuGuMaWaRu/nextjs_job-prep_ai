@@ -32,6 +32,7 @@ export function NewQuestionClientPage({
   const [answer, setAnswer] = useState<string | null>(null);
   const [questionId, setQuestionId] = useState<string | null>(null);
   const [question, setQuestion] = useState<string | null>(null);
+  const [difficulty, setDifficulty] = useState<QuestionDifficulty | null>(null);
 
   const { complete: generateQuestion, isLoading: isGeneratingQuestion } =
     useCompletion({
@@ -72,10 +73,12 @@ export function NewQuestionClientPage({
         }
         isLoading={isGeneratingQuestion || isGeneratingFeedback}
         status={status}
+        difficulty={difficulty}
         generateQuestion={(difficulty) => {
           setQuestion("");
           setFeedback("");
           setAnswer(null);
+          setDifficulty(difficulty);
           generateQuestion(difficulty, { body: { jobInfoId: jobInfo.id } });
         }}
         generateFeedback={() => {
@@ -92,6 +95,7 @@ export function NewQuestionClientPage({
           setQuestion("");
           setFeedback("");
           setAnswer(null);
+          setDifficulty(null);
         }}
       />
       <QuestionContainer
@@ -167,6 +171,7 @@ function Controls({
   answerBtnDisabled,
   isLoading,
   status,
+  difficulty,
   generateQuestion,
   generateFeedback,
   reset,
@@ -174,6 +179,7 @@ function Controls({
   answerBtnDisabled: boolean;
   isLoading: boolean;
   status: Status;
+  difficulty: QuestionDifficulty | null;
   generateQuestion: (difficulty: QuestionDifficulty) => void;
   generateFeedback: () => void;
   reset: () => void;
@@ -187,7 +193,7 @@ function Controls({
             onClick={reset}
             disabled={isLoading}
             size="sm">
-            <LoadingSwap isLoading={isLoading}>Skip</LoadingSwap>
+            Skip
           </Button>
           <Button
             onClick={generateFeedback}
@@ -197,15 +203,16 @@ function Controls({
           </Button>
         </>
       ) : (
-        questionDifficulties.map((difficulty) => (
+        questionDifficulties.map((questionDifficulty) => (
           <Button
-            key={difficulty}
+            key={questionDifficulty}
             disabled={isLoading}
             onClick={() => {
-              generateQuestion(difficulty);
+              generateQuestion(questionDifficulty);
             }}>
-            <LoadingSwap isLoading={isLoading}>
-              {formatQuestionDifficulty(difficulty)}
+            <LoadingSwap
+              isLoading={isLoading && questionDifficulty === difficulty}>
+              {formatQuestionDifficulty(questionDifficulty)}
             </LoadingSwap>
           </Button>
         ))
