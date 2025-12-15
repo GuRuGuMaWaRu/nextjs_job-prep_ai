@@ -19,6 +19,7 @@ import {
   DropdownMenuItem,
 } from "@core/components/ui/dropdown-menu";
 import { ThemeToggle } from "@core/components/ThemeToggle";
+import { SkeletonButton } from "@/core/components/Skeleton";
 import { Button } from "@/core/components/ui/button";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
@@ -69,7 +70,7 @@ export function Navbar({ user }: { user: { name: string; image: string } }) {
 
         <ThemeToggle />
 
-        {userId && (
+        {userId ? (
           <DropdownMenu>
             <DropdownMenuTrigger>
               <UserAvatar user={user} />
@@ -87,6 +88,8 @@ export function Navbar({ user }: { user: { name: string; image: string } }) {
               </SignOutButton>
             </DropdownMenuContent>
           </DropdownMenu>
+        ) : (
+          <SkeletonButton className="size-10 rounded-full" />
         )}
       </div>
     </nav>

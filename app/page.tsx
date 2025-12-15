@@ -1,4 +1,7 @@
-"use client";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { Mic, FileText, Search } from "lucide-react";
 
 import { Button } from "@/core/components/ui/button";
 import {
@@ -7,30 +10,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/core/components/ui/card";
-import { Mic, FileText, Search } from "lucide-react";
-import Link from "next/link";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { ThemeToggle } from "@/core/components/ThemeToggle";
 
-export default function LandingPage() {
-  // Mock user state - toggle this to test authenticated/unauthenticated states
-  const isUserLoggedIn = false;
+export default async function LandingPage() {
+  const { userId } = await getCurrentUser();
+  const isUserLoggedIn = userId != null;
+
+  if (isUserLoggedIn) return redirect("/app");
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
-      <nav className="border-b">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold tracking-tight">
-              Landr
-            </Link>
-            <Button asChild variant={isUserLoggedIn ? "default" : "outline"}>
-              <Link href={isUserLoggedIn ? "/app" : "/sign-in"}>
-                {isUserLoggedIn ? "Dashboard" : "Sign In"}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 md:py-32">
@@ -43,9 +35,11 @@ export default function LandingPage() {
             Practice interviews, get tailored resume suggestions, and deeply
             understand job descriptions—all powered by cutting-edge AI.
           </p>
-          <Button asChild size="lg" className="text-base h-12">
-            <Link href="/app">Get Started for Free</Link>
-          </Button>
+          <SignUpButton>
+            <Button size="lg" className="text-base h-12">
+              Get Started for Free
+            </Button>
+          </SignUpButton>
         </div>
       </section>
 
@@ -131,5 +125,24 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function Navbar() {
+  return (
+    <nav className="border-b">
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <p className="text-2xl font-bold tracking-tight">Landr</p>
+
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <SignInButton>
+              <Button variant="outline">Sign In</Button>
+            </SignInButton>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 }
