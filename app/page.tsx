@@ -13,6 +13,7 @@ import {
   Clock,
   Target,
   Quote,
+  Check,
 } from "lucide-react";
 
 import { Button } from "@/core/components/ui/button";
@@ -35,6 +36,7 @@ export default function LandingPage() {
       <FeaturesSection />
       <StatsComparisonSection />
       <TestimonialsSection />
+      <PricingSection />
       <Footer />
     </div>
   );
@@ -282,10 +284,10 @@ function TestimonialsSection() {
   return (
     <section className="container mx-auto px-6 py-16 md:py-24">
       <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-balance">
           Hear From Our <span className="text-primary">Success Stories</span>
         </h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
           Real people, real results. See how Landr helped professionals land
           their dream jobs.
         </p>
@@ -296,14 +298,14 @@ function TestimonialsSection() {
           <Card
             className="transition-all hover:shadow-lg hover:scale-[1.01]"
             key={testimonial.user.name}>
-            <CardHeader className="space-y-4 h-full">
+            <CardHeader className="space-y-4 flex flex-col h-full">
               <div className="flex items-start justify-between gap-2">
                 <Quote className="w-8 h-8 text-primary/40 shrink-0" />
                 <Badge variant="secondary" className="text-xs font-semibold">
                   ✨ {testimonial.result}
                 </Badge>
               </div>
-              <CardDescription className="text-base leading-relaxed">
+              <CardDescription className="text-base leading-relaxed flex-1">
                 &quot;{testimonial.quote}&quot;
               </CardDescription>
               <div className="flex items-center gap-3 pt-2 mt-auto">
@@ -316,6 +318,125 @@ function TestimonialsSection() {
                     {testimonial.role} at {testimonial.company}
                   </p>
                 </div>
+              </div>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PricingSection() {
+  const plans = [
+    {
+      name: "Free",
+      price: "$0",
+      period: "forever",
+      description: "Perfect for getting started with job prep",
+      features: [
+        "1 AI mock interview per month",
+        "Basic resume analysis",
+        "5 practice questions per month",
+        "Email support",
+      ],
+      cta: "Get Started",
+      popular: false,
+    },
+    {
+      name: "Pro",
+      price: "$29",
+      period: "per month",
+      description: "Best for serious job seekers",
+      features: [
+        "Unlimited AI mock interviews",
+        "Advanced resume optimization",
+        "Unlimited practice questions",
+        "Priority support",
+        "Interview performance analytics",
+        "Custom job description analysis",
+      ],
+      cta: "Start Free Trial",
+      popular: true,
+    },
+    {
+      name: "Enterprise",
+      price: "Custom",
+      period: "contact us",
+      description: "For teams and organizations",
+      features: [
+        "Everything in Pro",
+        "Team management dashboard",
+        "Custom integrations",
+        "Dedicated account manager",
+        "White-label options",
+        "API access",
+      ],
+      cta: "Contact Sales",
+      popular: false,
+    },
+  ];
+
+  return (
+    <section className="container mx-auto px-6 py-16 md:py-24 bg-muted/30">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-balance">
+          Choose Your <span className="text-primary">Success Plan</span>
+        </h2>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+          Start for free and upgrade when you&apos;re ready to accelerate your
+          job search. All plans include AI-powered tools to help you land your
+          dream job.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {plans.map((plan) => (
+          <Card
+            key={plan.name}
+            className={`relative transition-all hover:shadow-lg ${
+              plan.popular
+                ? "border-primary shadow-lg scale-105 md:scale-110"
+                : "hover:scale-[1.02]"
+            }`}>
+            {plan.popular && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="px-3 py-1 text-xs font-semibold">
+                  Most Popular
+                </Badge>
+              </div>
+            )}
+            <CardHeader className="space-y-6 pb-8">
+              <div className="space-y-2">
+                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold tracking-tight">
+                    {plan.price}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {plan.period}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                className="w-full"
+                variant={plan.popular ? "default" : "outline"}
+                size="lg">
+                {plan.cta}
+              </Button>
+
+              <div className="space-y-3 pt-4">
+                {plan.features.map((feature) => (
+                  <div key={feature} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground">{feature}</span>
+                  </div>
+                ))}
               </div>
             </CardHeader>
           </Card>
