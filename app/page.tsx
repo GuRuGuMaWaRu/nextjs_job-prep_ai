@@ -22,10 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/core/components/ui/card";
-import { Avatar, AvatarFallback } from "@/core/components/ui/avatar";
 import { Badge } from "@/core/components/ui/badge";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
+import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
 export default function LandingPage() {
   return (
@@ -234,37 +234,45 @@ function StatsComparisonSection() {
 function TestimonialsSection() {
   const testimonials = [
     {
-      name: "Sarah Chen",
+      user: {
+        name: "Sarah Chen",
+        image: "https://i.pravatar.cc/150?img=5",
+      },
       role: "Software Engineer",
       company: "Tech Innovations Inc",
-      initials: "SC",
       result: "Hired in 3 weeks",
       quote:
         "Landr transformed my interview prep. The AI mock interviews helped me identify weak spots I never knew I had. I landed my dream job after just 3 interviews!",
     },
     {
-      name: "Marcus Johnson",
+      user: {
+        name: "Marcus Johnson",
+        image: "https://i.pravatar.cc/150?img=12",
+      },
       role: "Product Manager",
       company: "Digital Solutions Co",
-      initials: "MJ",
       result: "Hired in 5 weeks",
       quote:
         "The resume optimization feature is incredible. It helped me tailor my resume for each application, and my callback rate increased by 300%. Worth every penny!",
     },
     {
-      name: "Emily Rodriguez",
+      user: {
+        name: "Emily Rodriguez",
+        image: "https://i.pravatar.cc/150?img=9",
+      },
       role: "Data Scientist",
       company: "Analytics Pro",
-      initials: "ER",
       result: "Hired in 4 weeks",
       quote:
         "I was struggling with technical interviews until I found Landr. The practice questions were spot-on, and the instant feedback helped me improve rapidly. Got an offer in 4 weeks!",
     },
     {
-      name: "David Kim",
+      user: {
+        name: "David Kim",
+        image: "https://i.pravatar.cc/150?img=33",
+      },
       role: "UX Designer",
       company: "Creative Studio",
-      initials: "DK",
       result: "Hired in 2 weeks",
       quote:
         "The personalized interview feedback was a game-changer. I went from nervous and unprepared to confident and articulate. Highly recommend to anyone job hunting!",
@@ -287,7 +295,7 @@ function TestimonialsSection() {
         {testimonials.map((testimonial) => (
           <Card
             className="transition-all hover:shadow-lg hover:scale-[1.01]"
-            key={testimonial.name}>
+            key={testimonial.user.name}>
             <CardHeader className="space-y-4 h-full">
               <div className="flex items-start justify-between gap-2">
                 <Quote className="w-8 h-8 text-primary/40 shrink-0" />
@@ -299,14 +307,10 @@ function TestimonialsSection() {
                 &quot;{testimonial.quote}&quot;
               </CardDescription>
               <div className="flex items-center gap-3 pt-2 mt-auto">
-                <Avatar className="size-12">
-                  <AvatarFallback className="text-sm font-semibold">
-                    {testimonial.initials}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar user={testimonial.user} className="size-12" />
                 <div>
                   <p className="font-semibold text-foreground">
-                    {testimonial.name}
+                    {testimonial.user.name}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {testimonial.role} at {testimonial.company}
