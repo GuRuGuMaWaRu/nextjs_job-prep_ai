@@ -5,7 +5,7 @@ import {
   SignInButton as ClerkSignInButton,
   SignUpButton as ClerkSignUpButton,
 } from "@clerk/nextjs";
-import { Mic, FileText, Brain } from "lucide-react";
+import { Mic, FileText, Brain, TrendingUp, Clock, Target } from "lucide-react";
 
 import { Button } from "@/core/components/ui/button";
 import {
@@ -23,6 +23,7 @@ export default function LandingPage() {
       <Navbar />
       <HeroSection />
       <FeaturesSection />
+      <StatsComparisonSection />
       <Footer />
     </div>
   );
@@ -125,6 +126,95 @@ function FeaturesSection() {
             </CardHeader>
           </Card>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function StatsComparisonSection() {
+  const stats = [
+    {
+      title: "Time to Job Offer",
+      landrUsers: "3.2 weeks",
+      average: "8.5 weeks",
+      improvement: "62% faster",
+      icon: <Clock className="w-6 h-6 text-primary" />,
+    },
+    {
+      title: "Interviews Needed",
+      landrUsers: "4.3 interviews",
+      average: "12.7 interviews",
+      improvement: "66% fewer",
+      icon: <Target className="w-6 h-6 text-primary" />,
+    },
+    {
+      title: "Success Rate",
+      landrUsers: "78%",
+      average: "32%",
+      improvement: "2.4x higher",
+      icon: <TrendingUp className="w-6 h-6 text-primary" />,
+    },
+  ];
+
+  return (
+    <section className="container mx-auto px-6 py-16 md:py-24 bg-muted/30">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          Land Your Dream Job{" "}
+          <span className="text-primary">Faster Than Ever</span>
+        </h2>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Our users consistently outperform the average job applicant.
+          Here&apos;s how we accelerate your job search success.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {stats.map((stat) => (
+          <Card
+            className="transition-all hover:shadow-lg hover:scale-[1.02]"
+            key={stat.title}>
+            <CardHeader className="space-y-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                {stat.icon}
+              </div>
+              <CardTitle className="text-xl">{stat.title}</CardTitle>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Landr Users
+                  </span>
+                  <span className="text-lg font-bold text-primary">
+                    {stat.landrUsers}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Average
+                  </span>
+                  <span className="text-lg font-semibold">{stat.average}</span>
+                </div>
+                <div className="text-center pt-2">
+                  <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    {stat.improvement}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+
+      <div className="text-center mt-12">
+        <p className="text-sm text-muted-foreground mb-6 text-pretty">
+          Join thousands of successful job seekers who landed their dream roles
+          with Landr
+        </p>
+        <ClerkSignUpButton>
+          <Button size="lg" className="text-base h-12">
+            Start Your Success Story
+          </Button>
+        </ClerkSignUpButton>
       </div>
     </section>
   );
