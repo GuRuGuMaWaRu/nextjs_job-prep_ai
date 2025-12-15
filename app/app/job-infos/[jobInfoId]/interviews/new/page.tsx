@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { fetchAccessToken } from "hume";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
+import { BackLink } from "@/core/components/BackLink";
 import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { canCreateInterview } from "@/core/features/interviews/actions";
@@ -19,9 +20,17 @@ export default async function NewInterviewPage({
   const { jobInfoId } = await params;
 
   return (
-    <Suspense fallback={<FullScreenLoader />}>
-      <SuspendedComponent jobInfoId={jobInfoId} />
-    </Suspense>
+    <div className="container max-w-5xl py-4 space-y-4 h-screen-header flex flex-col items-start">
+      <BackLink
+        href={`/app/job-infos/${jobInfoId}/interviews`}
+        className="self-start">
+        Back to Interviews
+      </BackLink>
+
+      <Suspense fallback={<FullScreenLoader className="m-auto" />}>
+        <SuspendedComponent jobInfoId={jobInfoId} />
+      </Suspense>
+    </div>
   );
 }
 

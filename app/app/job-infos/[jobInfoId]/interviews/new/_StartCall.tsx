@@ -13,7 +13,6 @@ import {
 
 import { env } from "@/core/data/env/client";
 import { Button } from "@/core/components/ui/button";
-import { BackLink } from "@/core/components/BackLink";
 import { JobInfoTable } from "@/core/drizzle/schema";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
@@ -121,25 +120,17 @@ export function StartCall({
   };
 
   return (
-    <div className="container h-screen-header flex flex-col justify-between py-4">
-      <BackLink
-        href={`/app/job-infos/${jobInfo.id}/interviews`}
-        className="self-start">
-        Back to Interviews
-      </BackLink>
-
+    <div className="h-full w-full flex flex-col py-4">
       {readyState === VoiceReadyState.CONNECTING ? (
-        <Loader2Icon className="animate-spin size-24 self-center" />
+        <Loader2Icon className="animate-spin size-24 self-center m-auto" />
       ) : null}
 
-      <div className="overflow-y-auto flex flex-col-reverse">
-        <div className="container py-6 flex flex-col items-center justify-end gap-4">
-          <Messages user={user} />
-          <Controls
-            onEndInterview={handleEndInterview}
-            onStartInterview={handleStartInterview}
-          />
-        </div>
+      <div className="overflow-y-auto flex flex-col mt-auto self-center">
+        <Messages user={user} />
+        <Controls
+          onEndInterview={handleEndInterview}
+          onStartInterview={handleStartInterview}
+        />
       </div>
     </div>
   );
