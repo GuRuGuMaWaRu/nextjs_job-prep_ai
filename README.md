@@ -1,6 +1,6 @@
 ## Next.js + AI
 
-Simple shadcn-based UI, multiple pages, live interviews with AI and feedbacks
+Simple shadcn-based UI, multiple pages, live interviews, technical questions practice, resume optimization with AI
 
 TODOs:
 
