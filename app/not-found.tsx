@@ -9,7 +9,7 @@ export default function NotFound() {
         Oopsie! No such page found.
       </p>
       <Button asChild className="mt-2">
-        <Link href="/" replace>
+        <Link href="/app" replace>
           Go to Home Page
         </Link>
       </Button>
