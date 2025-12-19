@@ -20,7 +20,8 @@ import { routes } from "@/core/data/routes";
 
 export default function AppPage() {
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense
+      fallback={<FullScreenLoader className="m-auto h-screen-header" />}>
       <JobInfos />
     </Suspense>
   );
