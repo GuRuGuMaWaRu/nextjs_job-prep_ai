@@ -9,6 +9,7 @@ TODOs:
 
 Completed TODOs:
 
+[V] Fix main app page loader vertical centering
 [V] Possibly need a file with all routes that we use
 [V] Add 404 page for the main app layer - it will activate when a logged in user tries to access a top-layer page that doesn't exist, i.e. /sdfsadfsdaf
 [V] Right now when we press Easy, Medium or Hard button all of them show a spinner, which is not good UX. We should show a spinner only for the clicked button and just disable the other buttons.
