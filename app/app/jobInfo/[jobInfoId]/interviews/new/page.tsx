@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { canCreateInterview } from "@/core/features/interviews/actions";
 import { env } from "@/core/data/env/server";
+import { routes } from "@/core/data/routes";
 
 import { StartCall } from "./_StartCall";
 import { InterviewVoiceBoundary } from "./_InterviewVoiceBoundary";
@@ -21,9 +22,7 @@ export default async function NewInterviewPage({
 
   return (
     <div className="container max-w-5xl py-4 space-y-4 h-screen-header flex flex-col items-start">
-      <BackLink
-        href={`/app/jobInfo/${jobInfoId}/interviews`}
-        className="self-start">
+      <BackLink href={routes.interviews(jobInfoId)} className="self-start">
         Back to Interviews
       </BackLink>
 
@@ -42,7 +41,7 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
 
   const hasPermissionForInterviews = await canCreateInterview();
   if (!hasPermissionForInterviews) {
-    redirect(`/app/jobInfo/${jobInfoId}/interviews`);
+    redirect(routes.interviews(jobInfoId));
   }
 
   const jobInfo = await getJobInfo(jobInfoId, userId);

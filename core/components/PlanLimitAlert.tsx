@@ -7,6 +7,7 @@ import {
   AlertTitle,
 } from "@/core/components/ui/alert";
 import { Button } from "@/core/components/ui/button";
+import { routes } from "@/core/data/routes";
 
 export function PlanLimitAlert({
   hasRedirectButton = false,
@@ -22,7 +23,7 @@ export function PlanLimitAlert({
         continue using all features.
         {hasRedirectButton ? (
           <Button size="sm" asChild className="mt-3 ml-auto">
-            <Link href="/app/upgrade">Upgrade</Link>
+            <Link href={routes.upgrade}>Upgrade</Link>
           </Button>
         ) : null}
       </AlertDescription>

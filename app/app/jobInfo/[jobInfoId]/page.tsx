@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 
-import { BackLink } from "@/core/components/BackLink";
 import { Badge } from "@/core/components/ui/badge";
 import {
   Card,
@@ -11,11 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/core/components/ui/card";
+import { BackLink } from "@/core/components/BackLink";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { routes } from "@/core/data/routes";
 
 const options = [
   {
@@ -62,7 +63,7 @@ export default async function JobInfoPage({
 
   return (
     <div className="container max-w-5xl my-4 space-y-4">
-      <BackLink href="/app">Back to Dashboard</BackLink>
+      <BackLink href={routes.app}>Back to Dashboard</BackLink>
 
       <div className="space-y-6">
         <header className="space-y-4">
@@ -106,7 +107,7 @@ export default async function JobInfoPage({
           {options.map((option) => (
             <Link
               className="hover:scale-[1.02] transition-[transform_opacity]"
-              href={`/app/jobInfo/${jobInfoId}/${option.href}`}
+              href={`${routes.jobInfo(jobInfoId)}/${option.href}`}
               key={option.href}>
               <Card className="h-full flex flex-row items-start justify-between">
                 <CardHeader className="grow">

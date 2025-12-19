@@ -2,27 +2,28 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
-import { BackLink } from "@/core/components/BackLink";
-import {
-  generateInterviewFeedback,
-  getInterviewById,
-} from "@/core/features/interviews/actions";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { SuspendedItem } from "@/core/components/SuspendedItem";
-import { Skeleton, SkeletonButton } from "@/core/components/Skeleton";
-import { formatDateTime } from "@/core/lib/formatters";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "@/core/components/ui/dialog";
+import { ActionButton } from "@/core/components/ui/action-button";
 import { Button } from "@/core/components/ui/button";
+import { BackLink } from "@/core/components/BackLink";
+import { SuspendedItem } from "@/core/components/SuspendedItem";
+import { Skeleton, SkeletonButton } from "@/core/components/Skeleton";
 import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
+import {
+  generateInterviewFeedback,
+  getInterviewById,
+} from "@/core/features/interviews/actions";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
-import { ActionButton } from "@/core/components/ui/action-button";
+import { formatDateTime } from "@/core/lib/formatters";
+import { routes } from "@/core/data/routes";
 
 export default async function InterviewPage({
   params,
@@ -44,7 +45,7 @@ export default async function InterviewPage({
 
   return (
     <div className="container my-4 space-y-4">
-      <BackLink href={`/app/jobInfo/${jobInfoId}/interviews`}>
+      <BackLink href={routes.interviews(jobInfoId)}>
         Back to Interviews
       </BackLink>
 

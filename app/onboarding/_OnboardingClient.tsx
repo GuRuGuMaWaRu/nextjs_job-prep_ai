@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 import { getUser } from "@/core/features/users/actions";
+import { routes } from "@/core/data/routes";
 
 export function OnboardingClient({ userId }: { userId: string }) {
   const router = useRouter();
@@ -14,7 +15,7 @@ export function OnboardingClient({ userId }: { userId: string }) {
       const user = await getUser(userId);
       if (user == null) return;
 
-      router.replace("/app");
+      router.replace(routes.app);
       clearInterval(intervalId);
     }, 250);
 

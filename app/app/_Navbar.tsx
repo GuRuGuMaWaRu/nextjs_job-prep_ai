@@ -22,6 +22,7 @@ import { ThemeToggle } from "@core/components/ThemeToggle";
 import { SkeletonButton } from "@/core/components/Skeleton";
 import { Button } from "@/core/components/ui/button";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
+import { routes } from "@/core/data/routes";
 
 const navLinks = [
   { name: "Interviews", href: "interviews", Icon: SpeechIcon },
@@ -42,7 +43,7 @@ export function Navbar({ user }: { user: { name: string; image: string } }) {
   return (
     <nav className="h-header border-b flex items-center justify-between container">
       {/* Left side - Logo and App Name */}
-      <Link href="/app" className="flex items-center gap-2">
+      <Link href={routes.app} className="flex items-center gap-2">
         <BrainCircuitIcon className="size-6 text-primary" />
         <span className="text-xl font-bold">Landr</span>
       </Link>
@@ -51,7 +52,7 @@ export function Navbar({ user }: { user: { name: string; image: string } }) {
       <div className="flex items-center gap-4">
         {typeof jobInfoId === "string"
           ? navLinks.map(({ name, href, Icon }) => {
-              const hrefPath = `/app/jobInfo/${jobInfoId}/${href}`;
+              const hrefPath = `${routes.jobInfo(jobInfoId)}/${href}`;
 
               return (
                 <Button

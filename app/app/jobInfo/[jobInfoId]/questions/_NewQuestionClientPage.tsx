@@ -16,10 +16,11 @@ import {
 } from "@/core/components/ui/resizable";
 import { ScrollArea, ScrollBar } from "@/core/components/ui/scroll-area";
 import { Textarea } from "@/core/components/ui/textarea";
-import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
 import { LoadingSwap } from "@/core/components/ui/loading-swap";
+import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
 import { formatQuestionDifficulty } from "@/core/features/questions/formatters";
 import { errorToast } from "@/core/lib/errorToast";
+import { routes } from "@/core/data/routes";
 
 type Status = "awaiting-answer" | "awaiting-difficulty" | "init";
 
@@ -36,7 +37,7 @@ export function NewQuestionClientPage({
 
   const { complete: generateQuestion, isLoading: isGeneratingQuestion } =
     useCompletion({
-      api: "/api/ai/questions/generate-question",
+      api: routes.api.aiQuestionGeneration,
       onFinish: async (_, completion) => {
         const [question, questionId] = completion.split("Question ID: ");
         setQuestionId(questionId);
@@ -55,7 +56,7 @@ export function NewQuestionClientPage({
     setCompletion: setFeedback,
     isLoading: isGeneratingFeedback,
   } = useCompletion({
-    api: "/api/ai/questions/generate-feedback",
+    api: routes.api.aiQuestionFeedback,
     onFinish: () => {
       setStatus("awaiting-difficulty");
     },

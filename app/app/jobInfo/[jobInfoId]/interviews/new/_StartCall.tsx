@@ -11,7 +11,6 @@ import {
   PhoneOffIcon,
 } from "lucide-react";
 
-import { env } from "@/core/data/env/client";
 import { Button } from "@/core/components/ui/button";
 import { JobInfoTable } from "@/core/drizzle/schema";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
@@ -21,6 +20,8 @@ import {
   updateInterview,
 } from "@/core/features/interviews/actions";
 import { errorToast, HUME_UNAVAILABLE_MESSAGE } from "@/core/lib/errorToast";
+import { env } from "@/core/data/env/client";
+import { routes } from "@/core/data/routes";
 
 export function StartCall({
   accessToken,
@@ -110,13 +111,13 @@ export function StartCall({
     disconnect();
 
     if (interviewId == null) {
-      return router.push(`/app/jobInfo/${jobInfo.id}/interviews`);
+      return router.push(routes.interviews(jobInfo.id));
     }
 
     if (durationRef.current != null) {
       updateInterview(interviewId, { duration: durationRef.current });
     }
-    router.push(`/app/jobInfo/${jobInfo.id}/interviews/${interviewId}`);
+    router.push(routes.interview(jobInfo.id, interviewId));
   };
 
   return (

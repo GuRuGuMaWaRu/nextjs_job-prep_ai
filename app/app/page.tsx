@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRightIcon, PlusIcon } from "lucide-react";
 
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import {
   Card,
   CardContent,
@@ -16,6 +15,8 @@ import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { getJobInfos } from "@/core/features/jobInfos/actions";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { routes } from "@/core/data/routes";
 
 export default function AppPage() {
   return (
@@ -42,7 +43,7 @@ async function JobInfos() {
           Select a job description
         </h1>
         <Button asChild>
-          <Link href="/app/jobInfo/new">
+          <Link href={routes.newJobInfo}>
             <PlusIcon />
             Create Job Description
           </Link>
@@ -52,7 +53,7 @@ async function JobInfos() {
         {jobInfos.map((jobInfo) => (
           <Link
             className="hover:scale-[1.02] transition-[transform_opacity]"
-            href={`/app/jobInfo/${jobInfo.id}`}
+            href={routes.jobInfo(jobInfo.id)}
             key={jobInfo.id}>
             <Card className="h-full">
               <div className="flex items-center justify-between h-full">
@@ -79,7 +80,7 @@ async function JobInfos() {
             </Card>
           </Link>
         ))}
-        <Link className="transition-opacity" href="/app/jobInfo/new">
+        <Link className="transition-opacity" href={routes.newJobInfo}>
           <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
             <div className="text-lg flex items-center gap-2">
               <PlusIcon className="size-6" />

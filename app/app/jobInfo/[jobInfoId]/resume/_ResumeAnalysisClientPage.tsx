@@ -29,6 +29,7 @@ import { Badge } from "@/core/components/ui/badge";
 import { Skeleton } from "@/core/components/Skeleton";
 import { aiAnalyzeSchema } from "@/core/services/ai/resumes/schemas";
 import { cn } from "@/core/lib/utils";
+import { routes } from "@/core/data/routes";
 import {
   errorToast,
   FILE_SIZE_TOO_LARGE_MESSAGE,
@@ -44,7 +45,7 @@ export function ResumeAnalysisClientPage({ jobInfoId }: { jobInfoId: string }) {
     isLoading,
     submit: generateAnalysis,
   } = useObject({
-    api: "/api/ai/resumes/analyze",
+    api: routes.api.aiResumeAnalysis,
     schema: aiAnalyzeSchema,
     fetch: (url, options) => {
       const headers = new Headers(options?.headers);

@@ -4,12 +4,13 @@ import { BackLink } from "@/core/components/BackLink";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { canCreateInterview } from "@/core/features/interviews/actions";
 import { PricingTable } from "@/core/services/clerk/components/ClerkPricingTable";
+import { routes } from "@/core/data/routes";
 
 export default function UpgradePage() {
   return (
     <div className="container py-4 max-w-5xl">
       <div className="mb-4">
-        <BackLink href="/app">To Dashboard</BackLink>
+        <BackLink href={routes.app}>To Dashboard</BackLink>
       </div>
 
       <div className="space-y-16">

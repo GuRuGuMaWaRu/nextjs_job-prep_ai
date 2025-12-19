@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 import { Button } from "@core/components/ui/button";
+import { routes } from "@core/data/routes";
 
 export const PLAN_LIMIT_MESSAGE = "PLAN_LIMIT";
 export const RATE_LIMIT_MESSAGE = "RATE_LIMIT";
@@ -20,7 +21,7 @@ export async function errorToast(message: string) {
           onClick={() => {
             toast.dismiss(toastId);
           }}>
-          <Link href="/app/upgrade">Upgrade</Link>
+          <Link href={routes.upgrade}>Upgrade</Link>
         </Button>
       ),
     });

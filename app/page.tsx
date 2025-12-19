@@ -24,8 +24,9 @@ import {
   CardTitle,
 } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
+import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { routes } from "@/core/data/routes";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
 export default function LandingPage() {
@@ -52,7 +53,7 @@ function Navbar() {
           <ThemeToggle />
           <Suspense
             fallback={
-              <ClerkSignInButton forceRedirectUrl="/app">
+              <ClerkSignInButton forceRedirectUrl={routes.app}>
                 <Button variant="outline">Sign In</Button>
               </ClerkSignInButton>
             }>
@@ -68,10 +69,10 @@ async function SignInButton() {
   const { userId } = await getCurrentUser();
   const isUserLoggedIn = userId != null;
 
-  if (isUserLoggedIn) return redirect("/app");
+  if (isUserLoggedIn) return redirect(routes.app);
 
   return (
-    <ClerkSignInButton forceRedirectUrl="/app">
+    <ClerkSignInButton forceRedirectUrl={routes.app}>
       <Button variant="outline">Sign In</Button>
     </ClerkSignInButton>
   );
