@@ -33,7 +33,7 @@ export function StartCall({
     typeof JobInfoTable.$inferSelect,
     "id" | "title" | "description" | "experienceLevel"
   >;
-  user: { name: string; image: string };
+  user: { name: string; image: string | null };
 }) {
   const router = useRouter();
   const {
@@ -137,7 +137,7 @@ export function StartCall({
   );
 }
 
-function Messages({ user }: { user: { name: string; image: string } }) {
+function Messages({ user }: { user: { name: string; image: string | null } }) {
   const { messages, fft } = useVoice();
 
   const condensedMessages = useMemo(() => {

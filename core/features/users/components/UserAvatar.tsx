@@ -10,7 +10,7 @@ export function UserAvatar({
   user,
   ...props
 }: {
-  user: { name: string; image: string };
+  user: { name: string; image: string | null };
 } & ComponentProps<typeof Avatar>) {
   const initials = user.name
     .split(" ")
@@ -20,7 +20,7 @@ export function UserAvatar({
 
   return (
     <Avatar {...props}>
-      <AvatarImage src={user.image} alt={user.name} />
+      {user.image && <AvatarImage src={user.image} alt={user.name} />}
       <AvatarFallback className="uppercase">{initials}</AvatarFallback>
     </Avatar>
   );

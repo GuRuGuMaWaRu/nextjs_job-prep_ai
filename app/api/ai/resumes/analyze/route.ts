@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";

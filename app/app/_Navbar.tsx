@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { SignOutButton, useAuth, useClerk } from "@clerk/nextjs";
 import {
   BookOpenIcon,
   BrainCircuitIcon,
   FileSlidersIcon,
   LogOut,
   SpeechIcon,
-  User,
 } from "lucide-react";
 
 import {
@@ -19,10 +17,10 @@ import {
   DropdownMenuItem,
 } from "@core/components/ui/dropdown-menu";
 import { ThemeToggle } from "@core/components/ThemeToggle";
-import { SkeletonButton } from "@/core/components/Skeleton";
 import { Button } from "@/core/components/ui/button";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 import { routes } from "@/core/data/routes";
+import { signOutAction } from "@/core/features/auth/actions";
 
 const navLinks = [
   { name: "Interviews", href: "interviews", Icon: SpeechIcon },
@@ -30,15 +28,13 @@ const navLinks = [
   { name: "Resume", href: "resume", Icon: FileSlidersIcon },
 ];
 
-export function Navbar({ user }: { user: { name: string; image: string } }) {
-  const { userId } = useAuth();
-  const { openUserProfile } = useClerk();
+export function Navbar({
+  user,
+}: {
+  user: { name: string; image: string | null };
+}) {
   const { jobInfoId } = useParams();
   const pathName = usePathname();
-
-  const handleProfile = () => {
-    openUserProfile();
-  };
 
   return (
     <nav className="h-header border-b flex items-center justify-between container">
@@ -71,27 +67,21 @@ export function Navbar({ user }: { user: { name: string; image: string } }) {
 
         <ThemeToggle />
 
-        {userId ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <UserAvatar user={user} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleProfile}>
-                <User className="mr-2" />
-                Profile
-              </DropdownMenuItem>
-              <SignOutButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <UserAvatar user={user} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <form action={signOutAction}>
+              <button type="submit" className="w-full">
                 <DropdownMenuItem>
                   <LogOut className="mr-2" />
                   Logout
                 </DropdownMenuItem>
-              </SignOutButton>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <SkeletonButton className="size-10 rounded-full" />
-        )}
+              </button>
+            </form>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </nav>
   );

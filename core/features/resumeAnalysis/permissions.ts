@@ -1,5 +1,8 @@
-import { hasPermission } from "@/core/services/clerk/lib/hasPermission";
+import { getCurrentUser } from "@/core/auth/server";
 
+// TODO: Implement proper permission system in Phase 5
+// For now, allow all authenticated users unlimited access
 export async function checkResumeAnalysisPermission() {
-  return hasPermission("unlimited_resume_analyses");
+  const { userId } = await getCurrentUser();
+  return userId != null;
 }

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
-import { ClerkProvider } from "@/core/services/clerk/components/ClerkProvider";
 import { Toaster } from "@core/components/ui/sonner";
 
 import "./globals.css";
@@ -25,17 +24,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased font-sans`}>
-        <ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableColorScheme
-            disableTransitionOnChange
-            value={{ light: "light", dark: "dark" }}>
-            {children}
-            <Toaster position="bottom-right" />
-          </ThemeProvider>
-        </ClerkProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableColorScheme
+          disableTransitionOnChange
+          value={{ light: "light", dark: "dark" }}>
+          {children}
+          <Toaster position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
