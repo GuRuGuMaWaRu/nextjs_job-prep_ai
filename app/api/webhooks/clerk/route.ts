@@ -3,9 +3,9 @@ import { verifyWebhook } from "@clerk/nextjs/webhooks";
 
 import { deleteUserDb, upsertUserDb } from "@/core/features/users/db";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const event = await verifyWebhook(request);
+    const event = await verifyWebhook(req);
 
     switch (event.type) {
       case "user.created":
