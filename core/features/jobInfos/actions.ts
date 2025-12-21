@@ -4,7 +4,7 @@ import z from "zod";
 import { redirect } from "next/navigation";
 import { cacheTag } from "next/cache";
 
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import {
   getJobInfoDb,
   createJobInfoDb,

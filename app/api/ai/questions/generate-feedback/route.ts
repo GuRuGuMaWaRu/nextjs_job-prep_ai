@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import { getQuestionById } from "@/core/features/questions/actions";
 
 const schema = z.object({

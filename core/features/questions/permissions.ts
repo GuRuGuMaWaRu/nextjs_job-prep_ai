@@ -1,16 +1,11 @@
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { hasPermission } from "@/core/services/clerk/lib/hasPermission";
+import { getCurrentUser } from "@/core/auth/server";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 
+// TODO: Implement proper permission system in Phase 5
+// For now, allow all authenticated users unlimited access
 export async function checkQuestionsPermission() {
-  return await Promise.any([
-    hasPermission("unlimited_questions").then(
-      (permitted) => permitted || Promise.reject()
-    ),
-    Promise.all([hasPermission("5_questions"), getQuestionCount()]).then(
-      ([permitted, count]) => (permitted && count < 1) || Promise.reject()
-    ),
-  ]).catch(() => false);
+  const { userId } = await getCurrentUser();
+  return userId != null;
 }
 
 async function getQuestionCount() {

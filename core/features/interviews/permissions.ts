@@ -1,16 +1,11 @@
 import { getInterviewCountDb } from "@/core/features/interviews/db";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
-import { hasPermission } from "@/core/services/clerk/lib/hasPermission";
+import { getCurrentUser } from "@/core/auth/server";
 
+// TODO: Implement proper permission system in Phase 5
+// For now, allow all authenticated users unlimited access
 export async function checkInterviewPermission() {
-  return await Promise.any([
-    hasPermission("unlimited_interviews").then(
-      (permitted) => permitted || Promise.reject()
-    ),
-    Promise.all([hasPermission("1_interview"), getInterviewCount()]).then(
-      ([permitted, count]) => (permitted && count < 1) || Promise.reject()
-    ),
-  ]).catch(() => false);
+  const { userId } = await getCurrentUser();
+  return userId != null;
 }
 
 async function getInterviewCount() {

@@ -15,7 +15,7 @@ import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import { routes } from "@/core/data/routes";
 import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 

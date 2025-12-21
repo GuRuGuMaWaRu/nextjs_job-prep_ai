@@ -1,9 +1,9 @@
-import { SignIn } from "@clerk/nextjs";
+import { SignInForm } from "@/core/features/auth/components/SignInForm";
 
 export default function SignInPage() {
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <SignIn />
+      <SignInForm />
     </div>
   );
 }

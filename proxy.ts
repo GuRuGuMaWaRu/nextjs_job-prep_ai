@@ -1,12 +1,26 @@
 import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/next";
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { env } from "./core/data/env/server";
+import { NextRequest, NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
+import { env } from "./core/data/env/server";
+import { routes } from "./core/data/routes";
+
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  "/sign-in",
+  "/sign-up",
+  "/api/auth/signin",
+  "/api/auth/signup",
+  "/api/auth/signout",
+  "/api/auth/verify-email",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
   "/",
-  "/api/webhooks(.*)",
-]);
+];
+
+// Check if route is public
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+}
 
 const aj = arcjet({
   // TODO: add ts for env vars
@@ -34,7 +48,7 @@ const aj = arcjet({
   ],
 });
 
-export default clerkMiddleware(async (auth, req) => {
+export default async function middleware(req: NextRequest) {
   // TODO: the proposed idea is not to call arcJet when we try to create a new interview
   const decision = await aj.protect(req);
 
@@ -42,10 +56,27 @@ export default clerkMiddleware(async (auth, req) => {
     return new Response(null, { status: 403 });
   }
 
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  const { pathname } = req.nextUrl;
+
+  // Allow public routes
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
   }
-});
+
+  // Check for session token in cookies
+  const sessionToken = req.cookies.get("session_token")?.value;
+
+  if (!sessionToken) {
+    // Redirect to sign in if no session token
+    const signInUrl = new URL(routes.signIn, req.url);
+    signInUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // Session validation happens in server components via getCurrentUser()
+  // We just check for token presence here for performance
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

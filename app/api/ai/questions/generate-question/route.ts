@@ -4,7 +4,7 @@ import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { questionDifficulties } from "@/core/drizzle/schema";
 import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { generateAiQuestion } from "@/core/services/ai/questions";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import {

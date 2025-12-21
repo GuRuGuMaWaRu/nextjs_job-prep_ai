@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { BackLink } from "@/core/components/BackLink";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { canCreateInterview } from "@/core/features/interviews/actions";
-import { PricingTable } from "@/core/services/clerk/components/ClerkPricingTable";
 import { routes } from "@/core/data/routes";
 
 export default function UpgradePage() {
@@ -17,7 +16,14 @@ export default function UpgradePage() {
         <Suspense fallback={null}>
           <SuspendedAlert />
         </Suspense>
-        <PricingTable />
+        {/* TODO: Implement pricing table in Phase 5 */}
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Upgrade Plans</h2>
+          <p className="text-muted-foreground">
+            Pricing plans will be available soon. Currently, all features are
+            available to all users.
+          </p>
+        </div>
       </div>
     </div>
   );

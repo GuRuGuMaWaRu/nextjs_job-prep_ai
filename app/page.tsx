@@ -2,10 +2,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  SignInButton as ClerkSignInButton,
-  SignUpButton as ClerkSignUpButton,
-} from "@clerk/nextjs";
-import {
   Mic,
   FileText,
   Brain,
@@ -25,7 +21,7 @@ import {
 } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import { routes } from "@/core/data/routes";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
@@ -53,9 +49,9 @@ function Navbar() {
           <ThemeToggle />
           <Suspense
             fallback={
-              <ClerkSignInButton forceRedirectUrl={routes.app}>
-                <Button variant="outline">Sign In</Button>
-              </ClerkSignInButton>
+              <Button variant="outline" asChild>
+                <Link href={routes.signIn}>Sign In</Link>
+              </Button>
             }>
             <SignInButton />
           </Suspense>
@@ -72,9 +68,9 @@ async function SignInButton() {
   if (isUserLoggedIn) return redirect(routes.app);
 
   return (
-    <ClerkSignInButton forceRedirectUrl={routes.app}>
-      <Button variant="outline">Sign In</Button>
-    </ClerkSignInButton>
+    <Button variant="outline" asChild>
+      <Link href={routes.signIn}>Sign In</Link>
+    </Button>
   );
 }
 
@@ -93,11 +89,9 @@ function HeroSection() {
         feedback on your resume, practice with mock interviews, and understand
         job descriptions like a pro.
       </p>
-      <ClerkSignUpButton>
-        <Button size="lg" className="text-base h-12">
-          Get Started for Free
-        </Button>
-      </ClerkSignUpButton>
+      <Button size="lg" className="text-base h-12" asChild>
+        <Link href={routes.signUp}>Get Started for Free</Link>
+      </Button>
     </section>
   );
 }
@@ -224,11 +218,9 @@ function StatsComparisonSection() {
           Join thousands of successful job seekers who landed their dream roles
           with Landr
         </p>
-        <ClerkSignUpButton>
-          <Button size="lg" className="text-base h-12">
-            Start Your Success Story
-          </Button>
-        </ClerkSignUpButton>
+        <Button size="lg" className="text-base h-12" asChild>
+          <Link href={routes.signUp}>Start Your Success Story</Link>
+        </Button>
       </div>
     </section>
   );

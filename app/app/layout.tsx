@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 import { routes } from "@/core/data/routes";
 
 import { Navbar } from "./_Navbar";

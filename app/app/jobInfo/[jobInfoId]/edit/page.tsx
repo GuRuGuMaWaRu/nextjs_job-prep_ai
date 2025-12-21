@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/core/components/ui/card";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/services/clerk/lib/getCurrentUser";
+import { getCurrentUser } from "@/core/auth/server";
 
 export default async function JobInfoEditPage({
   params,
