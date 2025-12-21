@@ -72,14 +72,12 @@ export function Navbar({
             <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <form action={signOutAction}>
-              <button type="submit" className="w-full">
-                <DropdownMenuItem>
-                  <LogOut className="mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </button>
-            </form>
+            <button type="button" onClick={signOutAction} className="w-full">
+              <DropdownMenuItem>
+                <LogOut className="mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </button>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
