@@ -72,7 +72,7 @@ export async function signUpAction(
 
     // Create user
     const userId = generateUserId();
-    await dalAssertSuccess(
+    dalAssertSuccess(
       await dalDbOperation(
         async () =>
           await createUserDb({
@@ -117,7 +117,7 @@ export async function signInAction(
 
   try {
     // Find user by email
-    const user = await dalAssertSuccess(
+    const user = dalAssertSuccess(
       await dalDbOperation(async () => await findUserByEmailDb(email))
     );
 

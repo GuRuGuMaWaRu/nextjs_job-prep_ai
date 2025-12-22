@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     return new Response(FILE_TYPE_NOT_SUPPORTED_MESSAGE, { status: 400 });
   }
 
-  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
+  const jobInfo = dalAssertSuccess(await getJobInfo(jobInfoId, userId));
 
   if (jobInfo == null) {
     return new Response("You do not have permission to do this", {

@@ -10,7 +10,7 @@ export async function dalDbOperation<T>(operation: () => Promise<T>) {
   }
 }
 
-export async function dalAssertSuccess<T>(dalReturn: DalReturn<T>) {
+export function dalAssertSuccess<T>(dalReturn: DalReturn<T>): T {
   if (dalReturn.success) {
     return dalReturn.data;
   }

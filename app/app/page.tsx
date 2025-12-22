@@ -32,7 +32,7 @@ async function JobInfos() {
   const { userId, redirectToSignIn } = await getCurrentUser();
   if (userId == null) return redirectToSignIn();
 
-  const jobInfos = await dalAssertSuccess(await getJobInfos(userId));
+  const jobInfos = dalAssertSuccess(await getJobInfos(userId));
 
   if (jobInfos.length === 0) {
     return <NoJobInfos />;

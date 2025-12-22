@@ -78,7 +78,7 @@ export async function createInterview({
     };
   }
 
-  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
+  const jobInfo = dalAssertSuccess(await getJobInfo(jobInfoId, userId));
   if (jobInfo == null) {
     return {
       error: true,
@@ -86,7 +86,7 @@ export async function createInterview({
     };
   }
 
-  const interview = await dalAssertSuccess(
+  const interview = dalAssertSuccess(
     await dalDbOperation(
       async () =>
         await insertInterviewDb({
@@ -114,7 +114,7 @@ export async function updateInterview(
     };
   }
 
-  const foundInterview = await dalAssertSuccess(
+  const foundInterview = dalAssertSuccess(
     await dalDbOperation(async () => await getInterviewByIdDb(id))
   );
   if (foundInterview == null)
@@ -122,7 +122,7 @@ export async function updateInterview(
   if (foundInterview.jobInfo.userId !== userId)
     return { error: true, message: "You don't have permission to do this." };
 
-  await dalAssertSuccess(
+  dalAssertSuccess(
     await dalDbOperation(async () => await updateInterviewDb(id, interview))
   );
 
@@ -133,7 +133,7 @@ export async function getInterviewById(id: string, userId: string) {
   "use cache";
   cacheTag(getInterviewIdTag(id));
 
-  const foundInterview = await dalAssertSuccess(
+  const foundInterview = dalAssertSuccess(
     await dalDbOperation(async () => await getInterviewByIdDb(id))
   );
   if (foundInterview == null) return null;
@@ -183,7 +183,7 @@ export async function generateInterviewFeedback(interviewId: string) {
     };
   }
 
-  const feedback = await dalAssertSuccess(
+  const feedback = dalAssertSuccess(
     await dalDbOperation(
       async () =>
         await generateAiInterviewFeedback({
@@ -201,7 +201,7 @@ export async function generateInterviewFeedback(interviewId: string) {
     };
   }
 
-  await dalAssertSuccess(
+  dalAssertSuccess(
     await dalDbOperation(
       async () => await updateInterviewDb(interviewId, { feedback })
     )

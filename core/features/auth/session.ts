@@ -31,7 +31,7 @@ export async function createSession(userId: string): Promise<Session> {
   const token = generateSecureToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-  const [session] = await dalAssertSuccess(
+  const [session] = dalAssertSuccess(
     await dalDbOperation(
       async () => await createSessionDb({ userId, token, expiresAt })
     )
@@ -46,7 +46,7 @@ export async function createSession(userId: string): Promise<Session> {
  * @returns Session object if valid, null otherwise
  */
 export async function validateSession(token: string): Promise<Session | null> {
-  const [session] = await dalAssertSuccess(
+  const [session] = dalAssertSuccess(
     await dalDbOperation(async () => await validateSessionDb(token))
   );
 
@@ -77,7 +77,7 @@ export async function extendSessionIfNeeded(
   if (timeUntilExpiry < SESSION_REFRESH_THRESHOLD_MS) {
     const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-    const [updatedSession] = await dalAssertSuccess(
+    const [updatedSession] = dalAssertSuccess(
       await dalDbOperation(
         async () => await extendSessionDb(session.id, newExpiresAt)
       )
@@ -94,7 +94,7 @@ export async function extendSessionIfNeeded(
  * @param token - Session token to delete
  */
 export async function deleteSession(token: string): Promise<void> {
-  await dalAssertSuccess(
+  dalAssertSuccess(
     await dalDbOperation(async () => await deleteSessionDb(token))
   );
 }
@@ -104,7 +104,7 @@ export async function deleteSession(token: string): Promise<void> {
  * @param userId - User ID to delete sessions for
  */
 export async function deleteAllUserSessions(userId: string): Promise<void> {
-  await dalAssertSuccess(
+  dalAssertSuccess(
     await dalDbOperation(async () => await deleteAllUserSessionsDb(userId))
   );
 }
@@ -114,7 +114,7 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
  * Should be run periodically
  */
 export async function deleteExpiredSessions(): Promise<void> {
-  await dalAssertSuccess(
+  dalAssertSuccess(
     await dalDbOperation(async () => await deleteExpiredSessionsDb())
   );
 }
@@ -125,7 +125,7 @@ export async function deleteExpiredSessions(): Promise<void> {
  * @returns Array of active sessions
  */
 export async function getUserSessions(userId: string): Promise<Session[]> {
-  return await dalAssertSuccess(
+  return dalAssertSuccess(
     await dalDbOperation(async () => await getUserSessionsDb(userId))
   );
 }

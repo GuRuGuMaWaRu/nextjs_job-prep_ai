@@ -45,7 +45,7 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
     redirect(routes.interviews(jobInfoId));
   }
 
-  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
+  const jobInfo = dalAssertSuccess(await getJobInfo(jobInfoId, userId));
   if (jobInfo == null) return notFound();
 
   const accessToken = await fetchAccessToken({

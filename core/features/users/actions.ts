@@ -11,7 +11,7 @@ export async function getUser(id: string) {
   "use cache";
   cacheTag(getUserIdTag(id));
 
-  return await dalAssertSuccess(
+  return dalAssertSuccess(
     await dalDbOperation(async () => await getUserByIdDb(id))
   );
 }

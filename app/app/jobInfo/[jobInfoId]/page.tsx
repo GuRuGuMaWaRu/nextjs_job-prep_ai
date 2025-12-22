@@ -58,9 +58,7 @@ export default async function JobInfoPage({
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      const jobInfo = await dalAssertSuccess(
-        await getJobInfo(jobInfoId, userId)
-      );
+      const jobInfo = dalAssertSuccess(await getJobInfo(jobInfoId, userId));
       if (jobInfo == null) return notFound();
 
       return jobInfo;

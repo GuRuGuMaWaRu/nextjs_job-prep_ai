@@ -37,7 +37,7 @@ export async function createJobInfo(unsafeData: z.infer<typeof jobInfoSchema>) {
     };
   }
 
-  const jobInfo = await dalAssertSuccess(
+  const jobInfo = dalAssertSuccess(
     await dalDbOperation(async () => await createJobInfoDb({ ...data, userId }))
   );
 
@@ -64,7 +64,7 @@ export async function updateJobInfo(
     };
   }
 
-  const existingJobInfo = await dalAssertSuccess(
+  const existingJobInfo = dalAssertSuccess(
     await dalDbOperation(async () => await getJobInfoDb(id, userId))
   );
   if (existingJobInfo == null) {
@@ -74,7 +74,7 @@ export async function updateJobInfo(
     };
   }
 
-  const jobInfo = await dalAssertSuccess(
+  const jobInfo = dalAssertSuccess(
     await dalDbOperation(async () => await updateJobInfoDb(id, data))
   );
 

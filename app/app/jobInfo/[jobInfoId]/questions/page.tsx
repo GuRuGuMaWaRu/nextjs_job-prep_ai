@@ -34,7 +34,7 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
 
   if (!(await checkQuestionsPermission())) redirect(routes.upgrade);
 
-  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
+  const jobInfo = dalAssertSuccess(await getJobInfo(jobInfoId, userId));
   if (jobInfo == null) return notFound();
 
   return <NewQuestionClientPage jobInfo={jobInfo} />;

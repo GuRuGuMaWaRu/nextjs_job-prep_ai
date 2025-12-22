@@ -16,7 +16,7 @@ export function JobInfoBackLink({ jobInfoId }: { jobInfoId: string }) {
 }
 
 async function JobInfoName({ jobInfoId }: { jobInfoId: string }) {
-  const jobInfo = await dalAssertSuccess(await getJobInfoById(jobInfoId));
+  const jobInfo = dalAssertSuccess(await getJobInfoById(jobInfoId));
 
   return jobInfo?.name
     ? `Back to "${jobInfo.name}"`

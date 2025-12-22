@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     return new Response(PLAN_LIMIT_MESSAGE, { status: 403 });
   }
 
-  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
+  const jobInfo = dalAssertSuccess(await getJobInfo(jobInfoId, userId));
   if (jobInfo == null) {
     return new Response("You do not have permission to do this", {
       status: 403,

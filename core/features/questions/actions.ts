@@ -42,7 +42,7 @@ export async function getQuestionById(questionId: string, userId: string) {
   "use cache";
   cacheTag(getQuestionIdTag(questionId));
 
-  return await dalAssertSuccess(
+  return dalAssertSuccess(
     await dalDbOperation(
       async () => await getQuestionByIdDb(questionId, userId)
     )
