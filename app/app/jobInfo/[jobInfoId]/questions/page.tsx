@@ -5,7 +5,7 @@ import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUser } from "@/core/auth/server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { routes } from "@/core/data/routes";
 
 import { NewQuestionClientPage } from "./_NewQuestionClientPage";

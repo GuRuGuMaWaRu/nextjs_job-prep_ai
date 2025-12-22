@@ -7,15 +7,16 @@ import {
   hashPassword,
   verifyPassword,
   validatePassword,
-  generateUserId,
-  createSession,
+} from "@/core/features/auth/password";
+import {
   setSessionCookie,
   getSessionToken,
-  deleteSession,
   deleteSessionCookie,
-} from "@/core/auth";
+} from "@/core/features/auth/cookies";
+import { createSession, deleteSession } from "@/core/features/auth/session";
+import { generateUserId } from "@/core/features/auth/tokens";
+import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { routes } from "@/core/data/routes";
-import { createUserDb, findUserByEmailDb } from "./db";
 
 type ActionState = {
   error?: string;

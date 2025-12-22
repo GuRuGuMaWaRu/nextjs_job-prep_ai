@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/auth/server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 
 // TODO: Implement proper permission system in Phase 5

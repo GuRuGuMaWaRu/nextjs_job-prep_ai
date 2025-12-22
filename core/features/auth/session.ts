@@ -2,8 +2,11 @@ import { eq, and, gt, lt } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
 import { SessionTable } from "@/core/drizzle/schema";
-import { generateSecureToken } from "./tokens";
-import { SESSION_DURATION_MS, SESSION_REFRESH_THRESHOLD_MS } from "./constants";
+import { generateSecureToken } from "@/core/features/auth/tokens";
+import {
+  SESSION_DURATION_MS,
+  SESSION_REFRESH_THRESHOLD_MS,
+} from "@/core/features/auth/constants";
 
 export type Session = {
   id: string;

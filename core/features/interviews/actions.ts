@@ -18,7 +18,7 @@ import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/server";
-import { getCurrentUser } from "@/core/auth/server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
 
 const aj = arcjet({
