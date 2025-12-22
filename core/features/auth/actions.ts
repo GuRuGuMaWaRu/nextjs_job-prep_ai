@@ -2,10 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
 
-import { db } from "@/core/drizzle/db";
-import { UserTable } from "@/core/drizzle/schema";
 import {
   hashPassword,
   verifyPassword,
@@ -18,6 +15,7 @@ import {
   deleteSessionCookie,
 } from "@/core/auth";
 import { routes } from "@/core/data/routes";
+import { createUserDb, findUserByEmailDb } from "./db";
 
 type ActionState = {
   error?: string;
@@ -32,7 +30,7 @@ type ActionState = {
  * Sign up a new user
  */
 export async function signUpAction(
-  prevState: ActionState | null,
+  _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
   const name = formData.get("name") as string;
@@ -61,9 +59,7 @@ export async function signUpAction(
 
   try {
     // Check if user already exists
-    const existingUser = await db.query.UserTable.findFirst({
-      where: eq(UserTable.email, email.toLowerCase()),
-    });
+    const existingUser = await findUserByEmailDb(email);
 
     if (existingUser) {
       return { error: "An account with this email already exists", fields };
@@ -74,13 +70,11 @@ export async function signUpAction(
 
     // Create user
     const userId = generateUserId();
-    await db.insert(UserTable).values({
+    await createUserDb({
       id: userId,
       name,
       email: email.toLowerCase(),
       passwordHash,
-      image: null,
-      emailVerified: null,
     });
 
     // Create session
@@ -93,8 +87,6 @@ export async function signUpAction(
     return { error: "An error occurred during signup", fields };
   }
 
-  // Revalidate and redirect to app
-  revalidatePath("/", "layout");
   redirect(routes.app);
 }
 
@@ -102,7 +94,7 @@ export async function signUpAction(
  * Sign in an existing user
  */
 export async function signInAction(
-  prevState: ActionState | null,
+  _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
   const email = formData.get("email") as string;
@@ -118,9 +110,7 @@ export async function signInAction(
 
   try {
     // Find user by email
-    const user = await db.query.UserTable.findFirst({
-      where: eq(UserTable.email, email.toLowerCase()),
-    });
+    const user = await findUserByEmailDb(email);
 
     if (!user || !user.passwordHash) {
       return { error: "Invalid email or password", fields };
@@ -143,8 +133,6 @@ export async function signInAction(
     return { error: "An error occurred during sign in", fields };
   }
 
-  // Revalidate and redirect to app
-  revalidatePath("/", "layout");
   redirect(routes.app);
 }
 
