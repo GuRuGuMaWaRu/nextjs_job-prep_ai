@@ -4,7 +4,7 @@ import { fetchAccessToken } from "hume";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { BackLink } from "@/core/components/BackLink";
-import { getCurrentUser } from "@/core/auth/server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { canCreateInterview } from "@/core/features/interviews/actions";
 import { env } from "@/core/data/env/server";

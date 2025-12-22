@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 
-import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./constants";
+import {
+  MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
+} from "@/core/features/auth/constants";
 
 /**
  * Hash a password using bcrypt
@@ -61,4 +64,3 @@ export function validatePassword(password: string): {
 
   return { isValid: true };
 }
-

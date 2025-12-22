@@ -16,7 +16,7 @@ import {
   getInterviews,
 } from "@/core/features/interviews/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUser } from "@/core/auth/server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
 

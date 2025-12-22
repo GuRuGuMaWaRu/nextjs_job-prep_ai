@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 
-import { getSessionToken } from "./cookies";
-import { validateSession, extendSessionIfNeeded } from "./session";
+import { getSessionToken } from "@/core/features/auth/cookies";
+import {
+  validateSession,
+  extendSessionIfNeeded,
+} from "@/core/features/auth/session";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 

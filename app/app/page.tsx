@@ -15,7 +15,7 @@ import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { getJobInfos } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/auth/server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { routes } from "@/core/data/routes";
 
 export default function AppPage() {

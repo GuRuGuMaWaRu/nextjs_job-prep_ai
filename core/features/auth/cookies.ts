@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 
-import { SESSION_COOKIE_NAME, COOKIE_OPTIONS } from "./constants";
+import {
+  SESSION_COOKIE_NAME,
+  COOKIE_OPTIONS,
+} from "@/core/features/auth/constants";
 
 /**
  * Set session cookie
@@ -35,4 +38,3 @@ export async function deleteSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
-
