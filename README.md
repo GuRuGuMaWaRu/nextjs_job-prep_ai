@@ -4,10 +4,12 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 
 TODOs:
 
-[-]
+[-] Add DAL layers for all actions
+[-] Loading spinner for Interviews page is not aligned to the center of the page
 
 Completed TODOs:
 
+[V] Username is missing in Interview actions (generateInterviewFeedback)
 [V] Looks into 404 pages for deeper nested routes
 [V] Implement 404 page for dynamic routes (right now sending random ID for job-info crashes the app)
 [V] Fix main app page loader vertical centering
