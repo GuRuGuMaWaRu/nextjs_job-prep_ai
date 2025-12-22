@@ -1,8 +1,18 @@
 import { getCurrentUser } from "@/core/features/auth/server";
+import { hasPermission } from "@/core/features/auth/permissions";
 
-// TODO: Implement proper permission system in Phase 5
-// For now, allow all authenticated users unlimited access
-export async function checkResumeAnalysisPermission() {
+/**
+ * Check if user can analyze resumes
+ * - Pro users: unlimited
+ * - Free users: no access
+ */
+export async function checkResumeAnalysisPermission(): Promise<boolean> {
   const { userId } = await getCurrentUser();
-  return userId != null;
+
+  if (!userId) {
+    return false;
+  }
+
+  // Only Pro users can analyze resumes
+  return hasPermission("unlimited_resume_analyses");
 }
