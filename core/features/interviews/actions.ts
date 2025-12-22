@@ -154,7 +154,9 @@ export async function getInterviews(jobInfoId: string, userId: string) {
 }
 
 export async function generateInterviewFeedback(interviewId: string) {
-  const { userId, user } = await getCurrentUser({ allData: true });
+  const { userId, user } = await getCurrentUser({
+    allData: true,
+  });
   if (userId == null || user == null) {
     return {
       error: true,
@@ -163,6 +165,7 @@ export async function generateInterviewFeedback(interviewId: string) {
   }
 
   const interview = await getInterviewById(interviewId, userId);
+
   if (interview == null) {
     return {
       error: true,
