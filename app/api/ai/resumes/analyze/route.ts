@@ -7,6 +7,7 @@ import {
   FILE_TYPE_NOT_SUPPORTED_MESSAGE,
   PLAN_LIMIT_MESSAGE,
 } from "@/core/lib/errorToast";
+import { dalAssertSuccess } from "@/core/dal/helpers";
 
 export async function POST(req: Request) {
   const { userId } = await getCurrentUser();
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
     return new Response(FILE_TYPE_NOT_SUPPORTED_MESSAGE, { status: 400 });
   }
 
-  const jobInfo = await getJobInfo(jobInfoId, userId);
+  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
 
   if (jobInfo == null) {
     return new Response("You do not have permission to do this", {

@@ -1,12 +1,18 @@
-import { eq, and, gt, lt } from "drizzle-orm";
-
-import { db } from "@/core/drizzle/db";
-import { SessionTable } from "@/core/drizzle/schema";
 import { generateSecureToken } from "@/core/features/auth/tokens";
 import {
   SESSION_DURATION_MS,
   SESSION_REFRESH_THRESHOLD_MS,
 } from "@/core/features/auth/constants";
+import { dalAssertSuccess, dalDbOperation } from "@/core/dal/helpers";
+import {
+  createSessionDb,
+  deleteAllUserSessionsDb,
+  deleteExpiredSessionsDb,
+  deleteSessionDb,
+  extendSessionDb,
+  getUserSessionsDb,
+  validateSessionDb,
+} from "@/core/features/auth/db";
 
 export type Session = {
   id: string;
@@ -25,14 +31,11 @@ export async function createSession(userId: string): Promise<Session> {
   const token = generateSecureToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-  const [session] = await db
-    .insert(SessionTable)
-    .values({
-      userId,
-      token,
-      expiresAt,
-    })
-    .returning();
+  const [session] = await dalAssertSuccess(
+    await dalDbOperation(
+      async () => await createSessionDb({ userId, token, expiresAt })
+    )
+  );
 
   return session;
 }
@@ -43,13 +46,9 @@ export async function createSession(userId: string): Promise<Session> {
  * @returns Session object if valid, null otherwise
  */
 export async function validateSession(token: string): Promise<Session | null> {
-  const [session] = await db
-    .select()
-    .from(SessionTable)
-    .where(
-      and(eq(SessionTable.token, token), gt(SessionTable.expiresAt, new Date()))
-    )
-    .limit(1);
+  const [session] = await dalAssertSuccess(
+    await dalDbOperation(async () => await validateSessionDb(token))
+  );
 
   if (!session) {
     return null;
@@ -78,11 +77,11 @@ export async function extendSessionIfNeeded(
   if (timeUntilExpiry < SESSION_REFRESH_THRESHOLD_MS) {
     const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-    const [updatedSession] = await db
-      .update(SessionTable)
-      .set({ expiresAt: newExpiresAt })
-      .where(eq(SessionTable.id, session.id))
-      .returning();
+    const [updatedSession] = await dalAssertSuccess(
+      await dalDbOperation(
+        async () => await extendSessionDb(session.id, newExpiresAt)
+      )
+    );
 
     return updatedSession;
   }
@@ -95,7 +94,9 @@ export async function extendSessionIfNeeded(
  * @param token - Session token to delete
  */
 export async function deleteSession(token: string): Promise<void> {
-  await db.delete(SessionTable).where(eq(SessionTable.token, token));
+  await dalAssertSuccess(
+    await dalDbOperation(async () => await deleteSessionDb(token))
+  );
 }
 
 /**
@@ -103,7 +104,9 @@ export async function deleteSession(token: string): Promise<void> {
  * @param userId - User ID to delete sessions for
  */
 export async function deleteAllUserSessions(userId: string): Promise<void> {
-  await db.delete(SessionTable).where(eq(SessionTable.userId, userId));
+  await dalAssertSuccess(
+    await dalDbOperation(async () => await deleteAllUserSessionsDb(userId))
+  );
 }
 
 /**
@@ -111,7 +114,9 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
  * Should be run periodically
  */
 export async function deleteExpiredSessions(): Promise<void> {
-  await db.delete(SessionTable).where(lt(SessionTable.expiresAt, new Date()));
+  await dalAssertSuccess(
+    await dalDbOperation(async () => await deleteExpiredSessionsDb())
+  );
 }
 
 /**
@@ -120,13 +125,7 @@ export async function deleteExpiredSessions(): Promise<void> {
  * @returns Array of active sessions
  */
 export async function getUserSessions(userId: string): Promise<Session[]> {
-  return db
-    .select()
-    .from(SessionTable)
-    .where(
-      and(
-        eq(SessionTable.userId, userId),
-        gt(SessionTable.expiresAt, new Date())
-      )
-    );
+  return await dalAssertSuccess(
+    await dalDbOperation(async () => await getUserSessionsDb(userId))
+  );
 }

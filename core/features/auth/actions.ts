@@ -17,6 +17,7 @@ import { createSession, deleteSession } from "@/core/features/auth/session";
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { routes } from "@/core/data/routes";
+import { dalAssertSuccess, dalDbOperation } from "@/core/dal/helpers";
 
 type ActionState = {
   error?: string;
@@ -71,12 +72,17 @@ export async function signUpAction(
 
     // Create user
     const userId = generateUserId();
-    await createUserDb({
-      id: userId,
-      name,
-      email: email.toLowerCase(),
-      passwordHash,
-    });
+    await dalAssertSuccess(
+      await dalDbOperation(
+        async () =>
+          await createUserDb({
+            id: userId,
+            name,
+            email: email.toLowerCase(),
+            passwordHash,
+          })
+      )
+    );
 
     // Create session
     const session = await createSession(userId);
@@ -111,7 +117,9 @@ export async function signInAction(
 
   try {
     // Find user by email
-    const user = await findUserByEmailDb(email);
+    const user = await dalAssertSuccess(
+      await dalDbOperation(async () => await findUserByEmailDb(email))
+    );
 
     if (!user || !user.passwordHash) {
       return { error: "Invalid email or password", fields };

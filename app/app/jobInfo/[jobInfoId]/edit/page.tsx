@@ -7,6 +7,7 @@ import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBack
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { getCurrentUser } from "@/core/features/auth/server";
+import { dalAssertSuccess } from "@/core/dal/helpers";
 
 export default async function JobInfoEditPage({
   params,
@@ -36,7 +37,9 @@ async function SuspendedForm({ jobInfoId }: { jobInfoId: string }) {
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      const jobInfo = await getJobInfo(jobInfoId, userId);
+      const jobInfo = await dalAssertSuccess(
+        await getJobInfo(jobInfoId, userId)
+      );
       if (jobInfo == null) return notFound();
 
       return jobInfo;

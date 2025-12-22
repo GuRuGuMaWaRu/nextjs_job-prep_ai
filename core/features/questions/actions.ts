@@ -10,12 +10,15 @@ import {
   getQuestionJobInfoTag,
 } from "@/core/features/questions/dbCache";
 import { QuestionDifficulty } from "@/core/drizzle/schema";
+import { dalAssertSuccess, dalDbOperation } from "@/core/dal/helpers";
 
 export async function getQuestions(jobInfoId: string) {
   "use cache";
   cacheTag(getQuestionJobInfoTag(jobInfoId));
 
-  return getQuestionsDb(jobInfoId);
+  return dalAssertSuccess(
+    await dalDbOperation(async () => await getQuestionsDb(jobInfoId))
+  );
 }
 
 export async function insertQuestion(
@@ -23,16 +26,25 @@ export async function insertQuestion(
   jobInfoId: string,
   difficulty: QuestionDifficulty
 ) {
-  return insertQuestionDb({
-    text: question,
-    jobInfoId,
-    difficulty,
-  });
+  return dalAssertSuccess(
+    await dalDbOperation(
+      async () =>
+        await insertQuestionDb({
+          text: question,
+          jobInfoId,
+          difficulty,
+        })
+    )
+  );
 }
 
 export async function getQuestionById(questionId: string, userId: string) {
   "use cache";
   cacheTag(getQuestionIdTag(questionId));
 
-  return await getQuestionByIdDb(questionId, userId);
+  return await dalAssertSuccess(
+    await dalDbOperation(
+      async () => await getQuestionByIdDb(questionId, userId)
+    )
+  );
 }

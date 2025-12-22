@@ -18,6 +18,7 @@ import { Skeleton } from "@/core/components/Skeleton";
 import { getCurrentUser } from "@/core/features/auth/server";
 import { routes } from "@/core/data/routes";
 import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
+import { dalAssertSuccess } from "@/core/dal/helpers";
 
 const options = [
   {
@@ -57,7 +58,9 @@ export default async function JobInfoPage({
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      const jobInfo = await getJobInfo(jobInfoId, userId);
+      const jobInfo = await dalAssertSuccess(
+        await getJobInfo(jobInfoId, userId)
+      );
       if (jobInfo == null) return notFound();
 
       return jobInfo;

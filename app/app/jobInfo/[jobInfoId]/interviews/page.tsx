@@ -19,6 +19,7 @@ import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBack
 import { getCurrentUser } from "@/core/features/auth/server";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
+import { dalAssertSuccess } from "@/core/dal/helpers";
 
 import { PermissionCheckedLink } from "./_PermissionCheckedLink";
 
@@ -45,7 +46,9 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
   const { userId, redirectToSignIn } = await getCurrentUser();
   if (userId == null) return redirectToSignIn();
 
-  const interviews = await getInterviews(jobInfoId, userId);
+  const interviews = await dalAssertSuccess(
+    await getInterviews(jobInfoId, userId)
+  );
   const hasPermissionForInterviews = await canCreateInterview();
 
   return (

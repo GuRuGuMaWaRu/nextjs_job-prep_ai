@@ -18,6 +18,7 @@ import {
   getJobInfoIdTag,
 } from "@/core/features/jobInfos/dbCache";
 import { routes } from "@/core/data/routes";
+import { dalAssertSuccess, dalDbOperation } from "@/core/dal/helpers";
 
 export async function createJobInfo(unsafeData: z.infer<typeof jobInfoSchema>) {
   const { userId } = await getCurrentUser();
@@ -36,7 +37,9 @@ export async function createJobInfo(unsafeData: z.infer<typeof jobInfoSchema>) {
     };
   }
 
-  const jobInfo = await createJobInfoDb({ ...data, userId });
+  const jobInfo = await dalAssertSuccess(
+    await dalDbOperation(async () => await createJobInfoDb({ ...data, userId }))
+  );
 
   redirect(routes.jobInfo(jobInfo.id));
 }
@@ -61,7 +64,9 @@ export async function updateJobInfo(
     };
   }
 
-  const existingJobInfo = await getJobInfoDb(id, userId);
+  const existingJobInfo = await dalAssertSuccess(
+    await dalDbOperation(async () => await getJobInfoDb(id, userId))
+  );
   if (existingJobInfo == null) {
     return {
       error: true,
@@ -69,7 +74,9 @@ export async function updateJobInfo(
     };
   }
 
-  const jobInfo = await updateJobInfoDb(id, data);
+  const jobInfo = await dalAssertSuccess(
+    await dalDbOperation(async () => await updateJobInfoDb(id, data))
+  );
 
   redirect(routes.jobInfo(jobInfo.id));
 }
@@ -78,19 +85,19 @@ export async function getJobInfo(id: string, userId: string) {
   "use cache";
   cacheTag(getJobInfoIdTag(id));
 
-  return await getJobInfoDb(id, userId);
+  return dalDbOperation(async () => await getJobInfoDb(id, userId));
 }
 
 export async function getJobInfoById(id: string) {
   "use cache";
   cacheTag(getJobInfoIdTag(id));
 
-  return await getJobInfoByIdDb(id);
+  return dalDbOperation(async () => await getJobInfoByIdDb(id));
 }
 
 export async function getJobInfos(userId: string) {
   "use cache";
   cacheTag(getJobInfoGlobalTag());
 
-  return await getJobInfosDb(userId);
+  return dalDbOperation(async () => await getJobInfosDb(userId));
 }

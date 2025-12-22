@@ -16,10 +16,11 @@ import {
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/server";
-import { getCurrentUser } from "@/core/features/auth/server";
 import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
+import { dalAssertSuccess, dalDbOperation } from "@/core/dal/helpers";
 
 const aj = arcjet({
   characteristics: ["userId"],
@@ -77,7 +78,7 @@ export async function createInterview({
     };
   }
 
-  const jobInfo = await getJobInfo(jobInfoId, userId);
+  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
   if (jobInfo == null) {
     return {
       error: true,
@@ -85,10 +86,15 @@ export async function createInterview({
     };
   }
 
-  const interview = await insertInterviewDb({
-    jobInfoId,
-    duration: "00:00:00",
-  });
+  const interview = await dalAssertSuccess(
+    await dalDbOperation(
+      async () =>
+        await insertInterviewDb({
+          jobInfoId,
+          duration: "00:00:00",
+        })
+    )
+  );
 
   return {
     error: false,
@@ -108,22 +114,17 @@ export async function updateInterview(
     };
   }
 
-  const foundInterview = await getInterviewByIdDb(id);
-  if (foundInterview == null) {
-    return {
-      error: true,
-      message: "You don't have permission to do this.",
-    };
-  }
+  const foundInterview = await dalAssertSuccess(
+    await dalDbOperation(async () => await getInterviewByIdDb(id))
+  );
+  if (foundInterview == null)
+    return { error: true, message: "You don't have permission to do this." };
+  if (foundInterview.jobInfo.userId !== userId)
+    return { error: true, message: "You don't have permission to do this." };
 
-  if (foundInterview.jobInfo.userId !== userId) {
-    return {
-      error: true,
-      message: "You don't have permission to do this.",
-    };
-  }
-
-  await updateInterviewDb(id, interview);
+  await dalAssertSuccess(
+    await dalDbOperation(async () => await updateInterviewDb(id, interview))
+  );
 
   return { error: false };
 }
@@ -132,7 +133,9 @@ export async function getInterviewById(id: string, userId: string) {
   "use cache";
   cacheTag(getInterviewIdTag(id));
 
-  const foundInterview = await getInterviewByIdDb(id);
+  const foundInterview = await dalAssertSuccess(
+    await dalDbOperation(async () => await getInterviewByIdDb(id))
+  );
   if (foundInterview == null) return null;
 
   cacheTag(getJobInfoIdTag(foundInterview.jobInfo.id));
@@ -150,7 +153,7 @@ export async function getInterviews(jobInfoId: string, userId: string) {
   cacheTag(getInterviewJobInfoTag(jobInfoId));
   cacheTag(getJobInfoIdTag(jobInfoId));
 
-  return await getInterviewsDb(jobInfoId, userId);
+  return dalDbOperation(async () => await getInterviewsDb(jobInfoId, userId));
 }
 
 export async function generateInterviewFeedback(interviewId: string) {
@@ -180,11 +183,16 @@ export async function generateInterviewFeedback(interviewId: string) {
     };
   }
 
-  const feedback = await generateAiInterviewFeedback({
-    humeChatId: interview.humeChatId,
-    jobInfo: interview.jobInfo,
-    userName: user.name,
-  });
+  const feedback = await dalAssertSuccess(
+    await dalDbOperation(
+      async () =>
+        await generateAiInterviewFeedback({
+          humeChatId: interview.humeChatId as string,
+          jobInfo: interview.jobInfo,
+          userName: user.name,
+        })
+    )
+  );
 
   if (feedback == null) {
     return {
@@ -193,7 +201,11 @@ export async function generateInterviewFeedback(interviewId: string) {
     };
   }
 
-  await updateInterviewDb(interviewId, { feedback });
+  await dalAssertSuccess(
+    await dalDbOperation(
+      async () => await updateInterviewDb(interviewId, { feedback })
+    )
+  );
   refresh();
 
   return { error: false };

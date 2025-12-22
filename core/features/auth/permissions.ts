@@ -1,4 +1,4 @@
-import { getCurrentUser } from "./server";
+import { getCurrentUser } from "@/core/features/auth/server";
 import { getUser } from "@/core/features/users/actions";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 

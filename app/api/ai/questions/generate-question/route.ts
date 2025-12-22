@@ -11,6 +11,7 @@ import {
   getQuestions,
   insertQuestion,
 } from "@/core/features/questions/actions";
+import { dalAssertSuccess } from "@/core/dal/helpers";
 
 const schema = z.object({
   prompt: z.enum(questionDifficulties),
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     return new Response(PLAN_LIMIT_MESSAGE, { status: 403 });
   }
 
-  const jobInfo = await getJobInfo(jobInfoId, userId);
+  const jobInfo = await dalAssertSuccess(await getJobInfo(jobInfoId, userId));
   if (jobInfo == null) {
     return new Response("You do not have permission to do this", {
       status: 403,
