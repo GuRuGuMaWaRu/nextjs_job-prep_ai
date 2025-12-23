@@ -7,6 +7,7 @@ TODOs:
 [-] Add DAL layers for all actions
 [-] Loading spinner for Interviews page is not aligned to the center of the page
 [-] Resumes page is not loading properly, I get redirected to Upgrade Plans page, which is not implemented yet
+[-] Should be able to delete Job Infos
 
 Completed TODOs:
 
