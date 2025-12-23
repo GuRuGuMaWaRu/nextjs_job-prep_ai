@@ -16,7 +16,11 @@ export type Permission =
  * Plan configurations defining what each plan allows
  */
 const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
-  free: ["limited_interviews", "limited_questions"],
+  free: [
+    "limited_interviews",
+    "limited_questions",
+    "unlimited_resume_analyses",
+  ],
   pro: [
     "unlimited_interviews",
     "unlimited_questions",
@@ -30,7 +34,7 @@ const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
 export const FREE_PLAN_LIMITS = {
   interviews: 1,
   questions: 5,
-  resumeAnalyses: 0,
+  resumeAnalyses: 3,
 } as const;
 
 /**
