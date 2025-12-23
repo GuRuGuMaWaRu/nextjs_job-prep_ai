@@ -1,54 +1,42 @@
-import { cacheTag } from "next/cache";
+"use server";
 
-import {
-  getQuestionByIdDb,
-  getQuestionsDb,
-  insertQuestionDb,
-} from "@/core/features/questions/db";
-import {
-  getQuestionIdTag,
-  getQuestionJobInfoTag,
-} from "@/core/features/questions/dbCache";
 import { QuestionDifficulty } from "@/core/drizzle/schema";
-import { DatabaseError } from "@/core/dal/helpers";
+import {
+  getQuestionByIdService,
+  getQuestionsService,
+  insertQuestionService,
+} from "@/core/features/questions/service";
 
+/**
+ * Action Layer for Questions
+ * Handles: Delegates to service layer, lets errors bubble to error boundaries
+ * These actions are called from pages/components that have error boundaries
+ */
+
+/**
+ * Get all questions for a job info
+ * Used in pages - errors bubble up to error boundary
+ */
 export async function getQuestions(jobInfoId: string) {
-  "use cache";
-  cacheTag(getQuestionJobInfoTag(jobInfoId));
-
-  try {
-    return await getQuestionsDb(jobInfoId);
-  } catch (error) {
-    console.error("Database error getting questions:", error);
-    throw new DatabaseError("Failed to fetch questions from database", error);
-  }
+  return await getQuestionsService(jobInfoId);
 }
 
+/**
+ * Insert a new question
+ * Used from AI generation - errors bubble up to caller
+ */
 export async function insertQuestion(
   question: string,
   jobInfoId: string,
   difficulty: QuestionDifficulty
 ) {
-  try {
-    return await insertQuestionDb({
-      text: question,
-      jobInfoId,
-      difficulty,
-    });
-  } catch (error) {
-    console.error("Database error inserting question:", error);
-    throw new DatabaseError("Failed to save question to database", error);
-  }
+  return await insertQuestionService(question, jobInfoId, difficulty);
 }
 
-export async function getQuestionById(questionId: string, userId: string) {
-  "use cache";
-  cacheTag(getQuestionIdTag(questionId));
-
-  try {
-    return await getQuestionByIdDb(questionId, userId);
-  } catch (error) {
-    console.error("Database error getting question:", error);
-    throw new DatabaseError("Failed to fetch question from database", error);
-  }
+/**
+ * Get a single question by ID
+ * Used in pages - errors bubble up to error boundary
+ */
+export async function getQuestionById(questionId: string) {
+  return await getQuestionByIdService(questionId);
 }

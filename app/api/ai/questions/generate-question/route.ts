@@ -11,7 +11,12 @@ import {
   getQuestions,
   insertQuestion,
 } from "@/core/features/questions/actions";
-import { NotFoundError, PermissionError } from "@/core/dal/helpers";
+import {
+  NotFoundError,
+  PermissionError,
+  UnauthorizedError,
+  DatabaseError,
+} from "@/core/dal/helpers";
 
 const schema = z.object({
   prompt: z.enum(questionDifficulties),
@@ -76,13 +81,24 @@ export async function POST(req: Request) {
       }),
     });
   } catch (error) {
+    console.error("Error generating question:", error);
+
+    if (error instanceof UnauthorizedError) {
+      return new Response("You are not logged in", { status: 401 });
+    }
+
     if (error instanceof NotFoundError || error instanceof PermissionError) {
       return new Response("You do not have permission to do this", {
         status: 403,
       });
     }
 
-    console.error("Error generating question:", error);
+    if (error instanceof DatabaseError) {
+      return new Response("Database error while generating question", {
+        status: 500,
+      });
+    }
+
     return new Response("An error occurred while generating your question", {
       status: 500,
     });

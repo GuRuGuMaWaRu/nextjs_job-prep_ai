@@ -1,8 +1,8 @@
 import z from "zod";
 
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
-import { getCurrentUser } from "@/core/features/auth/server";
 import { getQuestionById } from "@/core/features/questions/actions";
+import { UnauthorizedError, DatabaseError } from "@/core/dal/helpers";
 
 const schema = z.object({
   prompt: z.string().min(1),
@@ -18,22 +18,35 @@ export async function POST(req: Request) {
   }
 
   const { questionId, prompt: answer } = result.data;
-  const { userId } = await getCurrentUser();
 
-  if (userId == null) {
-    return new Response("You are not logged in", { status: 401 });
+  try {
+    const question = await getQuestionById(questionId);
+
+    if (question == null) {
+      return new Response("Question not found", { status: 404 });
+    }
+
+    const res = generateAiQuestionFeedback({
+      question: question.text,
+      answer,
+    });
+
+    return res.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error("Error generating question feedback:", error);
+
+    if (error instanceof UnauthorizedError) {
+      return new Response("You are not logged in", { status: 401 });
+    }
+
+    if (error instanceof DatabaseError) {
+      return new Response("Failed to fetch question from database", {
+        status: 500,
+      });
+    }
+
+    return new Response("An error occurred while generating feedback", {
+      status: 500,
+    });
   }
-
-  const question = await getQuestionById(questionId, userId);
-
-  if (question == null) {
-    return new Response("Question not found", { status: 404 });
-  }
-
-  const res = generateAiQuestionFeedback({
-    question: question.text,
-    answer,
-  });
-
-  return res.toUIMessageStreamResponse();
 }
