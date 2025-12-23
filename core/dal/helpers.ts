@@ -58,15 +58,6 @@ export async function requireUser(): Promise<string> {
 }
 
 /**
- * Get current user if available, return null if not
- * Use this when auth is optional
- */
-export async function getOptionalUser(): Promise<string | null> {
-  const { userId } = await getCurrentUser();
-  return userId ?? null;
-}
-
-/**
  * Require user with full data
  * Throws UnauthorizedError if not authenticated
  */
