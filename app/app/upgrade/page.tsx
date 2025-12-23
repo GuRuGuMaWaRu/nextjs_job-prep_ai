@@ -2,8 +2,8 @@ import { Suspense } from "react";
 
 import { BackLink } from "@/core/components/BackLink";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
-import { canCreateInterview } from "@/core/features/interviews/actions";
 import { routes } from "@/core/data/routes";
+import { canCreateInterview } from "@/core/features/interviews/actions";
 
 export default function UpgradePage() {
   return (
