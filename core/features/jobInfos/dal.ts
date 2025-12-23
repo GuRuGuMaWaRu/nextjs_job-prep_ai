@@ -8,13 +8,14 @@ import {
   getJobInfosDb,
 } from "./db";
 import { getJobInfoIdTag, getJobInfoGlobalTag } from "./dbCache";
-import { NotFoundError, DatabaseError } from "@/core/dal/helpers";
+import { DatabaseError } from "@/core/dal/helpers";
 import { JobInfoTable } from "@/core/drizzle/schema";
 
 /**
  * DAL Layer for JobInfo
  * Handles: Data access, caching, error translation
- * Throws: NotFoundError, DatabaseError
+ * Returns: Data or null for not found cases
+ * Throws: DatabaseError (only for actual database errors)
  */
 
 /**
@@ -33,37 +34,41 @@ export async function createJobInfoDal(data: typeof JobInfoTable.$inferInsert) {
 }
 
 /**
- * Get job info by ID
+ * Get job info by ID for a specific user
+ * Returns null if not found or user doesn't have access
  */
 export async function getJobInfoDal(id: string, userId: string) {
   "use cache";
   cacheTag(getJobInfoIdTag(id));
 
-  const jobInfo = await getJobInfoDb(id, userId);
-
-  if (!jobInfo) {
-    throw new NotFoundError(
-      "Job posting not found or you don't have access to it"
+  try {
+    return await getJobInfoDb(id, userId);
+  } catch (error) {
+    console.error("Database error getting job info:", error);
+    throw new DatabaseError(
+      "Failed to fetch job information from database",
+      error
     );
   }
-
-  return jobInfo;
 }
 
 /**
- * Get job info by ID
+ * Get job info by ID without user filtering
+ * Returns null if not found
  */
 export async function getJobInfoByIdDal(id: string) {
   "use cache";
   cacheTag(getJobInfoIdTag(id));
 
-  const jobInfo = await getJobInfoByIdDb(id);
-
-  if (!jobInfo) {
-    throw new NotFoundError("Job posting not found");
+  try {
+    return await getJobInfoByIdDb(id);
+  } catch (error) {
+    console.error("Database error getting job info by id:", error);
+    throw new DatabaseError(
+      "Failed to fetch job information from database",
+      error
+    );
   }
-
-  return jobInfo;
 }
 
 /**
@@ -73,7 +78,15 @@ export async function getJobInfosDal(userId: string) {
   "use cache";
   cacheTag(getJobInfoGlobalTag());
 
-  return await getJobInfosDb(userId);
+  try {
+    return await getJobInfosDb(userId);
+  } catch (error) {
+    console.error("Database error getting job infos:", error);
+    throw new DatabaseError(
+      "Failed to fetch job information from database",
+      error
+    );
+  }
 }
 
 /**

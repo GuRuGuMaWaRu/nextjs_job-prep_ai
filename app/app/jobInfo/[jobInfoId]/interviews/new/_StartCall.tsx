@@ -16,8 +16,8 @@ import { JobInfoTable } from "@/core/drizzle/schema";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import {
-  createInterview,
-  updateInterview,
+  createInterviewAction,
+  updateInterviewAction,
 } from "@/core/features/interviews/actions";
 import { errorToast, HUME_UNAVAILABLE_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/client";
@@ -52,7 +52,7 @@ export function StartCall({
     if (chatMetadata?.chatId == null || interviewId == null) {
       return;
     }
-    updateInterview(interviewId, { humeChatId: chatMetadata.chatId });
+    updateInterviewAction(interviewId, { humeChatId: chatMetadata.chatId });
   }, [chatMetadata, interviewId]);
 
   //** Sync chat duration */
@@ -62,7 +62,7 @@ export function StartCall({
     const intervalId = setInterval(() => {
       if (durationRef.current == null) return;
 
-      updateInterview(interviewId, {
+      updateInterviewAction(interviewId, {
         duration: durationRef.current,
       });
     }, 10000);
@@ -83,14 +83,14 @@ export function StartCall({
   }, [jobInfo.id, messages.length, readyState, router]);
 
   const handleStartInterview = async () => {
-    const res = await createInterview({ jobInfoId: jobInfo.id });
+    const res = await createInterviewAction({ jobInfoId: jobInfo.id });
 
-    if (res.error) {
+    if (!res.success) {
       errorToast(res.message);
       return;
     }
 
-    setInterviewId(res.id);
+    setInterviewId(res.data.id);
 
     connect({
       auth: { type: "accessToken", value: accessToken },
@@ -115,7 +115,7 @@ export function StartCall({
     }
 
     if (durationRef.current != null) {
-      updateInterview(interviewId, { duration: durationRef.current });
+      updateInterviewAction(interviewId, { duration: durationRef.current });
     }
     router.push(routes.interview(jobInfo.id, interviewId));
   };

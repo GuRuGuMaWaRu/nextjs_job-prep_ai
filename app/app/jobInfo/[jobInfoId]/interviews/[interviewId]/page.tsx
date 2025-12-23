@@ -15,7 +15,7 @@ import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton, SkeletonButton } from "@/core/components/Skeleton";
 import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
 import {
-  generateInterviewFeedback,
+  generateInterviewFeedbackAction,
   getInterviewById,
 } from "@/core/features/interviews/actions";
 import { getCurrentUser } from "@/core/features/auth/server";
@@ -84,7 +84,7 @@ export default async function InterviewPage({
             result={(intv) =>
               intv.feedback == null ? (
                 <ActionButton
-                  action={generateInterviewFeedback.bind(null, intv.id)}>
+                  action={generateInterviewFeedbackAction.bind(null, intv.id)}>
                   Generate Feedback
                 </ActionButton>
               ) : (

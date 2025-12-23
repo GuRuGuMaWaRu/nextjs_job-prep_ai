@@ -1,26 +1,31 @@
 "use server";
 
-import { cacheTag, refresh } from "next/cache";
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import {
-  getInterviewByIdDb,
-  getInterviewsDb,
-  insertInterviewDb,
-  updateInterviewDb,
-} from "@/core/features/interviews/db";
-import {
-  getInterviewIdTag,
-  getInterviewJobInfoTag,
-} from "@/core/features/interviews/dbCache";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
-import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { getCurrentUser } from "@/core/features/auth/server";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/server";
-import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
-import { DatabaseError } from "@/core/dal/helpers";
+import {
+  UnauthorizedError,
+  PermissionError,
+  DatabaseError,
+  ActionResult,
+} from "@/core/dal/helpers";
+import {
+  createInterviewService,
+  updateInterviewService,
+  getInterviewByIdService,
+  getInterviewsService,
+  generateInterviewFeedbackService,
+} from "@/core/features/interviews/service";
+
+/**
+ * Action Layer for Interviews
+ * Handles: Rate limiting, permission checks, error conversion
+ * Returns: ActionResult or throws for page-level actions
+ */
 
 const aj = arcjet({
   characteristics: ["userId"],
@@ -35,192 +40,189 @@ const aj = arcjet({
   ],
 });
 
-type CreateInterviewReturn = Promise<
-  | {
-      error: true;
-      message: string;
-    }
-  | {
-      error: false;
-      id: string;
-    }
->;
-
-export async function createInterview({
+/**
+ * Create a new interview
+ * Server action called from client - returns ActionResult
+ */
+export async function createInterviewAction({
   jobInfoId,
 }: {
   jobInfoId: string;
-}): CreateInterviewReturn {
+}): Promise<ActionResult<{ id: string }>> {
   const { userId } = await getCurrentUser();
   if (userId == null) {
     return {
-      error: true,
-      message: "You don't have permission to do this.",
+      success: false,
+      message: "You must be logged in to create an interview.",
     };
   }
 
+  // Check permissions
   const permitted = await checkInterviewPermission();
   if (!permitted) {
     return {
-      error: true,
+      success: false,
       message: PLAN_LIMIT_MESSAGE,
     };
   }
 
+  // Check rate limit
   const decision = await aj.protect(await request(), {
     userId,
     requested: 1,
   });
   if (decision.isDenied()) {
     return {
-      error: true,
+      success: false,
       message: RATE_LIMIT_MESSAGE,
     };
   }
 
   try {
-    // getJobInfo now handles auth internally and throws on error
+    // Verify job info exists and user has access
     const jobInfo = await getJobInfo(jobInfoId);
     if (jobInfo == null) {
       return {
-        error: true,
-        message: "You don't have permission to do this.",
+        success: false,
+        message: "Job posting not found or you don't have access to it.",
       };
     }
 
-    const interview = await insertInterviewDb({
-      jobInfoId,
-      duration: "00:00:00",
-    });
+    // Create interview
+    const interview = await createInterviewService(jobInfoId);
 
     return {
-      error: false,
-      id: interview.id,
+      success: true,
+      data: { id: interview.id },
     };
   } catch (error) {
     console.error("Error creating interview:", error);
+
+    if (error instanceof UnauthorizedError) {
+      return {
+        success: false,
+        message: "You must be logged in to create an interview.",
+      };
+    }
+
+    if (error instanceof DatabaseError) {
+      return {
+        success: false,
+        message: "Failed to create interview. Please try again.",
+      };
+    }
+
     return {
-      error: true,
-      message: "Failed to create interview. Please try again.",
+      success: false,
+      message: "An unexpected error occurred. Please try again.",
     };
   }
 }
 
-export async function updateInterview(
+/**
+ * Update an interview
+ * Server action called from client - returns ActionResult
+ */
+export async function updateInterviewAction(
   id: string,
-  interview: { humeChatId?: string; duration?: string }
-) {
-  const { userId } = await getCurrentUser();
-  if (userId == null) {
-    return {
-      error: true,
-      message: "You don't have permission to do this.",
-    };
-  }
-
+  data: { humeChatId?: string; duration?: string }
+): Promise<ActionResult<void>> {
   try {
-    const foundInterview = await getInterviewByIdDb(id);
-    if (foundInterview == null)
-      return { error: true, message: "You don't have permission to do this." };
-    if (foundInterview.jobInfo.userId !== userId)
-      return { error: true, message: "You don't have permission to do this." };
+    await updateInterviewService(id, data);
 
-    await updateInterviewDb(id, interview);
-
-    return { error: false };
+    return { success: true, data: undefined };
   } catch (error) {
     console.error("Error updating interview:", error);
+
+    if (error instanceof UnauthorizedError) {
+      return {
+        success: false,
+        message: "You must be logged in to update this interview.",
+      };
+    }
+
+    if (error instanceof PermissionError) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    if (error instanceof DatabaseError) {
+      return {
+        success: false,
+        message: "Failed to update interview. Please try again.",
+      };
+    }
+
     return {
-      error: true,
-      message: "Failed to update interview. Please try again.",
+      success: false,
+      message: "An unexpected error occurred. Please try again.",
     };
   }
 }
 
+/**
+ * Get interview by ID
+ * Used in pages - errors bubble up to error boundary
+ */
 export async function getInterviewById(id: string, userId: string) {
-  "use cache";
-  cacheTag(getInterviewIdTag(id));
-
-  try {
-    const foundInterview = await getInterviewByIdDb(id);
-    if (foundInterview == null) return null;
-
-    cacheTag(getJobInfoIdTag(foundInterview.jobInfo.id));
-
-    if (foundInterview.jobInfo.userId !== userId) return null;
-    return foundInterview;
-  } catch (error) {
-    console.error("Database error getting interview:", error);
-    throw new DatabaseError("Failed to fetch interview from database", error);
-  }
+  return await getInterviewByIdService(id, userId);
 }
 
+/**
+ * Check if user can create an interview
+ * Used for UI permission checks
+ */
 export async function canCreateInterview(): Promise<boolean> {
   return await checkInterviewPermission();
 }
 
+/**
+ * Get all interviews for a job info
+ * Used in pages - errors bubble up to error boundary
+ */
 export async function getInterviews(jobInfoId: string, userId: string) {
-  "use cache";
-  cacheTag(getInterviewJobInfoTag(jobInfoId));
-  cacheTag(getJobInfoIdTag(jobInfoId));
-
-  try {
-    return await getInterviewsDb(jobInfoId, userId);
-  } catch (error) {
-    console.error("Database error getting interviews:", error);
-    throw new DatabaseError("Failed to fetch interviews from database", error);
-  }
+  return await getInterviewsService(jobInfoId, userId);
 }
 
-export async function generateInterviewFeedback(interviewId: string) {
-  const { userId, user } = await getCurrentUser({
-    allData: true,
-  });
-  if (userId == null || user == null) {
-    return {
-      error: true,
-      message: "You don't have permission to do this",
-    };
-  }
-
-  const interview = await getInterviewById(interviewId, userId);
-
-  if (interview == null) {
-    return {
-      error: true,
-      message: "You don't have permission to do this",
-    };
-  }
-
-  if (interview.humeChatId == null) {
-    return {
-      error: true,
-      message: "Interview has not been completed yet",
-    };
-  }
-
+/**
+ * Generate AI feedback for an interview
+ * Server action called from client - returns ActionResult
+ */
+export async function generateInterviewFeedbackAction(
+  interviewId: string
+): Promise<ActionResult<void>> {
   try {
-    const feedback = await generateAiInterviewFeedback({
-      humeChatId: interview.humeChatId as string,
-      jobInfo: interview.jobInfo,
-      userName: user.name,
-    });
+    await generateInterviewFeedbackService(interviewId);
 
-    if (feedback == null) {
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Error generating interview feedback:", error);
+
+    if (error instanceof UnauthorizedError) {
       return {
-        error: true,
-        message: "Failed to generate feedback",
+        success: false,
+        message: "You must be logged in to generate feedback.",
       };
     }
 
-    await updateInterviewDb(interviewId, { feedback });
-    refresh();
+    if (error instanceof PermissionError) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
 
-    return { error: false };
-  } catch (error) {
-    console.error("Error generating interview feedback:", error);
+    if (error instanceof DatabaseError) {
+      return {
+        success: false,
+        message: "Failed to save feedback. Please try again.",
+      };
+    }
+
     return {
-      error: true,
+      success: false,
       message: "Failed to generate feedback. Please try again.",
     };
   }

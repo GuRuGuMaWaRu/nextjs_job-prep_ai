@@ -23,7 +23,7 @@ export function ActionButton({
   areYouSureDescription = "This action cannot be undone.",
   ...props
 }: ComponentProps<typeof Button> & {
-  action: () => Promise<{ error: boolean; message?: string }>;
+  action: () => Promise<{ success: boolean; message?: string }>;
   requireAreYouSure?: boolean;
   areYouSureDescription?: ReactNode;
 }) {
@@ -32,7 +32,7 @@ export function ActionButton({
   function performAction() {
     startTransition(async () => {
       const data = await action();
-      if (data.error) {
+      if (!data.success) {
         toast.error(data.message ?? "Error");
       }
     });
