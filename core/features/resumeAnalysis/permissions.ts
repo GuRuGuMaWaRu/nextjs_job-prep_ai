@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import { hasPermission } from "@/core/features/auth/permissions";
 
 /**
