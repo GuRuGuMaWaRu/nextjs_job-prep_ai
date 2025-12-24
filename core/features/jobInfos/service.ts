@@ -53,7 +53,6 @@ export async function updateJobInfoService(
 ) {
   const userId = await requireUser();
 
-  // Verify ownership by fetching with ownership check
   const existingJobInfo = await getJobInfoDal(id, userId);
 
   if (!existingJobInfo) {
@@ -62,14 +61,12 @@ export async function updateJobInfoService(
     );
   }
 
-  // Double-check ownership (getJobInfoDal already checks by filtering, but being explicit)
   if (existingJobInfo.userId !== userId) {
     throw new PermissionError(
       "You don't have permission to edit this job posting."
     );
   }
 
-  // Update the job info
   const updated = await updateJobInfoDal(id, data);
 
   return updated;

@@ -64,7 +64,6 @@ export function JobInfoForm({
     if (!res.success) {
       toast.error(res.message);
     } else {
-      // Success! Redirect to the job info page
       toast.success(
         jobInfo ? "Job information updated!" : "Job information created!"
       );

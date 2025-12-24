@@ -80,7 +80,6 @@ export async function updateJobInfoAction(
   id: string,
   unsafeData: unknown
 ): Promise<ActionResult<{ id: string }>> {
-  // 1. Validate input
   const validation = jobInfoSchema.safeParse(unsafeData);
   if (!validation.success) {
     return {
@@ -90,16 +89,13 @@ export async function updateJobInfoAction(
   }
 
   try {
-    // 2. Call service
     const jobInfo = await updateJobInfoService(id, validation.data);
 
-    // 3. Return success with data for client-side redirect
     return {
       success: true,
       data: { id: jobInfo.id },
     };
   } catch (error) {
-    // 4. Convert errors to user-friendly messages
     console.error("Failed to update job info:", error);
 
     if (error instanceof UnauthorizedError) {
