@@ -18,7 +18,7 @@ import {
   generateInterviewFeedbackAction,
   getInterviewById,
 } from "@/core/features/interviews/actions";
-import { getCurrentUser } from "@/core/features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
