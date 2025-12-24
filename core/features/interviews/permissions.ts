@@ -11,12 +11,6 @@ import {
  * - Free users: up to 1 interview
  */
 export async function checkInterviewPermission(): Promise<boolean> {
-  const { userId } = await getCurrentUser();
-
-  if (!userId) {
-    return false;
-  }
-
   // Check if user has unlimited interviews (Pro plan)
   const hasUnlimited = await hasPermission("unlimited_interviews");
 
