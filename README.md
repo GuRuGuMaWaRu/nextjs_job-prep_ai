@@ -10,6 +10,7 @@ TODOs:
 [-] Should be able to delete Job Infos
 [-] Use zod validation for all forms
 [-] Check for existing email in the database before signing up - while user types or as a blur event happens
+[-] Allow changing plans (do I need Stripe for this?)
 
 Completed TODOs:
 
