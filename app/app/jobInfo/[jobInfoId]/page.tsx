@@ -57,7 +57,6 @@ export default async function JobInfoPage({
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      // getJobInfo now handles auth internally and throws on error
       const jobInfo = await getJobInfo(jobInfoId);
       if (jobInfo == null) return notFound();
 

@@ -34,10 +34,10 @@ export default async function NewInterviewPage({
 }
 
 async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
-  const { userId, redirectToSignIn, user } = await getCurrentUser({
+  const { redirectToSignIn, user } = await getCurrentUser({
     allData: true,
   });
-  if (userId == null || user == null) return redirectToSignIn();
+  if (user == null) return redirectToSignIn();
 
   const hasPermissionForInterviews = await canCreateInterview();
   if (!hasPermissionForInterviews) {
