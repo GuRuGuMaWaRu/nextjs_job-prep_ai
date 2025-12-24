@@ -1,10 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getSessionToken } from "@/core/features/auth/cookies";
-import {
-  validateSession,
-  extendSessionIfNeeded,
-} from "@/core/features/auth/session";
+import { extendSessionIfNeeded } from "@/core/features/auth/session";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 
@@ -61,38 +58,4 @@ export async function getCurrentUser({
     user: allData ? (await getUser(userId)) ?? undefined : undefined,
     redirectToSignIn: () => redirect(routes.signIn),
   };
-}
-
-/**
- * Require authentication - throws redirect if not authenticated
- * Convenience wrapper around getCurrentUser
- *
- * @returns userId of authenticated user
- */
-export async function requireAuth(): Promise<string> {
-  const { userId, redirectToSignIn } = await getCurrentUser();
-
-  if (!userId) {
-    return redirectToSignIn();
-  }
-
-  return userId;
-}
-
-/**
- * Get current user session without redirecting
- * Useful for optional authentication
- *
- * @returns userId or null
- */
-export async function getOptionalAuth(): Promise<string | null> {
-  const token = await getSessionToken();
-
-  if (!token) {
-    return null;
-  }
-
-  const session = await validateSession(token);
-
-  return session?.userId ?? null;
 }
