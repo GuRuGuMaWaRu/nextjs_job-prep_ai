@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import { getUser } from "@/core/features/users/actions";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 
@@ -33,7 +33,7 @@ const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
  */
 export const FREE_PLAN_LIMITS = {
   interviews: 1,
-  questions: 5,
+  questions: 10,
   resumeAnalyses: 3,
 } as const;
 

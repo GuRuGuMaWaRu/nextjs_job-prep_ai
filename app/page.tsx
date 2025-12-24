@@ -21,7 +21,7 @@ import {
 } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
-import { getCurrentUser } from "@/core/features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import { routes } from "@/core/data/routes";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
