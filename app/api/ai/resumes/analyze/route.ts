@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfo } from "@/core/features/jobInfos/actions";
 import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
