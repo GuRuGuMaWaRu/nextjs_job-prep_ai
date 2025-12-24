@@ -8,9 +8,12 @@ TODOs:
 [-] Loading spinner for Interviews page is not aligned to the center of the page
 [-] Resumes page is not loading properly, I get redirected to Upgrade Plans page, which is not implemented yet
 [-] Should be able to delete Job Infos
+[-] Use zod validation for all forms
+[-] Check for existing email in the database before signing up - while user types or as a blur event happens
 
 Completed TODOs:
 
+[V] Try to use data access layer as per WDS? [https://github.com/WebDevSimplified/next-js-data-access-layer/tree/main/src]. May be a good idea, at least worth a try. UPDATE: tried with a somewhat different approach, relied on Cursor to help me out and create a multi-layered architecture.
 [V] Username is missing in Interview actions (generateInterviewFeedback)
 [V] Looks into 404 pages for deeper nested routes
 [V] Implement 404 page for dynamic routes (right now sending random ID for job-info crashes the app)
@@ -27,9 +30,9 @@ Completed TODOs:
 Optional TODOs:
 
 [-?] Create a fork of this project with Tanstack Start.
-[-?] Try to use data access layer as per WDS? [https://github.com/WebDevSimplified/next-js-data-access-layer/tree/main/src]. May be a good idea, at least worth a try.
 [-?] Hide some sections on Landing Page for small screens
 [-?] show available interview count on Interview List page so that user knows he reached the limit even before he clicks New Interview link
+[-?] Try out BetterAuth for authentication [https://www.better-auth.com/]
 
 ---
 
