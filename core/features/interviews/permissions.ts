@@ -1,5 +1,5 @@
 import { getInterviewCountDb } from "@/core/features/interviews/db";
-import { getCurrentUser } from "@/core/features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import {
   hasPermission,
   FREE_PLAN_LIMITS,

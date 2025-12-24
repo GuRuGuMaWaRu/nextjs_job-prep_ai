@@ -1,8 +1,8 @@
-import { getCurrentUser } from "@/core/features/auth/server";
 import {
   hasPermission,
   FREE_PLAN_LIMITS,
 } from "@/core/features/auth/permissions";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 
 /**

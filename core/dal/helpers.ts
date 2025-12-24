@@ -1,4 +1,4 @@
-import { getCurrentUser } from "../features/auth/server";
+import { getCurrentUser } from "@/core/features/auth/actions";
 
 /**
  * Custom error classes for better error handling throughout the application
