@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRightIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import { ArrowRightIcon, PlusIcon } from "lucide-react";
 
 import {
   Card,
@@ -21,6 +21,7 @@ import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
 
 import { PermissionCheckedLink } from "./_PermissionCheckedLink";
+import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 
 export default async function InterviewsPage({
   params,
@@ -30,11 +31,10 @@ export default async function InterviewsPage({
   const { jobInfoId } = await params;
 
   return (
-    <div className="container max-w-5xl my-4 space-y-4">
+    <div className="container max-w-5xl py-4 space-y-4 h-screen-header flex flex-col items-start ">
       <JobInfoBackLink jobInfoId={jobInfoId} />
 
-      <Suspense
-        fallback={<Loader2Icon className="animate-spin size-24 m-auto" />}>
+      <Suspense fallback={<FullScreenLoader className="m-auto" />}>
         <SuspendedPage jobInfoId={jobInfoId} />
       </Suspense>
     </div>
