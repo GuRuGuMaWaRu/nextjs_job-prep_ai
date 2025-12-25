@@ -36,6 +36,14 @@ export async function JobInfos() {
         </Button>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
+        <Link className="transition-opacity" href={routes.newJobInfo}>
+          <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
+            <div className="text-lg flex items-center gap-2">
+              <PlusIcon className="size-6" />
+              New Job Description
+            </div>
+          </Card>
+        </Link>
         {jobInfos.map((jobInfo) => (
           <Link
             className="hover:scale-[1.02] transition-[transform_opacity]"
@@ -66,14 +74,6 @@ export async function JobInfos() {
             </Card>
           </Link>
         ))}
-        <Link className="transition-opacity" href={routes.newJobInfo}>
-          <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
-            <div className="text-lg flex items-center gap-2">
-              <PlusIcon className="size-6" />
-              New Job Description
-            </div>
-          </Card>
-        </Link>
       </div>
     </div>
   );

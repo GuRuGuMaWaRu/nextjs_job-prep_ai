@@ -4,7 +4,6 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 
 TODOs:
 
-[-] Loading spinner for Interviews page is not aligned to the center of the page
 [-] Resumes page is not loading properly, I get redirected to Upgrade Plans page, which is not implemented yet
 [-] Should be able to delete Job Infos
 [-] Use zod validation for all forms
@@ -13,6 +12,8 @@ TODOs:
 
 Completed TODOs:
 
+[V] On Job Infos page the main button for creating a new job info should be displayed first, before the list of job infos
+[V] Loading spinner for Interviews page is not aligned to the center of the page
 [V] Add DAL layers for all actions
 [V] Try to use data access layer as per WDS? [https://github.com/WebDevSimplified/next-js-data-access-layer/tree/main/src]. May be a good idea, at least worth a try. UPDATE: tried with a somewhat different approach, relied on Cursor to help me out and create a multi-layered architecture.
 [V] Username is missing in Interview actions (generateInterviewFeedback)
