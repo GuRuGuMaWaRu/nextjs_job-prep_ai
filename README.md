@@ -4,14 +4,15 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 
 TODOs:
 
-[-] Resumes page is not loading properly, I get redirected to Upgrade Plans page, which is not implemented yet
 [-] Should be able to delete Job Infos
 [-] Use zod validation for all forms
 [-] Check for existing email in the database before signing up - while user types or as a blur event happens
 [-] Allow changing plans (do I need Stripe for this?)
+[-] show available counts for all items that have limits. These counts should be displayed on Job Info page on specific nav items that have limits (Interviews, Questions, Resume Analyses)
 
 Completed TODOs:
 
+[V] Resumes page is not loading properly, I get redirected to Upgrade Plans page, which is not implemented yet. UPDATE: turns out this was a feature, not a bug; user is redirected to Upgrade Plans page only if he has no available resume analyses left.
 [V] On Job Infos page the main button for creating a new job info should be displayed first, before the list of job infos
 [V] Loading spinner for Interviews page is not aligned to the center of the page
 [V] Add DAL layers for all actions
@@ -33,9 +34,9 @@ Optional TODOs:
 
 [-?] Create a fork of this project with Tanstack Start.
 [-?] Hide some sections on Landing Page for small screens
-[-?] show available interview count on Interview List page so that user knows he reached the limit even before he clicks New Interview link
 [-?] Try out BetterAuth for authentication [https://www.better-auth.com/]
 [-?] Try to use data access layer as per WDS? [https://github.com/WebDevSimplified/next-js-data-access-layer/tree/main/src]. I did some version of this, but it feels bad. Maybe some day I will try it again.
+[-?] May be an interesting idea to have an item called Check Your Fitness For The Job. For this a user will be able to save his professional description (not a CV, but the whole dump of his professional experience, skills, etc.) and then the app will analyze it and give him a score and a list of things he can improve to increase his chances of getting the job.
 
 ---
 
