@@ -4,6 +4,8 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 
 TODOs:
 
+- [-] BUG: although I select System theme in the theme switcher, I still see Dark theme selected.
+- [-] BUG: when adding a new Job Info the form comes already prefilled with the values from the previously created Job Info.
 - [-] Use zod validation for all forms
 - [-] Check for existing email in the database before signing up - while user types or as a blur event happens
 - [-] Allow changing plans (do I need Stripe for this?)
@@ -14,6 +16,7 @@ TODOs:
 
 Completed TODOs:
 
+- [V] Show a dialog with a confirmation before deleting a job info
 - [V] BUG: When adding a new job info a user is redirected to that Job Info page, but if he goes back to Job Infos List page he won't see the new job info, only refreshing the page helps.
 - [V] Should be able to delete Job Infos. For this I need a delete button (and a confirmation dialog). For the delete button I need to change Job Info card styling. When I hover over Delete Button it should show a tooltip, activate hover state for the whole card and make it's border red. For the Go To Button I need to add a tooltip that says "Go to Job Info" and activate hover state for the whole card.
 - [V] Resumes page is not loading properly, I get redirected to Upgrade Plans page, which is not implemented yet. UPDATE: turns out this was a feature, not a bug; user is redirected to Upgrade Plans page only if he has no available resume analyses left.

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, TrashIcon } from "lucide-react";
 
 import { Badge } from "@/core/components/ui/badge";
 import {
@@ -10,8 +10,9 @@ import {
   CardFooter,
 } from "@/core/components/ui/card";
 import { Button } from "@/core/components/ui/button";
-import { JobInfoCardRemoveBtn } from "@/core/features/jobInfos/components/JobInfoCardRemoveBtn";
+import { ActionButton } from "@/core/components/ui/action-button";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
+import { removeJobInfoAction } from "@/core/features/jobInfos/actions";
 import { JobInfoTable } from "@/core/drizzle/schema";
 import { routes } from "@/core/data/routes";
 
@@ -51,7 +52,15 @@ export function JobInfoCard({
                 <ArrowRightIcon className="size-6 " />
               </Link>
             </Button>
-            <JobInfoCardRemoveBtn jobInfo={jobInfo} />
+            <ActionButton
+              action={removeJobInfoAction.bind(null, jobInfo.id)}
+              requireAreYouSure
+              areYouSureDescription="Deleting this Job Info will also remove all related interviews and questions."
+              successMessage={`Job info for "${jobInfo.name}" removed successfully`}
+              className="w-full h-1/2 delete-button"
+              variant="ghost">
+              <TrashIcon className="size-4 text-destructive" />
+            </ActionButton>
           </CardContent>
         </div>
       </Card>

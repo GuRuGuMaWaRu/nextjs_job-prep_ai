@@ -69,6 +69,7 @@ export async function removeJobInfoDb(id: string) {
     id: deletedJobInfo.id,
     userId: deletedJobInfo.userId,
   });
+  revalidatePath("/app");
 
   return deletedJobInfo;
 }

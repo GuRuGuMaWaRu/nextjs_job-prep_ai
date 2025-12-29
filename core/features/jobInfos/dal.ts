@@ -12,7 +12,7 @@ import {
   getJobInfoIdTag,
   getJobInfoGlobalTag,
 } from "@/core/features/jobInfos/dbCache";
-import { DatabaseError } from "@/core/dal/helpers";
+import { ActionResult, DatabaseError } from "@/core/dal/helpers";
 import { JobInfoTable } from "@/core/drizzle/schema";
 
 /**
@@ -114,14 +114,17 @@ export async function updateJobInfoDal(
 /**
  * Remove a job info by ID
  */
-export async function removeJobInfoDal(id: string) {
+export async function removeJobInfoDal(
+  id: string
+): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
   try {
-    return await removeJobInfoDb(id);
+    const deletedJobInfo = await removeJobInfoDb(id);
+    return { success: true, data: deletedJobInfo };
   } catch (error) {
     console.error("Database error removing job info:", error);
-    throw new DatabaseError(
-      "Failed to remove job information from database",
-      error
-    );
+    return {
+      success: false,
+      message: "Failed to remove job information from database",
+    };
   }
 }
