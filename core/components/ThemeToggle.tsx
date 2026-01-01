@@ -32,7 +32,7 @@ const themes = [
 ] as const;
 
 export function ThemeToggle() {
-  const { theme, setTheme, systemTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -47,31 +47,28 @@ export function ThemeToggle() {
     );
   }
 
-  const resolvedTheme = theme === "system" ? systemTheme : theme;
-
-  const icon = resolvedTheme === "dark" ? <MoonIcon /> : <SunIcon />;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button size="icon" variant="ghost">
-          {icon}
+          {theme === "dark" ? <MoonIcon /> : null}
+          {theme === "light" ? <SunIcon /> : null}
+          {theme === "system" ? <LaptopIcon /> : null}
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-34">
-        {themes.map((theme) => (
+        {themes.map((t) => (
           <DropdownMenuItem
-            key={theme.value}
-            onSelect={() => setTheme(theme.value)}
+            key={t.value}
+            onSelect={() => setTheme(t.value)}
             className={cn(
               "cursor-pointer",
-              theme.value === resolvedTheme &&
-                "bg-accent text-accent-foreground"
+              t.value === theme && "bg-accent text-accent-foreground"
             )}>
             <div className="flex items-center gap-2">
-              {theme.icon}
-              {theme.name}
+              {t.icon}
+              {t.name}
             </div>
           </DropdownMenuItem>
         ))}
