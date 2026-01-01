@@ -4,7 +4,6 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 
 TODOs:
 
-- [-] BUG: although I select System theme in the theme switcher, I still see Dark theme selected.
 - [-] Use zod validation for all forms
 - [-] Check for existing email in the database before signing up - while user types or as a blur event happens
 - [-] Allow changing plans (do I need Stripe for this?)
@@ -15,6 +14,7 @@ TODOs:
 
 Completed TODOs:
 
+- [V] BUG: although I select System theme in the theme switcher, I still see Dark theme selected.
 - [V] BUG: when adding a new Job Info the form comes already prefilled with the values from the previously created Job Info.
 - [V] Show a dialog with a confirmation before deleting a job info
 - [V] BUG: When adding a new job info a user is redirected to that Job Info page, but if he goes back to Job Infos List page he won't see the new job info, only refreshing the page helps.
@@ -48,6 +48,8 @@ Optional TODOs:
 - [-?] Since we already store all generated questions, we can use them for later reference - user may want to see the correct answer. Yet there's a problem - currently we save only questions, not the answer given by the user and AI feedback. We should store them. UPDATE: all replies/feedback will be saved automatically, then we can show them for a particular JobInfo, but there's also going to ba a page where user can see all questions/replies/feedbacks with ability to filter out by JobInfo, Question, Difficulty, etc and be able to delete them.
 - [-?] There's currently no way to set user profile image. We should allow users to upload a profile image.
 - [-?] I throw a lot of errors in my layered architecture, which seems confusing to me. I'd like to either return a success or failure object, not throw errors. Then in the layer closest to the UI I can handle the errors by either displaying them to the user or redirecting to an error page.
+- [-?] Cover with tests and implement CI/CD pipeline
+- [-?] Add React Storybook for components
 
 ---
 
