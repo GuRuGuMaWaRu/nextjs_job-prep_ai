@@ -19,7 +19,6 @@ import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { getUser } from "@/core/features/users/actions";
 import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
-import { EMAIL_REGEX } from "@/core/features/auth/constants";
 import { routes } from "@/core/data/routes";
 import { ActionResult } from "@/core/dal/helpers";
 
@@ -28,22 +27,12 @@ export type SignUpFormData = z.infer<typeof signUpSchema>;
 export async function signUpAction(
   values: SignUpFormData
 ): Promise<ActionResult<void>> {
-  const { name, email, password } = values;
-
-  if (!name || !email || !password) {
-    return { success: false, message: "All fields are required" };
+  const parsed = signUpSchema.safeParse(values);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.message };
   }
 
-  if (!EMAIL_REGEX.test(email)) {
-    return { success: false, message: "Invalid email address" };
-  }
-
-  if (password.length < 8) {
-    return {
-      success: false,
-      message: "Password must be at least 8 characters long",
-    };
-  }
+  const { name, email, password } = parsed.data;
 
   try {
     const existingUser = await findUserByEmailDb(email);
@@ -80,22 +69,12 @@ export type SignInFormData = z.infer<typeof signInSchema>;
 export async function signInAction(
   values: SignInFormData
 ): Promise<ActionResult<void>> {
-  const { email, password } = values;
-
-  if (!email || !password) {
-    return { success: false, message: "All fields are required" };
+  const parsed = signInSchema.safeParse(values);
+  if (!parsed.success) {
+    return { success: false, message: parsed.error.message };
   }
 
-  if (!EMAIL_REGEX.test(email)) {
-    return { success: false, message: "Invalid email address" };
-  }
-
-  if (password.length < 8) {
-    return {
-      success: false,
-      message: "Password must be at least 8 characters long",
-    };
-  }
+  const { email, password } = parsed.data;
 
   try {
     const user = await findUserByEmailDb(email);
