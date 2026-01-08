@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import z from "zod";
+import { z } from "zod";
 
 import { hashPassword, verifyPassword } from "@/core/features/auth/password";
 import {

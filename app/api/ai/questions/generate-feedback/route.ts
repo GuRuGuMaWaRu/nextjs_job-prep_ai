@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { getQuestionById } from "@/core/features/questions/actions";
