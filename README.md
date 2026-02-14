@@ -2,6 +2,12 @@
 
 Simple shadcn-based UI, multiple pages, live interviews, technical questions practice, resume optimization with AI
 
+## Architecture
+
+For a one-page overhead view of app structure, layers, and request flow, see:
+
+- `ARCHITECTURE.md`
+
 TODOs:
 
 - [-] Use zod validation for all forms
