@@ -5,6 +5,8 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 TODOs:
 
 - [-] Use zod validation for all forms
+- [-] Update Job Info form to use more modern way recommended by React Hook Form and Shadcn/UI
+- [-] Allow going back to landing page from Sign In and Sign Up pages
 - [-] Check for existing email in the database before signing up - while user types or as a blur event happens
 - [-] Allow changing plans (do I need Stripe for this?)
 - [-] Show available counts for all items that have limits. These counts should be displayed on Job Info page on specific nav items that have limits (Interviews, Questions, Resume Analyses)
