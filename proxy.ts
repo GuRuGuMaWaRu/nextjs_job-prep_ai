@@ -4,24 +4,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { env } from "./core/data/env/server";
 import { routes } from "./core/data/routes";
 
-// Public routes that don't require authentication
-const PUBLIC_ROUTES = [
-  "/sign-in",
-  "/sign-up",
-  "/api/auth/signin",
-  "/api/auth/signup",
-  "/api/auth/signout",
-  "/api/auth/verify-email",
-  "/api/auth/forgot-password",
-  "/api/auth/reset-password",
-  "/",
-];
+//** Public routes that don't require authentication
+const EXACT_PUBLIC_ROUTES = ["/"];
+const PREFIX_PUBLIC_ROUTES = ["/sign-in", "/sign-up"];
 
-// Check if route is public
+//** Check if route is public */
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  if (EXACT_PUBLIC_ROUTES.includes(pathname)) {
+    return true;
+  }
+
+  return PREFIX_PUBLIC_ROUTES.some((route) => {
+    if (pathname === route) {
+      return true;
+    }
+
+    return pathname.startsWith(`${route}/`);
+  });
 }
 
+//** Arcjet instance */
 const aj = arcjet({
   // TODO: add ts for env vars
   key: env.ARCJET_KEY,
