@@ -6,7 +6,7 @@ Simple shadcn-based UI, multiple pages, live interviews, technical questions pra
 
 For a one-page overhead view of app structure, layers, and request flow, see:
 
-- `ARCHITECTURE.md`
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 
 TODOs:
 

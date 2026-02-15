@@ -9,7 +9,7 @@ flowchart TD
     U[Browser / Client] --> M[proxy.ts middleware]
     M -->|Public route| R[App Router in app/]
     M -->|Private route + session cookie| R
-    M -->|No valid session| SI[/sign-in]
+    M -->|No valid session| SI["/sign-in"]
 
     R --> L[Route layout and page components]
     L --> SA[Server Actions in core/features/*/actions.ts]
