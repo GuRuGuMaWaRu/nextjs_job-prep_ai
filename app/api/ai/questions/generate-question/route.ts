@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import { questionDifficulties } from "@/core/drizzle/schema";

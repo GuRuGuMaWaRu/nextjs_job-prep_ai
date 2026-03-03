@@ -3,7 +3,7 @@
 import { ReactNode, useRef, useState } from "react";
 import { experimental_useObject as useObject } from "@ai-sdk/react";
 import type { DeepPartial } from "ai";
-import z from "zod";
+import { z } from "zod";
 import {
   AlertCircleIcon,
   CheckCircleIcon,

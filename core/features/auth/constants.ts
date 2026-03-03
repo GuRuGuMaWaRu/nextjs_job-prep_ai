@@ -11,10 +11,6 @@ export const SESSION_REFRESH_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const VERIFICATION_TOKEN_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const PASSWORD_RESET_TOKEN_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
-// Password requirements
-export const MIN_PASSWORD_LENGTH = 8;
-export const MAX_PASSWORD_LENGTH = 128;
-
 // Token types
 export const TOKEN_TYPES = {
   EMAIL_VERIFICATION: "email_verification",
@@ -28,4 +24,3 @@ export const COOKIE_OPTIONS = {
   sameSite: "lax" as const,
   path: "/",
 };
-
