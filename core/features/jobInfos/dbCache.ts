@@ -15,11 +15,11 @@ export function getJobInfoGlobalTag() {
 }
 
 export function getJobInfoUserTag(userId: string) {
-  return getUserTag(userId, "jobInfos");
+  return getUserTag("jobInfos", userId);
 }
 
 export function getJobInfoIdTag(id: string) {
-  return getIdTag(id, "jobInfos");
+  return getIdTag("jobInfos", id);
 }
 
 export function revalidateJobInfoCache({

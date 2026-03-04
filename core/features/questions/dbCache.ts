@@ -7,11 +7,11 @@ export function getQuestionGlobalTag() {
 }
 
 export function getQuestionJobInfoTag(jobInfoId: string) {
-  return getJobInfoTag(jobInfoId, "questions");
+  return getJobInfoTag("questions", jobInfoId);
 }
 
 export function getQuestionIdTag(id: string) {
-  return getIdTag(id, "questions");
+  return getIdTag("questions", id);
 }
 
 export function revalidateQuestionCache({

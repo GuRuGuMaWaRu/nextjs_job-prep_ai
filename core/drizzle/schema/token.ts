@@ -10,7 +10,7 @@ export const VerificationTokenTable = pgTable("verification_tokens", {
     .notNull()
     .references(() => UserTable.id, { onDelete: "cascade" }),
   token: varchar().notNull().unique(),
-  type: varchar().notNull(), // 'email_verification' | 'email_change'
+  type: varchar().notNull(), // 'email_verification' | 'email_change' // TODO: add enum
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt,
 });
@@ -32,7 +32,7 @@ export const verificationTokenRelations = relations(
       fields: [VerificationTokenTable.userId],
       references: [UserTable.id],
     }),
-  })
+  }),
 );
 
 export const passwordResetTokenRelations = relations(
@@ -42,6 +42,5 @@ export const passwordResetTokenRelations = relations(
       fields: [PasswordResetTokenTable.userId],
       references: [UserTable.id],
     }),
-  })
+  }),
 );
-

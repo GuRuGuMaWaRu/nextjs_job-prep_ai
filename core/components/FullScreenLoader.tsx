@@ -1,4 +1,5 @@
 import { Loader2Icon } from "lucide-react";
+
 import { cn } from "@/core/lib/utils";
 
 export function FullScreenLoader({ className }: { className?: string }) {

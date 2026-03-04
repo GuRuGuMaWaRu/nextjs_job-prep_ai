@@ -1,3 +1,5 @@
+"use server";
+
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 import { env } from "@/core/data/env/server";
