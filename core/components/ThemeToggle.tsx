@@ -36,7 +36,9 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => {
+      setMounted(true);
+    }, 0);
   }, []);
 
   if (!mounted) {
@@ -62,7 +64,7 @@ export function ThemeToggle() {
             onSelect={() => setTheme(t.value)}
             className={cn(
               "cursor-pointer",
-              t.value === theme && "bg-accent text-accent-foreground"
+              t.value === theme && "bg-accent text-accent-foreground",
             )}>
             <div className="flex items-center gap-2">
               {t.icon}

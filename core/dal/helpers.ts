@@ -33,8 +33,11 @@ export class ValidationError extends Error {
 }
 
 export class DatabaseError extends Error {
-  constructor(message: string, public readonly originalError?: unknown) {
-    super(message);
+  constructor(
+    message: string,
+    public readonly originalError?: unknown,
+  ) {
+    super(message, { cause: originalError });
     this.name = "DatabaseError";
   }
 }

@@ -44,8 +44,12 @@ export function SignInForm() {
               placeholder="you@example.com"
               defaultValue={state?.fields?.email}
               disabled={isPending}
+              aria-invalid={state?.fieldErrors?.email != null}
               required
             />
+            {state?.fieldErrors?.email && (
+              <p className="text-sm text-destructive">{state.fieldErrors.email}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -56,8 +60,14 @@ export function SignInForm() {
               type="password"
               placeholder="••••••••"
               disabled={isPending}
+              aria-invalid={state?.fieldErrors?.password != null}
               required
             />
+            {state?.fieldErrors?.password && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.password}
+              </p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={isPending}>

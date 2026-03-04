@@ -3,17 +3,19 @@ import { BrainCircuitIcon } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
+interface CondensedMessagesProps {
+  messages: { isUser: boolean; content: string[] }[];
+  user: { name: string; image: string | null };
+  className?: string;
+  maxFft?: number;
+}
+
 export function CondensedMessages({
   messages,
   user,
   className,
   maxFft = 0,
-}: {
-  messages: { isUser: boolean; content: string[] }[];
-  user: { name: string; image: string | null };
-  className?: string;
-  maxFft?: number;
-}) {
+}: CondensedMessagesProps) {
   return (
     <div className={cn("flex flex-col gap-4 w-full", className)}>
       {messages.map((msg, index) => {
@@ -24,7 +26,7 @@ export function CondensedMessages({
             key={index}
             className={cn(
               "flex items-center gap-5 border pl-4 pr-6 py-4 rounded max-w-3/4",
-              msg.isUser ? "self-end" : "self-start"
+              msg.isUser ? "self-end" : "self-start",
             )}>
             {msg.isUser ? (
               <UserAvatar user={user} className="size-6 shrink-0" />
@@ -33,7 +35,7 @@ export function CondensedMessages({
                 <div
                   className={cn(
                     "absolute inset-0 border-muted border-4 rounded-full",
-                    shouldAnimate ? "animate-ping" : "hidden"
+                    shouldAnimate ? "animate-ping" : "hidden",
                   )}
                 />
                 <BrainCircuitIcon

@@ -4,14 +4,14 @@ export function getGlobalTag(tag: CacheTag) {
   return `global:${tag}` as const;
 }
 
-export function getUserTag(userId: string, tag: CacheTag) {
+export function getUserTag(tag: CacheTag, userId: string) {
   return `user:${userId}:${tag}` as const;
 }
 
-export function getIdTag(id: string, tag: CacheTag) {
+export function getIdTag(tag: CacheTag, id: string) {
   return `id:${id}:${tag}` as const;
 }
 
-export function getJobInfoTag(jobInfoId: string, tag: CacheTag) {
+export function getJobInfoTag(tag: CacheTag, jobInfoId: string) {
   return `jobInfo:${jobInfoId}:${tag}` as const;
 }

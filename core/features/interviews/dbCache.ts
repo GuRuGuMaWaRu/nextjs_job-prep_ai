@@ -7,11 +7,11 @@ export function getInterviewGlobalTag() {
 }
 
 export function getInterviewJobInfoTag(jobInfoId: string) {
-  return getJobInfoTag(jobInfoId, "interviews");
+  return getJobInfoTag("interviews", jobInfoId);
 }
 
 export function getInterviewIdTag(id: string) {
-  return getIdTag(id, "interviews");
+  return getIdTag("interviews", id);
 }
 
 export function revalidateInterviewCache({

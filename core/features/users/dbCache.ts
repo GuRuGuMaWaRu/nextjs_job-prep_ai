@@ -7,7 +7,7 @@ export function getUserGlobalTag() {
 }
 
 export function getUserIdTag(id: string) {
-  return getIdTag(id, "users");
+  return getIdTag("users", id);
 }
 
 export function revalidateUserCache(id: string) {

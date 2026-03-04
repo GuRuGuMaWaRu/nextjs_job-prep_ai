@@ -4,16 +4,18 @@ import { JobInfoTable } from "@/core/drizzle/schema";
 import { google } from "@/core/services/ai/models/google";
 import { aiAnalyzeSchema } from "@/core/services/ai/resumes/schemas";
 
-export async function analyzeResumeForJob({
-  resumeFile,
-  jobInfo,
-}: {
+interface AnalyzeResumeForJobProps {
   resumeFile: File;
   jobInfo: Pick<
     typeof JobInfoTable.$inferSelect,
     "title" | "experienceLevel" | "description"
   >;
-}) {
+}
+
+export async function analyzeResumeForJob({
+  resumeFile,
+  jobInfo,
+}: AnalyzeResumeForJobProps) {
   return streamObject({
     model: google("gemini-2.5-flash"),
     schema: aiAnalyzeSchema,

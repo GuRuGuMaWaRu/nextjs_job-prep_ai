@@ -3,6 +3,8 @@ import { pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
 
 import { JobInfoTable } from "./jobInfo";
 import { createdAt, updatedAt } from "../schemaHelpers";
+import { PasswordResetTokenTable, VerificationTokenTable } from "./token";
+import { SessionTable } from "./session";
 
 // User plan types
 export const userPlans = ["free", "pro"] as const;
@@ -21,5 +23,8 @@ export const UserTable = pgTable("users", {
 });
 
 export const usersRelations = relations(UserTable, ({ many }) => ({
-  jobInfo: many(JobInfoTable),
+  jobInfos: many(JobInfoTable),
+  verificationTokens: many(VerificationTokenTable),
+  passwordResetTokens: many(PasswordResetTokenTable),
+  sessions: many(SessionTable),
 }));

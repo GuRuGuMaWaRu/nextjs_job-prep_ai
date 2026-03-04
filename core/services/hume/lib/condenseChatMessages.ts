@@ -1,9 +1,14 @@
-import { ConnectionMessage, JSONMessage } from "@humeai/voice-react";
-import type { Hume } from "hume";
+type JSONChatMessage = {
+  type: "user_message" | "assistant_message";
+  message: { content: string | null | undefined };
+};
 
-type ReturnChatEvent = Hume.empathicVoice.ReturnChatEvent;
+type ReturnChatEventMessage = {
+  type: "USER_MESSAGE" | "AGENT_MESSAGE";
+  messageText: string | null | undefined;
+};
 
-type Message = JSONMessage | ConnectionMessage | ReturnChatEvent;
+type Message = JSONChatMessage | ReturnChatEventMessage | { type: string };
 
 export function condenseChatMessages(messages: Message[]) {
   return messages.reduce((acc, message) => {
@@ -33,6 +38,10 @@ function getJsonMessageData(message: Message) {
     return null;
   }
 
+  if (!("message" in message)) {
+    return null;
+  }
+
   return {
     isUser: message.type === "user_message",
     content: message.message.content,
@@ -41,6 +50,10 @@ function getJsonMessageData(message: Message) {
 
 function getChatEventData(message: Message) {
   if (message.type !== "USER_MESSAGE" && message.type !== "AGENT_MESSAGE") {
+    return null;
+  }
+
+  if (!("messageText" in message)) {
     return null;
   }
 

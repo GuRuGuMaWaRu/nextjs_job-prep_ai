@@ -50,7 +50,7 @@ export default async function InterviewPage({
       if (interview == null) return notFound();
 
       return interview;
-    }
+    },
   );
 
   return (
@@ -81,10 +81,10 @@ export default async function InterviewPage({
           <SuspendedItem
             item={interview}
             fallback={<SkeletonButton className="w-32" />}
-            result={(intv) =>
-              intv.feedback == null ? (
+            result={(i) =>
+              i.feedback == null ? (
                 <ActionButton
-                  action={generateInterviewFeedbackAction.bind(null, intv.id)}>
+                  action={generateInterviewFeedbackAction.bind(null, i.id)}>
                   Generate Feedback
                 </ActionButton>
               ) : (
@@ -94,7 +94,7 @@ export default async function InterviewPage({
                   </DialogTrigger>
                   <DialogContent className="md:max-w-3xl lg:max-w-4xl max-h-[calc(100%-2rem)] overflow-y-auto flex flex-col">
                     <DialogTitle>Feedback</DialogTitle>
-                    <MarkdownRenderer>{intv.feedback}</MarkdownRenderer>
+                    <MarkdownRenderer>{i.feedback}</MarkdownRenderer>
                   </DialogContent>
                 </Dialog>
               )
@@ -121,7 +121,7 @@ async function SuspendedMessages({
   if (humeChatId == null) return notFound();
 
   const condensedMessages = condenseChatMessages(
-    await fetchChatMessages(humeChatId)
+    await fetchChatMessages(humeChatId),
   );
 
   return (

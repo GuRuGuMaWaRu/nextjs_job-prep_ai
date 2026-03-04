@@ -22,7 +22,7 @@ export function PlanLimitAlert({
         You have reached the limit of your current plan. Please upgrade to
         continue using all features.
         {hasRedirectButton ? (
-          <Button size="sm" asChild className="mt-3 ml-auto">
+          <Button asChild size="sm" className="mt-3 ml-auto">
             <Link href={routes.upgrade}>Upgrade</Link>
           </Button>
         ) : null}
