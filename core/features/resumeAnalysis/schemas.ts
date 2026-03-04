@@ -14,6 +14,10 @@ export const ALLOWED_RESUME_FILE_TYPES = [
   "text/plain",
 ] as const;
 
+const allowedResumeFileTypesSet: ReadonlySet<string> = new Set(
+  ALLOWED_RESUME_FILE_TYPES
+);
+
 export const resumeAnalysisInputSchema = z.object({
   jobInfoId: z.string().min(1, "Missing resume or job info id"),
   resumeFile: z
@@ -21,7 +25,7 @@ export const resumeAnalysisInputSchema = z.object({
     .refine((file) => file.size <= MAX_RESUME_FILE_SIZE, {
       message: FILE_SIZE_TOO_LARGE_MESSAGE,
     })
-    .refine((file) => ALLOWED_RESUME_FILE_TYPES.includes(file.type), {
+    .refine((file) => allowedResumeFileTypesSet.has(file.type), {
       message: FILE_TYPE_NOT_SUPPORTED_MESSAGE,
     }),
 });
