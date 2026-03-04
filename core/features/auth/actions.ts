@@ -1,12 +1,12 @@
 "use server";
 
+import z from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import {
   hashPassword,
   verifyPassword,
-  validatePassword,
 } from "@/core/features/auth/password";
 import {
   setSessionCookie,
@@ -20,17 +20,35 @@ import {
 } from "@/core/features/auth/session";
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
+import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
+
+type AuthFieldErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
 
 type ActionState = {
   error?: string;
   success?: boolean;
+  fieldErrors?: AuthFieldErrors;
   fields?: {
     name?: string;
     email?: string;
   };
 };
+
+function getFirstFieldErrors(error: z.ZodError): AuthFieldErrors {
+  const { fieldErrors } = error.flatten();
+
+  return {
+    name: fieldErrors.name?.[0],
+    email: fieldErrors.email?.[0],
+    password: fieldErrors.password?.[0],
+  };
+}
 
 /**
  * Sign up a new user
@@ -39,47 +57,49 @@ export async function signUpAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const rawName = formData.get("name");
+  const rawEmail = formData.get("email");
+  const rawPassword = formData.get("password");
+
+  const unsafeData = {
+    name: typeof rawName === "string" ? rawName : "",
+    email: typeof rawEmail === "string" ? rawEmail : "",
+    password: typeof rawPassword === "string" ? rawPassword : "",
+  };
 
   // Store fields to return on error
-  const fields = { name, email };
+  const fields = { name: unsafeData.name, email: unsafeData.email };
 
-  // Validate required fields
-  if (!name || !email || !password) {
-    return { error: "All fields are required", fields };
-  }
-
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return { error: "Invalid email address", fields };
-  }
-
-  // Validate password strength
-  const passwordValidation = validatePassword(password);
-  if (!passwordValidation.isValid) {
-    return { error: passwordValidation.error, fields };
+  const validation = signUpSchema.safeParse(unsafeData);
+  if (!validation.success) {
+    return {
+      error: "Please correct the highlighted fields.",
+      fields,
+      fieldErrors: getFirstFieldErrors(validation.error),
+    };
   }
 
   try {
     // Check if user already exists
-    const existingUser = await findUserByEmailDb(email);
+    const existingUser = await findUserByEmailDb(validation.data.email);
 
     if (existingUser) {
-      return { error: "An account with this email already exists", fields };
+      return {
+        error: "An account with this email already exists",
+        fields,
+        fieldErrors: { email: "An account with this email already exists" },
+      };
     }
 
     // Hash password
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(validation.data.password);
 
     // Create user
     const userId = generateUserId();
     await createUserDb({
       id: userId,
-      name,
-      email: email.toLowerCase(),
+      name: validation.data.name,
+      email: validation.data.email.toLowerCase(),
       passwordHash,
     });
 
@@ -103,27 +123,39 @@ export async function signInAction(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const rawEmail = formData.get("email");
+  const rawPassword = formData.get("password");
+
+  const unsafeData = {
+    email: typeof rawEmail === "string" ? rawEmail : "",
+    password: typeof rawPassword === "string" ? rawPassword : "",
+  };
 
   // Store fields to return on error
-  const fields = { email };
+  const fields = { email: unsafeData.email };
 
-  // Validate required fields
-  if (!email || !password) {
-    return { error: "Email and password are required", fields };
+  const validation = signInSchema.safeParse(unsafeData);
+  if (!validation.success) {
+    return {
+      error: "Please correct the highlighted fields.",
+      fields,
+      fieldErrors: getFirstFieldErrors(validation.error),
+    };
   }
 
   try {
     // Find user by email
-    const user = await findUserByEmailDb(email);
+    const user = await findUserByEmailDb(validation.data.email);
 
     if (!user || !user.passwordHash) {
       return { error: "Invalid email or password", fields };
     }
 
     // Verify password
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
+    const isValidPassword = await verifyPassword(
+      validation.data.password,
+      user.passwordHash
+    );
 
     if (!isValidPassword) {
       return { error: "Invalid email or password", fields };

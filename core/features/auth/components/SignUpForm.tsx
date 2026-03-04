@@ -44,8 +44,12 @@ export function SignUpForm() {
               placeholder="John Doe"
               defaultValue={state?.fields?.name}
               disabled={isPending}
+              aria-invalid={state?.fieldErrors?.name != null}
               required
             />
+            {state?.fieldErrors?.name && (
+              <p className="text-sm text-destructive">{state.fieldErrors.name}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -57,8 +61,12 @@ export function SignUpForm() {
               placeholder="you@example.com"
               defaultValue={state?.fields?.email}
               disabled={isPending}
+              aria-invalid={state?.fieldErrors?.email != null}
               required
             />
+            {state?.fieldErrors?.email && (
+              <p className="text-sm text-destructive">{state.fieldErrors.email}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -69,9 +77,15 @@ export function SignUpForm() {
               type="password"
               placeholder="••••••••"
               disabled={isPending}
+              aria-invalid={state?.fieldErrors?.password != null}
               required
               minLength={8}
             />
+            {state?.fieldErrors?.password && (
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.password}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               Must be at least 8 characters with a letter and number
             </p>
