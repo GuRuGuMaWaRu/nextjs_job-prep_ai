@@ -9,7 +9,7 @@ import { getQuestionCountDb } from "@/core/features/questions/db";
 /**
  * Check if user can generate more questions
  * - Pro users: unlimited
- * - Free users: up to 5 questions
+ * - Free users: up to FREE_PLAN_LIMITS.questions
  */
 export async function checkQuestionsPermission(): Promise<boolean> {
   const { userId } = await getCurrentUser();
