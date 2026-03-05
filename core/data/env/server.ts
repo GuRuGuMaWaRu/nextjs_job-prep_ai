@@ -1,5 +1,5 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-import z from "zod";
+import { z } from "zod";
 
 export const env = createEnv({
   server: {
@@ -16,8 +16,15 @@ export const env = createEnv({
   },
   createFinalSchema: (env) => {
     return z.object(env).transform((val) => {
-      const { DB_PASSWORD, DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_SSLMODE, ...rest } =
-        val;
+      const {
+        DB_PASSWORD,
+        DB_HOST,
+        DB_PORT,
+        DB_USER,
+        DB_NAME,
+        DB_SSLMODE,
+        ...rest
+      } = val;
       const sslModeSuffix = DB_SSLMODE
         ? `?sslmode=${encodeURIComponent(DB_SSLMODE)}`
         : "";

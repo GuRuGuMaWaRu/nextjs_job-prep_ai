@@ -10,7 +10,6 @@ For a one-page overhead view of app structure, layers, and request flow, see:
 
 TODOs:
 
-- [-] Use zod validation for all forms
 - [-] Check for existing email in the database before signing up - while user types or as a blur event happens
 - [-] Allow changing plans (do I need Stripe for this?)
 - [-] Show available counts for all items that have limits. These counts should be displayed on Job Info page on specific nav items that have limits (Interviews, Questions, Resume Analyses)
@@ -20,6 +19,7 @@ TODOs:
 
 Completed TODOs:
 
+- [V] Use zod validation for all forms
 - [V] BUG: although I select System theme in the theme switcher, I still see Dark theme selected.
 - [V] BUG: when adding a new Job Info the form comes already prefilled with the values from the previously created Job Info.
 - [V] Show a dialog with a confirmation before deleting a job info

@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import { questionDifficulties } from "@/core/drizzle/schema";
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
               const { id } = await insertQuestion(
                 question,
                 jobInfoId,
-                difficulty
+                difficulty,
               );
               writer.write({
                 type: "text-delta",

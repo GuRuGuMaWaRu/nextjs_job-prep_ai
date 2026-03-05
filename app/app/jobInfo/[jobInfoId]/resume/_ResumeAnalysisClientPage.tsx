@@ -3,7 +3,7 @@
 import { ReactNode, useRef, useState } from "react";
 import { experimental_useObject as useObject } from "@ai-sdk/react";
 import type { DeepPartial } from "ai";
-import z from "zod";
+import { z } from "zod";
 import {
   AlertCircleIcon,
   CheckCircleIcon,
@@ -109,7 +109,7 @@ export function ResumeAnalysisClientPage({ jobInfoId }: { jobInfoId: string }) {
                 "mt-2 border-2 border-dashed rounded-lg p-6 transition-colors relative",
                 isDraggingOver
                   ? "border-primary bg-primary/10"
-                  : "border-muted-foreground/50 bg-muted/10"
+                  : "border-muted-foreground/50 bg-muted/10",
               )}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -305,7 +305,7 @@ function FeedbackItem({
     <div
       className={cn(
         "flex items-baseline gap-3 pl-3 pr-5 py-5 rounded-lg",
-        getColors()
+        getColors(),
       )}>
       <div>{getIcon()}</div>
       <div className="flex flex-col gap-1">

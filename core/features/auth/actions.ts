@@ -1,13 +1,10 @@
 "use server";
 
-import z from "zod";
+import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import {
-  hashPassword,
-  verifyPassword,
-} from "@/core/features/auth/password";
+import { hashPassword, verifyPassword } from "@/core/features/auth/password";
 import {
   setSessionCookie,
   getSessionToken,
@@ -55,7 +52,7 @@ function getFirstFieldErrors(error: z.ZodError): AuthFieldErrors {
  */
 export async function signUpAction(
   _prevState: ActionState | null,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   const rawName = formData.get("name");
   const rawEmail = formData.get("email");
@@ -121,7 +118,7 @@ export async function signUpAction(
  */
 export async function signInAction(
   _prevState: ActionState | null,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   const rawEmail = formData.get("email");
   const rawPassword = formData.get("password");
@@ -154,7 +151,7 @@ export async function signInAction(
     // Verify password
     const isValidPassword = await verifyPassword(
       validation.data.password,
-      user.passwordHash
+      user.passwordHash,
     );
 
     if (!isValidPassword) {
@@ -244,7 +241,7 @@ export async function getCurrentUser({
 
   return {
     userId,
-    user: allData ? (await getUser(userId)) ?? undefined : undefined,
+    user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
     redirectToSignIn: () => redirect(routes.signIn),
   };
 }

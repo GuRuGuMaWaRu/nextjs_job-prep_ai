@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 import {
   FILE_SIZE_TOO_LARGE_MESSAGE,
@@ -15,7 +15,7 @@ export const ALLOWED_RESUME_FILE_TYPES = [
 ] as const;
 
 const allowedResumeFileTypesSet: ReadonlySet<string> = new Set(
-  ALLOWED_RESUME_FILE_TYPES
+  ALLOWED_RESUME_FILE_TYPES,
 );
 
 export const resumeAnalysisInputSchema = z.object({

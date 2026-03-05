@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 import {
   MIN_PASSWORD_LENGTH,
@@ -15,11 +15,11 @@ const passwordStrengthSchema = z
   .string()
   .min(
     MIN_PASSWORD_LENGTH,
-    `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+    `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
   )
   .max(
     MAX_PASSWORD_LENGTH,
-    `Password must be less than ${MAX_PASSWORD_LENGTH} characters`
+    `Password must be less than ${MAX_PASSWORD_LENGTH} characters`,
   )
   .refine((password) => /[a-zA-Z]/.test(password), {
     message: "Password must contain at least one letter and one number",
