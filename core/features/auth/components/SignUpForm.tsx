@@ -75,6 +75,7 @@ export function SignUpForm() {
             <PasswordInput
               id="password"
               name="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               disabled={isPending}
               aria-invalid={state?.fieldErrors?.password != null}

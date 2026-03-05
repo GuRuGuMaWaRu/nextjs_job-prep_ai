@@ -58,6 +58,7 @@ export function SignInForm() {
             <PasswordInput
               id="password"
               name="password"
+              autoComplete="current-password"
               placeholder="••••••••"
               disabled={isPending}
               aria-invalid={state?.fieldErrors?.password != null}
