@@ -13,6 +13,7 @@ import {
 } from "@/core/components/ui/card";
 import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
+import { PasswordInput } from "@/core/components/ui/password-input";
 import { routes } from "@/core/data/routes";
 import { signUpAction } from "@/core/features/auth/actions";
 
@@ -71,10 +72,10 @@ export function SignUpForm() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
+              autoComplete="new-password"
               placeholder="••••••••"
               disabled={isPending}
               aria-invalid={state?.fieldErrors?.password != null}
