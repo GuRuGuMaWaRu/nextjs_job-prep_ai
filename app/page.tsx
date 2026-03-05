@@ -330,7 +330,7 @@ function PricingSection() {
       features: [
         "1 AI mock interview per month",
         "Basic resume analysis",
-        "5 practice questions per month",
+        "10 practice questions per month",
         "Email support",
       ],
       popular: false,

@@ -5,6 +5,7 @@ import { useParams, usePathname } from "next/navigation";
 import {
   BookOpenIcon,
   BrainCircuitIcon,
+  CircleArrowUpIcon,
   FileSlidersIcon,
   LogOut,
   SpeechIcon,
@@ -12,9 +13,10 @@ import {
 
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@core/components/ui/dropdown-menu";
 import { ThemeToggle } from "@core/components/ThemeToggle";
 import { Button } from "@/core/components/ui/button";
@@ -72,6 +74,13 @@ export function Navbar({
             <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={routes.upgrade}>
+                <CircleArrowUpIcon className="mr-2" />
+                Upgrade
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <button type="button" onClick={signOutAction} className="w-full">
               <DropdownMenuItem>
                 <LogOut className="mr-2" />
