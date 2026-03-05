@@ -47,7 +47,7 @@ export async function createSession(userId: string): Promise<Session> {
  */
 export async function validateSession(token: string): Promise<Session | null> {
   try {
-    const [session] = await validateSessionDb(token);
+    const session = await validateSessionDb(token);
 
     if (!session) {
       return null;
@@ -66,7 +66,7 @@ export async function validateSession(token: string): Promise<Session | null> {
  * @returns Updated session if extended, original session otherwise
  */
 export async function extendSessionIfNeeded(
-  token: string
+  token: string,
 ): Promise<Session | null> {
   const session = await validateSession(token);
 
