@@ -1,6 +1,7 @@
 import {
   hasPermission,
   FREE_PLAN_LIMITS,
+  PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getCurrentUser } from "@/core/features/auth/actions";
 import { getQuestionCountDb } from "@/core/features/questions/db";
@@ -18,14 +19,14 @@ export async function checkQuestionsPermission(): Promise<boolean> {
   }
 
   // Check if user has unlimited questions (Pro plan)
-  const hasUnlimited = await hasPermission("unlimited_questions");
+  const hasUnlimited = await hasPermission(PERMISSIONS.UNLIMITED.QUESTIONS);
 
   if (hasUnlimited) {
     return true;
   }
 
   // Check if user has limited questions permission (Free plan)
-  const hasLimited = await hasPermission("limited_questions");
+  const hasLimited = await hasPermission(PERMISSIONS.LIMITED.QUESTIONS);
 
   if (!hasLimited) {
     return false;

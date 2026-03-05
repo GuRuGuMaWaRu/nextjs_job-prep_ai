@@ -5,28 +5,48 @@ import type { UserPlan } from "@/core/drizzle/schema/user";
 /**
  * Permission types that can be checked
  */
+export const PERMISSIONS = {
+  UNLIMITED: {
+    INTERVIEWS: "unlimited_interviews",
+    QUESTIONS: "unlimited_questions",
+    RESUME_ANALYSES: "unlimited_resume_analyses",
+  },
+  LIMITED: {
+    INTERVIEWS: "limited_interviews",
+    QUESTIONS: "limited_questions",
+  },
+} as const;
+
+type ValueOf<T> = T[keyof T];
+
 export type Permission =
-  | "unlimited_interviews"
-  | "unlimited_questions"
-  | "unlimited_resume_analyses"
-  | "limited_interviews"
-  | "limited_questions";
+  | ValueOf<typeof PERMISSIONS.UNLIMITED>
+  | ValueOf<typeof PERMISSIONS.LIMITED>;
 
 /**
  * Plan configurations defining what each plan allows
  */
 const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
   free: [
-    "limited_interviews",
-    "limited_questions",
-    "unlimited_resume_analyses",
+    PERMISSIONS.LIMITED.INTERVIEWS,
+    PERMISSIONS.LIMITED.QUESTIONS,
+    PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
   ],
   pro: [
-    "unlimited_interviews",
-    "unlimited_questions",
-    "unlimited_resume_analyses",
+    PERMISSIONS.UNLIMITED.INTERVIEWS,
+    PERMISSIONS.UNLIMITED.QUESTIONS,
+    PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
   ],
 };
+
+/**
+ * Map of features to unlimited permissions
+ */
+const UNLIMITED_PERMISSION_MAP = {
+  interviews: PERMISSIONS.UNLIMITED.INTERVIEWS,
+  questions: PERMISSIONS.UNLIMITED.QUESTIONS,
+  resume_analyses: PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
+} as const;
 
 /**
  * Usage limits for free plan
@@ -34,7 +54,7 @@ const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
 export const FREE_PLAN_LIMITS = {
   interviews: 1,
   questions: 10,
-  resumeAnalyses: 3,
+  resume_analyses: 3,
 } as const;
 
 /**
@@ -83,13 +103,7 @@ export async function getUserPlan(): Promise<UserPlan> {
  * @returns true if unlimited, false if limited or no access
  */
 export async function hasUnlimitedAccess(
-  feature: "interviews" | "questions" | "resume_analyses"
+  feature: keyof typeof UNLIMITED_PERMISSION_MAP,
 ): Promise<boolean> {
-  const permissionMap = {
-    interviews: "unlimited_interviews" as Permission,
-    questions: "unlimited_questions" as Permission,
-    resume_analyses: "unlimited_resume_analyses" as Permission,
-  };
-
-  return hasPermission(permissionMap[feature]);
+  return hasPermission(UNLIMITED_PERMISSION_MAP[feature]);
 }

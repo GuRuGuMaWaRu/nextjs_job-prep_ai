@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/core/features/auth/actions";
 import {
   hasPermission,
   FREE_PLAN_LIMITS,
+  PERMISSIONS,
 } from "@/core/features/auth/permissions";
 
 /**
@@ -12,14 +13,14 @@ import {
  */
 export async function checkInterviewPermission(): Promise<boolean> {
   // Check if user has unlimited interviews (Pro plan)
-  const hasUnlimited = await hasPermission("unlimited_interviews");
+  const hasUnlimited = await hasPermission(PERMISSIONS.UNLIMITED.INTERVIEWS);
 
   if (hasUnlimited) {
     return true;
   }
 
   // Check if user has limited interviews permission (Free plan)
-  const hasLimited = await hasPermission("limited_interviews");
+  const hasLimited = await hasPermission(PERMISSIONS.LIMITED.INTERVIEWS);
 
   if (!hasLimited) {
     return false;
