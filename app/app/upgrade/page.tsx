@@ -70,8 +70,14 @@ function HeadlineSection({ currentPlan }: { currentPlan: UserPlan | null }) {
         your <span className="text-primary">dream job</span> faster.
       </p>
       {currentPlan != null && (
-        <p className="text-sm text-muted-foreground mt-3 inline-block" aria-live="polite">
-          You&apos;re on the <strong className="text-foreground">{currentPlan === "pro" ? "Pro" : "Free"}</strong> plan.
+        <p
+          className="text-sm text-muted-foreground mt-3 inline-block"
+          aria-live="polite">
+          You&apos;re on the{" "}
+          <strong className="text-foreground">
+            {currentPlan === "pro" ? "Pro" : "Free"}
+          </strong>{" "}
+          plan.
         </p>
       )}
     </section>
@@ -175,8 +181,7 @@ function PlanCard({
       className={`relative transition-all hover:shadow-lg ${
         plan.popular && "border-primary shadow-lg"
       } ${isCurrentPlan ? "ring-2 ring-primary/30" : ""}`}
-      aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}
-    >
+      aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}>
       {showBadges && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2">
           {plan.popular && (
@@ -194,7 +199,9 @@ function PlanCard({
       <CardHeader className="space-y-4 p-5">
         <div className="space-y-1">
           <CardTitle className="text-xl">{plan.name}</CardTitle>
-          <CardDescription className="text-sm">{plan.description}</CardDescription>
+          <CardDescription className="text-sm">
+            {plan.description}
+          </CardDescription>
         </div>
         <div className="flex items-baseline gap-1.5">
           <span className="text-3xl font-bold tracking-tight">
@@ -216,8 +223,7 @@ function PlanCard({
           size="lg"
           className="w-full"
           disabled={ctaDisabled}
-          asChild={!ctaDisabled && !ctaComingSoon}
-        >
+          asChild={!ctaDisabled && !ctaComingSoon}>
           {ctaComingSoon ? (
             <span>Coming soon</span>
           ) : ctaDisabled ? (
@@ -233,7 +239,7 @@ function PlanCard({
 
 function EnterpriseBlock() {
   return (
-    <Card className="max-w-4xl mx-auto bg-muted/30">
+    <Card className="max-w-4xl mx-auto border-enterprise/40 bg-enterprise-bg shadow-lg">
       <CardHeader className="space-y-4 p-5">
         <div className="space-y-1">
           <CardTitle className="text-xl">{ENTERPRISE_PLAN.name}</CardTitle>
@@ -254,14 +260,14 @@ function EnterpriseBlock() {
         <div className="space-y-2 pt-2">
           {ENTERPRISE_PLAN.features.map((feature) => (
             <div key={feature} className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <Check className="w-4 h-4 text-enterprise shrink-0 mt-0.5" />
               <span className="text-sm text-foreground">{feature}</span>
             </div>
           ))}
         </div>
       </CardHeader>
       <CardFooter className="pt-0 px-5">
-        <Button variant="outline" size="lg" className="w-full" asChild>
+        <Button variant="outline" size="lg" className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise" asChild>
           <a href="mailto:enterprise@landr.example.com">Contact us</a>
         </Button>
       </CardFooter>
