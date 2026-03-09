@@ -488,12 +488,12 @@ const FAQ_ITEMS = [
   {
     question: "Can I cancel anytime?",
     answer:
-      "Yes. You can cancel your Pro subscription at any time. You'll keep access until the end of your billing period, then your account will switch back to the Free plan.",
+      "Yes. You will be able to cancel your Pro subscription at any time. You'll keep access until the end of your billing period, then your account will switch back to the Free plan.",
   },
   {
     question: "How does billing work?",
     answer:
-      'Pro is billed monthly. Payment is charged at the start of each billing cycle. We\'ll send you a receipt by email. You can manage your subscription or payment method from the Upgrade page using the "Manage subscription" button.',
+      'Pro will be billed monthly. Payment will be charged at the start of each billing cycle. We plan to send you a receipt by email. You will be able to manage your subscription or payment method from the Upgrade page using the "Manage subscription" button.',
   },
 ] as const;
 
