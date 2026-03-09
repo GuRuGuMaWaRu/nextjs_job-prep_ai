@@ -114,11 +114,9 @@ async function syncSubscriptionFromStripe(
 ) {
   const user = await getUserByStripeCustomerIdDb(customerId);
   if (!user) {
-    console.warn(
-      "syncSubscriptionFromStripe: no user for customer",
-      customerId,
+    throw new Error(
+      `syncSubscriptionFromStripe: no user for customer ${customerId} — will retry`,
     );
-    return;
   }
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
