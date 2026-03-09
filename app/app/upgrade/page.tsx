@@ -312,7 +312,7 @@ async function PlanCardsSection() {
           plan={PRO_PLAN}
           isCurrentPlan={currentPlan === "pro"}
           cta={currentPlan === "pro" ? "Current plan" : "Upgrade to Pro"}
-          ctaDisabled={currentPlan === "pro" || hasExistingSubscription}
+          ctaDisabled={!canCheckout}
           canUpgrade={canCheckout}
           stripeCheckoutEnabled={canCheckout}
           checkoutAction={STRIPE_CHECKOUT_URL}
