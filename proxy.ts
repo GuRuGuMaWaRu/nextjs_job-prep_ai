@@ -58,7 +58,8 @@ export default async function middleware(req: NextRequest) {
   const isStripeReturn =
     pathname === "/app/upgrade" &&
     (searchParams.get("success") === "true" ||
-      searchParams.get("canceled") === "true");
+      searchParams.get("canceled") === "true" ||
+      searchParams.get("canceled_subscription") === "true");
 
   // Skip Arcjet and auth for Stripe webhooks; they use signature verification in the route.
   if (pathname === "/api/stripe/webhooks") {
