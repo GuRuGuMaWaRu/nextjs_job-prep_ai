@@ -99,7 +99,16 @@ export async function POST() {
     sessionParams.customer_email = user.email;
   }
 
-  const session = await stripe.checkout.sessions.create(sessionParams);
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create(sessionParams);
+  } catch (err) {
+    console.error("Stripe checkout session creation failed:", err);
+    return new NextResponse(
+      "Failed to create checkout session. Please try again.",
+      { status: 500 },
+    );
+  }
 
   if (!session.url) {
     return new NextResponse("Failed to create checkout session", {
