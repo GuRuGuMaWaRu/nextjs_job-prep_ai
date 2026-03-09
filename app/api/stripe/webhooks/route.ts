@@ -27,11 +27,24 @@ import { StripeEventTable } from "@/core/drizzle/schema";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 
+const TERMINAL_SUBSCRIPTION_STATUSES = [
+  "canceled",
+  "incomplete_expired",
+] as const;
+
 function isActiveSubscriptionStatus(
   status: string,
 ): status is (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number] {
   return ACTIVE_SUBSCRIPTION_STATUSES.includes(
     status as (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number],
+  );
+}
+
+function isTerminalSubscriptionStatus(
+  status: string,
+): status is (typeof TERMINAL_SUBSCRIPTION_STATUSES)[number] {
+  return TERMINAL_SUBSCRIPTION_STATUSES.includes(
+    status as (typeof TERMINAL_SUBSCRIPTION_STATUSES)[number],
   );
 }
 
@@ -122,10 +135,11 @@ async function syncSubscriptionFromStripe(
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
   const plan = isActiveSubscriptionStatus(subscription.status) ? "pro" : "free";
+  const terminal = isTerminalSubscriptionStatus(subscription.status);
 
   await updateUserPlanAndStripeIdsDb(user.id, {
     plan,
-    stripeSubscriptionId: plan === "pro" ? subscription.id : null,
+    stripeSubscriptionId: terminal ? null : subscription.id,
   });
 }
 
