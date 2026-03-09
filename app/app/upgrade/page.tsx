@@ -337,7 +337,7 @@ function PlanCard({
   return (
     <Card
       className={`relative transition-all hover:shadow-lg ${
-        plan.popular && "border-primary shadow-lg"
+        plan.popular ? "border-primary shadow-lg" : ""
       } ${isCurrentPlan ? "ring-2 ring-primary/30" : ""}`}
       aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}>
       {showBadges && (
