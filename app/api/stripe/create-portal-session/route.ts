@@ -43,10 +43,19 @@ export async function POST() {
 
   const returnUrl = `${baseUrl}${routes.upgrade}`;
 
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: user.stripeCustomerId,
-    return_url: returnUrl,
-  });
+  let portalSession;
+  try {
+    portalSession = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: returnUrl,
+    });
+  } catch (err) {
+    console.error("Stripe portal session creation failed:", err);
+    return new NextResponse(
+      "Failed to create billing portal session. Please try again.",
+      { status: 500 },
+    );
+  }
 
   if (!portalSession.url) {
     return new NextResponse("Failed to create portal session", {
