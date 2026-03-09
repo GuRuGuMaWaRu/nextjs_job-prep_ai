@@ -36,26 +36,32 @@ function isActiveSubscriptionStatus(
 }
 
 /**
- * Returns `true` if the event was already processed (duplicate delivery).
- * Uses INSERT ... ON CONFLICT DO NOTHING so that two concurrent invocations
- * for the same event ID are safe — only the first inserter "wins".
+ * Atomically attempts to claim an event for processing.
+ * Uses INSERT ... ON CONFLICT DO NOTHING ... RETURNING so that only one of
+ * potentially concurrent invocations for the same event ID "wins" the insert.
+ *
+ * Returns `true` if the event was successfully claimed (not yet processed).
+ * Returns `false` if another invocation already claimed it (duplicate delivery).
  */
-async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
-  const existing = await db.query.StripeEventTable.findFirst({
-    where: eq(StripeEventTable.id, eventId),
-  });
-
-  return !!existing;
-}
-
-async function markEventProcessed(
+async function claimEvent(
   eventId: string,
   eventType: string,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const rows = await db
     .insert(StripeEventTable)
     .values({ id: eventId, type: eventType })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ id: StripeEventTable.id });
+
+  return rows.length > 0;
+}
+
+/**
+ * Removes a previously claimed event so Stripe can retry delivery.
+ * Called when event processing fails after a successful claim.
+ */
+async function unclaimEvent(eventId: string): Promise<void> {
+  await db.delete(StripeEventTable).where(eq(StripeEventTable.id, eventId));
 }
 
 async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
@@ -165,8 +171,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // ── Idempotency: skip events we already processed ──────────────────
-  if (await isEventAlreadyProcessed(event.id)) {
+  // ── Idempotency: atomically claim the event ────────────────────────
+  const claimed = await claimEvent(event.id, event.type);
+  if (!claimed) {
     return new NextResponse(null, { status: 200 });
   }
 
@@ -223,15 +230,13 @@ export async function POST(request: Request) {
         break;
     }
   } catch (error) {
+    await unclaimEvent(event.id);
     console.error("Stripe webhook handler error:", error);
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 },
     );
   }
-
-  // ── Mark event as processed only after successful handling ─────────
-  await markEventProcessed(event.id, event.type);
 
   return new NextResponse(null, { status: 200 });
 }
