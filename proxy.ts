@@ -52,14 +52,6 @@ const aj = arcjet({
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const searchParams = req.nextUrl.searchParams;
-
-  // Skip Arcjet for Stripe checkout return: redirect from checkout can be misclassified (bot/shield).
-  const isStripeReturn =
-    pathname === "/app/upgrade" &&
-    (searchParams.get("success") === "true" ||
-      searchParams.get("canceled") === "true" ||
-      searchParams.get("canceled_subscription") === "true");
 
   // Skip Arcjet and auth for Stripe webhooks; they use signature verification in the route.
   if (pathname === "/api/stripe/webhooks") {
@@ -67,11 +59,9 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Arcjet protection
-  if (!isStripeReturn) {
-    const decision = await aj.protect(req);
-    if (decision.isDenied()) {
-      return new Response(null, { status: 403 });
-    }
+  const decision = await aj.protect(req);
+  if (decision.isDenied()) {
+    return new Response(null, { status: 403 });
   }
 
   // Allow public routes
