@@ -59,6 +59,10 @@ async function markEventProcessed(
 }
 
 async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
+  if (session.payment_status === "unpaid") {
+    return;
+  }
+
   const userId = session.metadata?.userId as string | undefined;
   if (!userId) {
     console.warn("fulfillCheckoutSession: missing metadata.userId", session.id);
@@ -75,10 +79,19 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
       ? session.customer
       : session.customer?.id ?? null;
 
+  if (!customerId || !subscriptionId) {
+    console.warn(
+      "fulfillCheckoutSession: incomplete session payload — " +
+        `customerId=${customerId}, subscriptionId=${subscriptionId}`,
+      session.id,
+    );
+    return;
+  }
+
   await updateUserPlanAndStripeIdsDb(userId, {
     plan: "pro",
-    stripeCustomerId: customerId ?? undefined,
-    stripeSubscriptionId: subscriptionId ?? undefined,
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscriptionId,
   });
 }
 
@@ -161,11 +174,6 @@ export async function POST(request: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-
-        if (session.payment_status === "unpaid") {
-          break;
-        }
-
         await fulfillCheckoutSession(session);
         break;
       }
