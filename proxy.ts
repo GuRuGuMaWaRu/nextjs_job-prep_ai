@@ -51,14 +51,27 @@ const aj = arcjet({
 });
 
 export default async function middleware(req: NextRequest) {
-  // TODO: the proposed idea is not to call arcJet when we try to create a new interview
-  const decision = await aj.protect(req);
+  const { pathname } = req.nextUrl;
+  const searchParams = req.nextUrl.searchParams;
 
-  if (decision.isDenied()) {
-    return new Response(null, { status: 403 });
+  // Skip Arcjet for Stripe checkout return: redirect from checkout can be misclassified (bot/shield).
+  const isStripeReturn =
+    pathname === "/app/upgrade" &&
+    (searchParams.get("success") === "true" ||
+      searchParams.get("canceled") === "true");
+
+  // Skip Arcjet and auth for Stripe webhooks; they use signature verification in the route.
+  if (pathname === "/api/stripe/webhooks") {
+    return NextResponse.next();
   }
 
-  const { pathname } = req.nextUrl;
+  // Arcjet protection
+  if (!isStripeReturn) {
+    const decision = await aj.protect(req);
+    if (decision.isDenied()) {
+      return new Response(null, { status: 403 });
+    }
+  }
 
   // Allow public routes
   if (isPublicRoute(pathname)) {

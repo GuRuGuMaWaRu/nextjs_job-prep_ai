@@ -13,6 +13,11 @@ export const env = createEnv({
     HUME_API_KEY: z.string().min(1),
     HUME_SECRET_KEY: z.string().min(1),
     GEMINI_API_KEY: z.string().min(1),
+    STRIPE_SECRET_KEY: z.string().min(1).optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+    STRIPE_PRO_PRICE_ID: z.string().min(1).optional(),
+    STRIPE_PRO_PRODUCT_ID: z.string().min(1).optional(),
+    APP_URL: z.string().url().optional(),
   },
   createFinalSchema: (env) => {
     return z.object(env).transform((val) => {

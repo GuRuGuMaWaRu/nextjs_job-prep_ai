@@ -23,16 +23,65 @@ import {
 import { routes } from "@/core/data/routes";
 import { canCreateInterview } from "@/core/features/interviews/actions";
 import { getUserPlan } from "@/core/features/auth/permissions";
+import { isStripeConfigured } from "@/core/lib/stripe";
 import type { UserPlan } from "@/core/drizzle/schema/user";
+import { RevalidateOnStripeReturn } from "./RevalidateOnStripeReturn";
 
-export default function UpgradePage() {
+const STRIPE_CHECKOUT_URL = "/api/stripe/create-checkout-session";
+const STRIPE_PORTAL_URL = "/api/stripe/create-portal-session";
+const STRIPE_CANCEL_SUBSCRIPTION_URL = "/api/stripe/cancel-subscription";
+
+type UpgradePageProps = {
+  searchParams?:
+    | Promise<Record<string, string | string[] | undefined>>
+    | Record<string, string | string[] | undefined>;
+};
+
+export default async function UpgradePage(props: UpgradePageProps) {
+  const rawParams = props.searchParams ?? {};
+  const searchParams =
+    rawParams instanceof Promise ? await rawParams : rawParams;
+  const success = searchParams.success === "true";
+  const canceled = searchParams.canceled === "true";
+  const canceledSubscription = searchParams.canceled_subscription === "true";
+
   return (
     <div className="container py-4 max-w-5xl">
+      <RevalidateOnStripeReturn
+        success={success}
+        canceled={canceled}
+        canceledSubscription={canceledSubscription}
+      />
       <div className="mb-4">
         <BackLink href={routes.app}>To Dashboard</BackLink>
       </div>
 
       <div className="space-y-16">
+        {success && (
+          <div
+            className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-center text-sm text-green-800 dark:text-green-200"
+            role="alert">
+            You&apos;re now on the <strong>Pro</strong> plan. Thank you for
+            upgrading!
+          </div>
+        )}
+        {canceled && (
+          <div
+            className="rounded-lg border border-muted-foreground/30 bg-muted/50 px-4 py-3 text-center text-sm text-muted-foreground"
+            role="status">
+            Checkout was canceled. You can try again whenever you&apos;re ready.
+          </div>
+        )}
+        {canceledSubscription && (
+          <div
+            className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200"
+            role="status">
+            You&apos;ve canceled your subscription. You&apos;ll keep Pro until
+            the end of your billing period, then you&apos;ll be on the Free
+            plan.
+          </div>
+        )}
+
         <Suspense fallback={null}>
           <SuspendedAlert />
         </Suspense>
@@ -199,6 +248,7 @@ function PlanCardsSkeleton() {
 
 async function PlanCardsSection() {
   const currentPlan = await getUserPlan();
+  const stripeEnabled = isStripeConfigured();
 
   return (
     <section className="space-y-8">
@@ -216,8 +266,29 @@ async function PlanCardsSection() {
           cta={currentPlan === "pro" ? "Current plan" : "Upgrade to Pro"}
           ctaDisabled={currentPlan === "pro"}
           ctaComingSoon={currentPlan !== "pro"}
+          stripeCheckoutEnabled={stripeEnabled}
+          checkoutAction={STRIPE_CHECKOUT_URL}
         />
       </div>
+
+      {currentPlan === "pro" && stripeEnabled && (
+        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-3">
+          <form action={STRIPE_PORTAL_URL} method="POST">
+            <Button type="submit" variant="outline" size="sm">
+              Manage subscription
+            </Button>
+          </form>
+          <form action={STRIPE_CANCEL_SUBSCRIPTION_URL} method="POST">
+            <Button
+              type="submit"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive">
+              Cancel subscription
+            </Button>
+          </form>
+        </div>
+      )}
 
       <EnterpriseBlock />
     </section>
@@ -230,14 +301,20 @@ function PlanCard({
   cta,
   ctaDisabled,
   ctaComingSoon,
+  stripeCheckoutEnabled,
+  checkoutAction,
 }: {
   plan: typeof FREE_PLAN | typeof PRO_PLAN;
   isCurrentPlan: boolean;
   cta: string;
   ctaDisabled: boolean;
   ctaComingSoon?: boolean;
+  stripeCheckoutEnabled?: boolean;
+  checkoutAction?: string;
 }) {
   const showBadges = plan.popular || isCurrentPlan;
+  const useStripeCheckout =
+    ctaComingSoon && stripeCheckoutEnabled && checkoutAction;
 
   return (
     <Card
@@ -282,19 +359,27 @@ function PlanCard({
         </div>
       </CardHeader>
       <CardFooter className="pt-0 px-5 mt-auto">
-        <Button
-          size="lg"
-          className="w-full"
-          disabled={ctaDisabled}
-          asChild={!ctaDisabled && !ctaComingSoon}>
-          {ctaComingSoon ? (
-            <span>Coming soon</span>
-          ) : ctaDisabled ? (
-            <span>{cta}</span>
-          ) : (
-            <Link href={routes.upgrade}>{cta}</Link>
-          )}
-        </Button>
+        {useStripeCheckout ? (
+          <form action={checkoutAction} method="POST">
+            <Button type="submit" size="lg" className="w-full">
+              {cta}
+            </Button>
+          </form>
+        ) : (
+          <Button
+            size="lg"
+            className="w-full"
+            disabled={ctaDisabled}
+            asChild={!ctaDisabled && !ctaComingSoon}>
+            {ctaComingSoon ? (
+              <span>Coming soon</span>
+            ) : ctaDisabled ? (
+              <span>{cta}</span>
+            ) : (
+              <Link href={routes.upgrade}>{cta}</Link>
+            )}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
@@ -330,7 +415,11 @@ function EnterpriseBlock() {
         </div>
       </CardHeader>
       <CardFooter className="pt-0 px-5">
-        <Button variant="outline" size="lg" className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise" asChild>
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise"
+          asChild>
           <a href="mailto:enterprise@landr.example.com">Contact us</a>
         </Button>
       </CardFooter>
@@ -387,7 +476,7 @@ const FAQ_ITEMS = [
   {
     question: "How does billing work?",
     answer:
-      "Pro is billed monthly. Payment is charged at the start of each billing cycle. We'll send you a receipt by email. When Pro is available, you can manage your subscription from your account.",
+      'Pro is billed monthly. Payment is charged at the start of each billing cycle. We\'ll send you a receipt by email. You can manage your subscription or payment method from the Upgrade page using the "Manage subscription" button.',
   },
 ] as const;
 
