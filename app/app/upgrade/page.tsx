@@ -420,12 +420,8 @@ function PlanCard({
             size="lg"
             className="w-full"
             disabled={ctaDisabled}
-            asChild={!ctaDisabled && !canUpgrade}>
-            {canUpgrade ? (
-              <span>Coming soon</span>
-            ) : (
-              <span>{cta}</span>
-            )}
+            variant={ctaDisabled ? "outline" : "default"}>
+            {cta}
           </Button>
         )}
       </CardFooter>
