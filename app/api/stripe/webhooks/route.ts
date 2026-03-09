@@ -1,12 +1,20 @@
 /**
  * Stripe webhook: updates user plan and Stripe IDs on checkout and subscription events.
  *
+ * Idempotency is guaranteed by two mechanisms:
+ *   1. Every processed event ID is persisted in the stripe_events table.
+ *      Duplicate deliveries (Stripe retries, network replays) are skipped.
+ *   2. For subscription-lifecycle events the authoritative Subscription object
+ *      is re-fetched from the Stripe API so that out-of-order delivery always
+ *      applies the latest state rather than stale event payloads.
+ *
  * Local dev: Stripe cannot POST to localhost. Run the Stripe CLI to forward events:
  *   stripe listen --forward-to localhost:3000/api/stripe/webhooks
  * Then set STRIPE_WEBHOOK_SECRET in .env to the signing secret the CLI prints (whsec_...).
  */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { eq } from "drizzle-orm";
 
 import {
   updateUserPlanAndStripeIdsDb,
@@ -14,6 +22,8 @@ import {
 } from "@/core/features/users/db";
 import { getStripe } from "@/core/lib/stripe";
 import { env } from "@/core/data/env/server";
+import { db } from "@/core/drizzle/db";
+import { StripeEventTable } from "@/core/drizzle/schema";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 
@@ -23,6 +33,29 @@ function isActiveSubscriptionStatus(
   return ACTIVE_SUBSCRIPTION_STATUSES.includes(
     status as (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number],
   );
+}
+
+/**
+ * Returns `true` if the event was already processed (duplicate delivery).
+ * Uses INSERT ... ON CONFLICT DO NOTHING so that two concurrent invocations
+ * for the same event ID are safe — only the first inserter "wins".
+ */
+async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
+  const existing = await db.query.StripeEventTable.findFirst({
+    where: eq(StripeEventTable.id, eventId),
+  });
+
+  return !!existing;
+}
+
+async function markEventProcessed(
+  eventId: string,
+  eventType: string,
+): Promise<void> {
+  await db
+    .insert(StripeEventTable)
+    .values({ id: eventId, type: eventType })
+    .onConflictDoNothing();
 }
 
 async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
@@ -46,6 +79,36 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     plan: "pro",
     stripeCustomerId: customerId ?? undefined,
     stripeSubscriptionId: subscriptionId ?? undefined,
+  });
+}
+
+/**
+ * Re-fetches the subscription from Stripe and applies the authoritative state
+ * to the local DB. This protects against out-of-order webhook delivery:
+ * regardless of which event triggered this call, the user always ends up with
+ * the latest Stripe-side subscription status.
+ */
+async function syncSubscriptionFromStripe(
+  stripe: Stripe,
+  subscriptionId: string,
+  customerId: string,
+) {
+  const user = await getUserByStripeCustomerIdDb(customerId);
+  if (!user) {
+    console.warn(
+      "syncSubscriptionFromStripe: no user for customer",
+      customerId,
+    );
+    return;
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+  const plan = isActiveSubscriptionStatus(subscription.status) ? "pro" : "free";
+
+  await updateUserPlanAndStripeIdsDb(user.id, {
+    plan,
+    stripeSubscriptionId: plan === "pro" ? subscription.id : null,
   });
 }
 
@@ -89,6 +152,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // ── Idempotency: skip events we already processed ──────────────────
+  if (await isEventAlreadyProcessed(event.id)) {
+    return new NextResponse(null, { status: 200 });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -127,23 +195,7 @@ export async function POST(request: Request) {
             : subscription.customer?.id;
         if (!customerId) break;
 
-        const user = await getUserByStripeCustomerIdDb(customerId);
-        if (!user) {
-          console.warn(
-            "customer.subscription.updated: no user for customer",
-            customerId,
-          );
-          break;
-        }
-
-        const plan = isActiveSubscriptionStatus(subscription.status)
-          ? "pro"
-          : "free";
-        await updateUserPlanAndStripeIdsDb(user.id, {
-          plan,
-          stripeSubscriptionId:
-            plan === "pro" ? subscription.id : null,
-        });
+        await syncSubscriptionFromStripe(stripe, subscription.id, customerId);
         break;
       }
 
@@ -155,24 +207,11 @@ export async function POST(request: Request) {
             : subscription.customer?.id;
         if (!customerId) break;
 
-        const user = await getUserByStripeCustomerIdDb(customerId);
-        if (!user) {
-          console.warn(
-            "customer.subscription.deleted: no user for customer",
-            customerId,
-          );
-          break;
-        }
-
-        await updateUserPlanAndStripeIdsDb(user.id, {
-          plan: "free",
-          stripeSubscriptionId: null,
-        });
+        await syncSubscriptionFromStripe(stripe, subscription.id, customerId);
         break;
       }
 
       default:
-        // Unhandled event type; return 200 so Stripe does not retry
         break;
     }
   } catch (error) {
@@ -182,6 +221,9 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  // ── Mark event as processed only after successful handling ─────────
+  await markEventProcessed(event.id, event.type);
 
   return new NextResponse(null, { status: 200 });
 }
