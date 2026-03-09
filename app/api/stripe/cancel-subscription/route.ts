@@ -51,6 +51,13 @@ export async function POST() {
   }
 
   const baseUrl = getStripeBaseUrl();
+  if (!baseUrl) {
+    return new NextResponse(
+      "APP_URL is not configured. Set APP_URL in .env for Stripe redirects.",
+      { status: 503 },
+    );
+  }
+
   const redirectUrl = `${baseUrl}${routes.upgrade}?canceled_subscription=true`;
 
   return NextResponse.redirect(redirectUrl, 302);

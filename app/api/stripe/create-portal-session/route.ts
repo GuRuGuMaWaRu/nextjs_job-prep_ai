@@ -34,6 +34,13 @@ export async function POST() {
   }
 
   const baseUrl = getStripeBaseUrl();
+  if (!baseUrl) {
+    return new NextResponse(
+      "APP_URL is not configured. Set APP_URL in .env for Stripe redirects.",
+      { status: 503 },
+    );
+  }
+
   const returnUrl = `${baseUrl}${routes.upgrade}`;
 
   const portalSession = await stripe.billingPortal.sessions.create({
