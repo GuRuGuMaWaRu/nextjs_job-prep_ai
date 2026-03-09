@@ -18,7 +18,7 @@ export const UserTable = pgTable("users", {
   passwordHash: varchar("password_hash"),
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   plan: varchar({ length: 50 }).notNull().default("free"),
-  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).unique(),
   stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
   createdAt,
   updatedAt,

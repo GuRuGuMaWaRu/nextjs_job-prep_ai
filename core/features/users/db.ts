@@ -31,11 +31,18 @@ export async function getUserByIdDb(id: string) {
 }
 
 export async function getUserByStripeCustomerIdDb(stripeCustomerId: string) {
-  const user = await db.query.UserTable.findFirst({
-    where: eq(UserTable.stripeCustomerId, stripeCustomerId),
-  });
+  const users = await db
+    .select()
+    .from(UserTable)
+    .where(eq(UserTable.stripeCustomerId, stripeCustomerId));
 
-  return user ?? null;
+  if (users.length > 1) {
+    throw new Error(
+      `Data integrity violation: multiple users share stripe_customer_id "${stripeCustomerId}"`,
+    );
+  }
+
+  return users[0] ?? null;
 }
 
 export async function updateUserPlanAndStripeIdsDb(
