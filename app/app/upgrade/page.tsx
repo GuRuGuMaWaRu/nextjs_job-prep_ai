@@ -23,7 +23,7 @@ import {
 import { routes } from "@/core/data/routes";
 import { canCreateInterview } from "@/core/features/interviews/actions";
 import { getUserPlan } from "@/core/features/auth/permissions";
-import { isStripeConfigured } from "@/core/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/core/lib/stripe";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { RevalidateOnStripeReturn } from "./RevalidateOnStripeReturn";
 
@@ -41,9 +41,27 @@ export default async function UpgradePage(props: UpgradePageProps) {
   const rawParams = props.searchParams ?? {};
   const searchParams =
     rawParams instanceof Promise ? await rawParams : rawParams;
-  const success = searchParams.success === "true";
   const canceled = searchParams.canceled === "true";
   const canceledSubscription = searchParams.canceled_subscription === "true";
+
+  let success = false;
+  if (searchParams.success === "true") {
+    const sessionId =
+      typeof searchParams.session_id === "string"
+        ? searchParams.session_id
+        : null;
+    const stripe = getStripe();
+
+    if (sessionId && stripe) {
+      try {
+        const session =
+          await stripe.checkout.sessions.retrieve(sessionId);
+        success = session.payment_status === "paid";
+      } catch {
+        // Invalid or expired session — don't show the success banner.
+      }
+    }
+  }
 
   return (
     <div className="container py-4 max-w-5xl">
