@@ -25,6 +25,30 @@ function isActiveSubscriptionStatus(
   );
 }
 
+async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId as string | undefined;
+  if (!userId) {
+    console.warn("fulfillCheckoutSession: missing metadata.userId", session.id);
+    return;
+  }
+
+  const subscriptionId =
+    typeof session.subscription === "string"
+      ? session.subscription
+      : session.subscription?.id ?? null;
+
+  const customerId =
+    typeof session.customer === "string"
+      ? session.customer
+      : session.customer?.id ?? null;
+
+  await updateUserPlanAndStripeIdsDb(userId, {
+    plan: "pro",
+    stripeCustomerId: customerId ?? undefined,
+    stripeSubscriptionId: subscriptionId ?? undefined,
+  });
+}
+
 export async function POST(request: Request) {
   const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -69,25 +93,29 @@ export async function POST(request: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.userId as string | undefined;
-        if (!userId) {
-          console.warn("checkout.session.completed: missing metadata.userId");
+
+        if (session.payment_status === "unpaid") {
           break;
         }
-        const subscriptionId =
-          typeof session.subscription === "string"
-            ? session.subscription
-            : session.subscription?.id ?? null;
-        const customerId =
-          typeof session.customer === "string"
-            ? session.customer
-            : session.customer?.id ?? null;
 
-        await updateUserPlanAndStripeIdsDb(userId, {
-          plan: "pro",
-          stripeCustomerId: customerId ?? undefined,
-          stripeSubscriptionId: subscriptionId ?? undefined,
-        });
+        await fulfillCheckoutSession(session);
+        break;
+      }
+
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await fulfillCheckoutSession(session);
+        break;
+      }
+
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.warn(
+          "checkout.session.async_payment_failed: session",
+          session.id,
+          "userId",
+          session.metadata?.userId,
+        );
         break;
       }
 
