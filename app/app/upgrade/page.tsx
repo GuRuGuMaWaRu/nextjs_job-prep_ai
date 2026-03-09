@@ -274,8 +274,8 @@ async function PlanCardsSection() {
         <PlanCard
           plan={FREE_PLAN}
           isCurrentPlan={currentPlan === "free"}
-          cta="Current plan"
-          ctaDisabled
+          cta={currentPlan === "free" ? "Current plan" : "Switch to Free"}
+          ctaDisabled={currentPlan === "free"}
           ctaComingSoon={false}
         />
         <PlanCard
