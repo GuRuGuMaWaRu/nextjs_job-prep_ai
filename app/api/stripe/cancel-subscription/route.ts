@@ -30,6 +30,14 @@ export async function POST() {
     return new NextResponse("Stripe is not configured", { status: 503 });
   }
 
+  const baseUrl = getStripeBaseUrl();
+  if (!baseUrl) {
+    return new NextResponse(
+      "APP_URL is not configured. Set APP_URL in .env for Stripe redirects.",
+      { status: 503 },
+    );
+  }
+
   const user = await getUser(userId);
   if (!user?.stripeSubscriptionId) {
     return new NextResponse(
@@ -47,14 +55,6 @@ export async function POST() {
     return new NextResponse(
       "Failed to cancel subscription. Try again or use Manage subscription.",
       { status: 500 },
-    );
-  }
-
-  const baseUrl = getStripeBaseUrl();
-  if (!baseUrl) {
-    return new NextResponse(
-      "APP_URL is not configured. Set APP_URL in .env for Stripe redirects.",
-      { status: 503 },
     );
   }
 
