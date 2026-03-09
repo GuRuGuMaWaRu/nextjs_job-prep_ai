@@ -19,7 +19,7 @@ export const UserTable = pgTable("users", {
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   plan: varchar({ length: 50 }).notNull().default("free"),
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).unique(),
-  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }).unique(),
   createdAt,
   updatedAt,
 });
