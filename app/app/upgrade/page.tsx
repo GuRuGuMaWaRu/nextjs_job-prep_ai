@@ -383,13 +383,13 @@ function PlanCard({
       </CardHeader>
       <CardFooter className="pt-0 px-5 mt-auto">
         {useStripeCheckout ? (
-          <form action={checkoutAction} method="POST">
+          <form action={checkoutAction} method="POST" className="w-full">
             <Button type="submit" size="lg" className="w-full">
               {cta}
             </Button>
           </form>
         ) : cancelAction ? (
-          <form action={cancelAction} method="POST">
+          <form action={cancelAction} method="POST" className="w-full">
             <Button type="submit" variant="outline" size="lg" className="w-full">
               {cta}
             </Button>
