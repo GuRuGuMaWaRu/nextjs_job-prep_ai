@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { Check, Zap, MessageCircle, HeadphonesIcon } from "lucide-react";
 
 import { BackLink } from "@/core/components/BackLink";
@@ -276,6 +275,11 @@ async function PlanCardsSection() {
           isCurrentPlan={currentPlan === "free"}
           cta={currentPlan === "free" ? "Current plan" : "Switch to Free"}
           ctaDisabled={currentPlan === "free"}
+          cancelAction={
+            currentPlan === "pro" && stripeEnabled
+              ? STRIPE_CANCEL_SUBSCRIPTION_URL
+              : undefined
+          }
         />
         <PlanCard
           plan={PRO_PLAN}
@@ -320,6 +324,7 @@ function PlanCard({
   canUpgrade,
   stripeCheckoutEnabled,
   checkoutAction,
+  cancelAction,
 }: {
   plan: typeof FREE_PLAN | typeof PRO_PLAN;
   isCurrentPlan: boolean;
@@ -328,6 +333,7 @@ function PlanCard({
   canUpgrade?: boolean;
   stripeCheckoutEnabled?: boolean;
   checkoutAction?: string;
+  cancelAction?: string;
 }) {
   const showBadges = plan.popular || isCurrentPlan;
   const useStripeCheckout =
@@ -382,6 +388,12 @@ function PlanCard({
               {cta}
             </Button>
           </form>
+        ) : cancelAction ? (
+          <form action={cancelAction} method="POST">
+            <Button type="submit" variant="outline" size="lg" className="w-full">
+              {cta}
+            </Button>
+          </form>
         ) : (
           <Button
             size="lg"
@@ -390,10 +402,8 @@ function PlanCard({
             asChild={!ctaDisabled && !canUpgrade}>
             {canUpgrade ? (
               <span>Coming soon</span>
-            ) : ctaDisabled ? (
-              <span>{cta}</span>
             ) : (
-              <Link href={routes.upgrade}>{cta}</Link>
+              <span>{cta}</span>
             )}
           </Button>
         )}
