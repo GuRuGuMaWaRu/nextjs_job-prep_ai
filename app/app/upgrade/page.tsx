@@ -276,14 +276,13 @@ async function PlanCardsSection() {
           isCurrentPlan={currentPlan === "free"}
           cta={currentPlan === "free" ? "Current plan" : "Switch to Free"}
           ctaDisabled={currentPlan === "free"}
-          ctaComingSoon={false}
         />
         <PlanCard
           plan={PRO_PLAN}
           isCurrentPlan={currentPlan === "pro"}
           cta={currentPlan === "pro" ? "Current plan" : "Upgrade to Pro"}
           ctaDisabled={currentPlan === "pro"}
-          ctaComingSoon={currentPlan !== "pro"}
+          canUpgrade={currentPlan !== "pro"}
           stripeCheckoutEnabled={stripeEnabled}
           checkoutAction={STRIPE_CHECKOUT_URL}
         />
@@ -318,7 +317,7 @@ function PlanCard({
   isCurrentPlan,
   cta,
   ctaDisabled,
-  ctaComingSoon,
+  canUpgrade,
   stripeCheckoutEnabled,
   checkoutAction,
 }: {
@@ -326,13 +325,13 @@ function PlanCard({
   isCurrentPlan: boolean;
   cta: string;
   ctaDisabled: boolean;
-  ctaComingSoon?: boolean;
+  canUpgrade?: boolean;
   stripeCheckoutEnabled?: boolean;
   checkoutAction?: string;
 }) {
   const showBadges = plan.popular || isCurrentPlan;
   const useStripeCheckout =
-    ctaComingSoon && stripeCheckoutEnabled && checkoutAction;
+    canUpgrade && stripeCheckoutEnabled && checkoutAction;
 
   return (
     <Card
@@ -388,8 +387,8 @@ function PlanCard({
             size="lg"
             className="w-full"
             disabled={ctaDisabled}
-            asChild={!ctaDisabled && !ctaComingSoon}>
-            {ctaComingSoon ? (
+            asChild={!ctaDisabled && !canUpgrade}>
+            {canUpgrade ? (
               <span>Coming soon</span>
             ) : ctaDisabled ? (
               <span>{cta}</span>
