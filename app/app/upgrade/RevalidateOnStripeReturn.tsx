@@ -29,9 +29,13 @@ export function RevalidateOnStripeReturn({
     if (didRun.current) return;
     didRun.current = true;
 
-    revalidateUpgradePage().then(() => {
-      router.refresh();
-    });
+    revalidateUpgradePage()
+      .catch((err: unknown) => {
+        console.error("revalidateUpgradePage failed:", err);
+      })
+      .finally(() => {
+        router.refresh();
+      });
   }, [success, canceled, canceledSubscription, router]);
 
   return null;
