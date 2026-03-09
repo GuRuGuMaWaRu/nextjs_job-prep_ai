@@ -59,6 +59,13 @@ export async function POST() {
     return new NextResponse("User not found", { status: 404 });
   }
 
+  if (user.plan === "pro" || user.stripeSubscriptionId) {
+    return new NextResponse(
+      "You already have an active Pro subscription.",
+      { status: 409 },
+    );
+  }
+
   const baseUrl = getStripeBaseUrl();
   if (!baseUrl) {
     return new NextResponse(
