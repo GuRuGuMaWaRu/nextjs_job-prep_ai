@@ -60,10 +60,12 @@ export async function POST() {
   }
 
   if (user.plan === "pro" || user.stripeSubscriptionId) {
-    return new NextResponse(
-      "You already have an active Pro subscription.",
-      { status: 409 },
-    );
+    const message =
+      user.plan === "pro"
+        ? "You already have an active Pro subscription."
+        : "You have an existing subscription that needs attention. Use \"Manage subscription\" on the Upgrade page to update your payment method or cancel.";
+
+    return new NextResponse(message, { status: 409 });
   }
 
   const baseUrl = getStripeBaseUrl();

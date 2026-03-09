@@ -97,6 +97,31 @@ export async function getUserPlan(): Promise<UserPlan> {
   return (user?.plan as UserPlan) || "free";
 }
 
+export type SubscriptionInfo = {
+  plan: UserPlan;
+  hasExistingSubscription: boolean;
+};
+
+/**
+ * Returns the user's plan together with whether they have a Stripe subscription
+ * (active, past_due, etc.). Needed by the upgrade page to show the correct UI
+ * for users whose subscription is in a non-terminal but non-active state.
+ */
+export async function getUserSubscriptionInfo(): Promise<SubscriptionInfo> {
+  const { userId } = await getCurrentUser();
+
+  if (!userId) {
+    return { plan: "free", hasExistingSubscription: false };
+  }
+
+  const user = await getUser(userId);
+
+  return {
+    plan: (user?.plan as UserPlan) || "free",
+    hasExistingSubscription: !!user?.stripeSubscriptionId,
+  };
+}
+
 /**
  * Check if user has unlimited access to a feature
  * @param feature - The feature to check

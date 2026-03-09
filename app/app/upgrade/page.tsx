@@ -21,7 +21,10 @@ import {
 } from "@/core/components/ui/accordion";
 import { routes } from "@/core/data/routes";
 import { canCreateInterview } from "@/core/features/interviews/actions";
-import { getUserPlan } from "@/core/features/auth/permissions";
+import {
+  getUserPlan,
+  getUserSubscriptionInfo,
+} from "@/core/features/auth/permissions";
 import { getStripe, isStripeConfigured } from "@/core/lib/stripe";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { RevalidateOnStripeReturn } from "./RevalidateOnStripeReturn";
@@ -264,19 +267,37 @@ function PlanCardsSkeleton() {
 }
 
 async function PlanCardsSection() {
-  const currentPlan = await getUserPlan();
+  const { plan: currentPlan, hasExistingSubscription } =
+    await getUserSubscriptionInfo();
   const stripeEnabled = isStripeConfigured();
+  const showManagement = hasExistingSubscription && stripeEnabled;
+  const canCheckout =
+    currentPlan !== "pro" && !hasExistingSubscription && stripeEnabled;
 
   return (
     <section className="space-y-8">
+      {hasExistingSubscription && currentPlan !== "pro" && (
+        <div
+          className="max-w-4xl mx-auto rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200"
+          role="alert">
+          Your subscription payment needs attention. Use{" "}
+          <strong>Manage subscription</strong> below to update your payment
+          method.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <PlanCard
           plan={FREE_PLAN}
-          isCurrentPlan={currentPlan === "free"}
-          cta={currentPlan === "free" ? "Current plan" : "Switch to Free"}
-          ctaDisabled={currentPlan === "free"}
+          isCurrentPlan={currentPlan === "free" && !hasExistingSubscription}
+          cta={
+            currentPlan === "free" && !hasExistingSubscription
+              ? "Current plan"
+              : "Switch to Free"
+          }
+          ctaDisabled={currentPlan === "free" && !hasExistingSubscription}
           cancelAction={
-            currentPlan === "pro" && stripeEnabled
+            hasExistingSubscription && stripeEnabled
               ? STRIPE_CANCEL_SUBSCRIPTION_URL
               : undefined
           }
@@ -285,14 +306,14 @@ async function PlanCardsSection() {
           plan={PRO_PLAN}
           isCurrentPlan={currentPlan === "pro"}
           cta={currentPlan === "pro" ? "Current plan" : "Upgrade to Pro"}
-          ctaDisabled={currentPlan === "pro"}
-          canUpgrade={currentPlan !== "pro"}
-          stripeCheckoutEnabled={stripeEnabled}
+          ctaDisabled={currentPlan === "pro" || hasExistingSubscription}
+          canUpgrade={canCheckout}
+          stripeCheckoutEnabled={canCheckout}
           checkoutAction={STRIPE_CHECKOUT_URL}
         />
       </div>
 
-      {currentPlan === "pro" && stripeEnabled && (
+      {showManagement && (
         <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-3">
           <form action={STRIPE_PORTAL_URL} method="POST">
             <Button type="submit" variant="outline" size="sm">
