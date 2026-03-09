@@ -21,6 +21,7 @@ import {
 } from "@/core/components/ui/accordion";
 import { routes } from "@/core/data/routes";
 import { canCreateInterview } from "@/core/features/interviews/actions";
+import { getCurrentUser } from "@/core/features/auth/actions";
 import {
   getUserPlan,
   getUserSubscriptionInfo,
@@ -56,9 +57,14 @@ export default async function UpgradePage(props: UpgradePageProps) {
 
     if (sessionId && stripe) {
       try {
+        const { userId } = await getCurrentUser();
         const session =
           await stripe.checkout.sessions.retrieve(sessionId);
-        success = session.payment_status === "paid";
+
+        success =
+          session.payment_status === "paid" &&
+          !!userId &&
+          session.metadata?.userId === userId;
       } catch {
         // Invalid or expired session — don't show the success banner.
       }
