@@ -5,6 +5,7 @@ import { getUser } from "@/core/features/users/actions";
 import {
   getStripe,
   getStripeBaseUrl,
+  getIdempotencyKeyFromRequest,
   getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/lib/stripe";
@@ -13,6 +14,7 @@ import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
+  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
 
   const baseUrl =
     getStripeBaseUrl() ?? new URL(request.url).origin;
@@ -111,7 +113,10 @@ export async function POST(request: Request) {
 
   let session;
   try {
-    session = await stripe.checkout.sessions.create(sessionParams);
+    session = await stripe.checkout.sessions.create(
+      sessionParams,
+      idempotencyKey ? { idempotencyKey } : undefined,
+    );
   } catch (err) {
     console.error("Stripe checkout session creation failed:", err);
     return NextResponse.redirect(

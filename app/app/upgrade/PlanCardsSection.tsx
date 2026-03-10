@@ -12,6 +12,8 @@ import {
 import { getUserSubscriptionInfo } from "@/core/features/auth/permissions";
 import { isStripeConfigured } from "@/core/lib/stripe";
 
+import { StripeActionButton } from "./StripeActionButton";
+
 const STRIPE_CHECKOUT_URL = "/api/stripe/create-checkout-session";
 const STRIPE_PORTAL_URL = "/api/stripe/create-portal-session";
 const STRIPE_CANCEL_SUBSCRIPTION_URL = "/api/stripe/cancel-subscription";
@@ -128,21 +130,26 @@ function PlanCard({
       </CardHeader>
       <CardFooter className="pt-0 px-5 mt-auto">
         {useStripeCheckout ? (
-          <form action={checkoutAction} method="POST" className="w-full">
-            <Button type="submit" size="lg" className="w-full">
-              {cta}
-            </Button>
-          </form>
+          <StripeActionButton
+            action="checkout"
+            url={checkoutAction}
+            className="w-full"
+            size="lg"
+            buttonClassName="w-full"
+            pendingLabel="Starting checkout...">
+            {cta}
+          </StripeActionButton>
         ) : cancelAction ? (
-          <form action={cancelAction} method="POST" className="w-full">
-            <Button
-              type="submit"
-              variant="outline"
-              size="lg"
-              className="w-full">
-              {cta}
-            </Button>
-          </form>
+          <StripeActionButton
+            action="cancel"
+            url={cancelAction}
+            className="w-full"
+            variant="outline"
+            size="lg"
+            buttonClassName="w-full"
+            pendingLabel="Canceling...">
+            {cta}
+          </StripeActionButton>
         ) : (
           <Button
             size="lg"
@@ -248,20 +255,23 @@ export async function PlanCardsSection() {
 
       {showManagement && (
         <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-3">
-          <form action={STRIPE_PORTAL_URL} method="POST">
-            <Button type="submit" variant="outline" size="sm">
-              Manage subscription
-            </Button>
-          </form>
-          <form action={STRIPE_CANCEL_SUBSCRIPTION_URL} method="POST">
-            <Button
-              type="submit"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-destructive">
-              Cancel subscription
-            </Button>
-          </form>
+          <StripeActionButton
+            action="portal"
+            url={STRIPE_PORTAL_URL}
+            variant="outline"
+            size="sm"
+            pendingLabel="Opening portal...">
+            Manage subscription
+          </StripeActionButton>
+          <StripeActionButton
+            action="cancel"
+            url={STRIPE_CANCEL_SUBSCRIPTION_URL}
+            variant="ghost"
+            size="sm"
+            buttonClassName="text-muted-foreground hover:text-destructive"
+            pendingLabel="Canceling...">
+            Cancel subscription
+          </StripeActionButton>
         </div>
       )}
 

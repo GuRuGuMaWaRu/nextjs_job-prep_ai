@@ -5,6 +5,7 @@ import { getUser } from "@/core/features/users/actions";
 import {
   getStripe,
   getStripeBaseUrl,
+  getIdempotencyKeyFromRequest,
   getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/lib/stripe";
@@ -17,6 +18,7 @@ import { routes } from "@/core/data/routes";
  */
 export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
+  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
 
   const baseUrl =
     getStripeBaseUrl() ?? new URL(request.url).origin;
@@ -52,9 +54,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    await stripe.subscriptions.update(user.stripeSubscriptionId, {
-      cancel_at_period_end: true,
-    });
+    await stripe.subscriptions.update(
+      user.stripeSubscriptionId,
+      {
+        cancel_at_period_end: true,
+      },
+      idempotencyKey ? { idempotencyKey } : undefined,
+    );
   } catch (err) {
     console.error("Stripe cancel subscription error:", err);
     return NextResponse.redirect(
