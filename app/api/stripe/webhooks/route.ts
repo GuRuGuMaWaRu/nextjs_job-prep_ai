@@ -242,7 +242,14 @@ export async function POST(request: Request) {
         break;
     }
   } catch (error) {
-    await unclaimEvent(event.id);
+    try {
+      await unclaimEvent(event.id);
+    } catch (unclaimErr) {
+      console.error(
+        "Stripe webhook: unclaimEvent failed (event remains claimed); Stripe will retry:",
+        unclaimErr,
+      );
+    }
     console.error("Stripe webhook handler error:", error);
     return NextResponse.json(
       { error: "Webhook handler failed" },
