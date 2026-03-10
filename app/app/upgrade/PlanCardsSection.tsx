@@ -235,7 +235,10 @@ export async function PlanCardsSection() {
               ? "Current plan"
               : "Switch to Free"
           }
-          ctaDisabled={currentPlan === "free" && !hasExistingSubscription}
+          ctaDisabled={
+            (currentPlan === "free" && !hasExistingSubscription) ||
+            (currentPlan === "pro" && !hasExistingSubscription)
+          }
           cancelAction={
             hasExistingSubscription && stripeEnabled
               ? STRIPE_CANCEL_SUBSCRIPTION_URL
