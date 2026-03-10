@@ -23,6 +23,19 @@ function isPublicRoute(pathname: string): boolean {
   });
 }
 
+/**
+ * Arcjet should primarily protect API surfaces.
+ * Page navigations are protected by session auth checks below.
+ */
+function shouldRunArcjet(pathname: string): boolean {
+  // Stripe routes can be noisy and are validated in their own handlers.
+  if (pathname.startsWith("/api/stripe/")) {
+    return false;
+  }
+
+  return pathname.startsWith("/api") || pathname.startsWith("/trpc");
+}
+
 //** Arcjet instance */
 const aj = arcjet({
   // TODO: add ts for env vars
@@ -58,15 +71,17 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Arcjet protection
-  const decision = await aj.protect(req);
-  if (decision.isDenied()) {
-    return new Response(null, { status: 403 });
-  }
-
   // Allow public routes
   if (isPublicRoute(pathname)) {
     return NextResponse.next();
+  }
+
+  // Arcjet protection for API/TRPC traffic only.
+  if (shouldRunArcjet(pathname)) {
+    const decision = await aj.protect(req);
+    if (decision.isDenied()) {
+      return new Response(null, { status: 403 });
+    }
   }
 
   // Check for session token in cookies
