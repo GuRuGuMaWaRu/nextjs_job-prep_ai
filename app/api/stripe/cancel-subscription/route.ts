@@ -19,37 +19,40 @@ import { routes } from "@/core/data/routes";
 export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
+  const wantsJson =
+    request.headers.get("content-type")?.toLowerCase().includes("application/json") ??
+    false;
 
   const baseUrl =
     getStripeBaseUrl() ?? new URL(request.url).origin;
+  const createRedirectResponse = (redirectUrl: string) =>
+    wantsJson
+      ? NextResponse.json({ redirectUrl })
+      : NextResponse.redirect(redirectUrl, 302);
 
   if (!userId) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("unauthorized", baseUrl),
-      302,
     );
   }
 
   if (!isStripeConfigured()) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
-      302,
     );
   }
 
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
-      302,
     );
   }
 
   const user = await getUser(userId);
   if (!user?.stripeSubscriptionId) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("no_subscription", baseUrl),
-      302,
     );
   }
 
@@ -63,13 +66,12 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("Stripe cancel subscription error:", err);
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("cancel_failed", baseUrl),
-      302,
     );
   }
 
   const redirectUrl = `${baseUrl}${routes.upgrade}?canceled_subscription=true`;
 
-  return NextResponse.redirect(redirectUrl, 302);
+  return createRedirectResponse(redirectUrl);
 }

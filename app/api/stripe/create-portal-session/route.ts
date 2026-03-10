@@ -14,37 +14,40 @@ import { routes } from "@/core/data/routes";
 export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
+  const wantsJson =
+    request.headers.get("content-type")?.toLowerCase().includes("application/json") ??
+    false;
 
   const baseUrl =
     getStripeBaseUrl() ?? new URL(request.url).origin;
+  const createRedirectResponse = (redirectUrl: string) =>
+    wantsJson
+      ? NextResponse.json({ redirectUrl })
+      : NextResponse.redirect(redirectUrl, 302);
 
   if (!userId) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("unauthorized", baseUrl),
-      302,
     );
   }
 
   if (!isStripeConfigured()) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
-      302,
     );
   }
 
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
-      302,
     );
   }
 
   const user = await getUser(userId);
   if (!user?.stripeCustomerId) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("no_customer", baseUrl),
-      302,
     );
   }
 
@@ -61,18 +64,16 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("Stripe portal session creation failed:", err);
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("portal_failed", baseUrl),
-      302,
     );
   }
 
   if (!portalSession.url) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("portal_failed", baseUrl),
-      302,
     );
   }
 
-  return NextResponse.redirect(portalSession.url, 302);
+  return createRedirectResponse(portalSession.url);
 }

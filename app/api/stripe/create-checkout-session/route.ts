@@ -15,29 +15,33 @@ import { routes } from "@/core/data/routes";
 export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
+  const wantsJson =
+    request.headers.get("content-type")?.toLowerCase().includes("application/json") ??
+    false;
 
   const baseUrl =
     getStripeBaseUrl() ?? new URL(request.url).origin;
+  const createRedirectResponse = (redirectUrl: string) =>
+    wantsJson
+      ? NextResponse.json({ redirectUrl })
+      : NextResponse.redirect(redirectUrl, 302);
 
   if (!userId) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("unauthorized", baseUrl),
-      302,
     );
   }
 
   if (!isStripeConfigured()) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
-      302,
     );
   }
 
   const stripe = getStripe();
   if (!stripe) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
-      302,
     );
   }
 
@@ -55,35 +59,25 @@ export async function POST(request: Request) {
         : (defaultPrice?.id ?? undefined);
 
     if (!priceId) {
-      return NextResponse.redirect(
-        getUpgradeErrorRedirect("config", baseUrl),
-        302,
-      );
+      return createRedirectResponse(getUpgradeErrorRedirect("config", baseUrl));
     }
   }
 
   if (!priceId) {
-    return NextResponse.redirect(
-      getUpgradeErrorRedirect("config", baseUrl),
-      302,
-    );
+    return createRedirectResponse(getUpgradeErrorRedirect("config", baseUrl));
   }
 
   const user = await getUser(userId);
   if (!user) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("user_not_found", baseUrl),
-      302,
     );
   }
 
   if (user.plan === "pro" || user.stripeSubscriptionId) {
     const errorCode =
       user.plan === "pro" ? "already_pro" : "existing_subscription";
-    return NextResponse.redirect(
-      getUpgradeErrorRedirect(errorCode, baseUrl),
-      302,
-    );
+    return createRedirectResponse(getUpgradeErrorRedirect(errorCode, baseUrl));
   }
 
   const successUrl = `${baseUrl}${routes.upgrade}?success=true&session_id={CHECKOUT_SESSION_ID}`;
@@ -119,18 +113,16 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("Stripe checkout session creation failed:", err);
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("checkout_failed", baseUrl),
-      302,
     );
   }
 
   if (!session.url) {
-    return NextResponse.redirect(
+    return createRedirectResponse(
       getUpgradeErrorRedirect("checkout_failed", baseUrl),
-      302,
     );
   }
 
-  return NextResponse.redirect(session.url, 302);
+  return createRedirectResponse(session.url);
 }

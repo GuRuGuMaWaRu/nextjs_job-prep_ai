@@ -34,14 +34,12 @@ function getOrCreateIdempotencyKey(storageKey: string): string {
   return next;
 }
 
-function getRedirectTarget(response: Response): string | null {
-  const locationHeader = response.headers.get("location");
-  if (locationHeader) return locationHeader;
+async function getRedirectTarget(response: Response): Promise<string | null> {
+  const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+  if (!contentType.includes("application/json")) return null;
 
-  if (response.type === "opaqueredirect" && response.url) return response.url;
-  if (response.redirected && response.url) return response.url;
-
-  return null;
+  const payload = (await response.json()) as { redirectUrl?: unknown } | null;
+  return typeof payload?.redirectUrl === "string" ? payload.redirectUrl : null;
 }
 
 function shouldClearIdempotencyKey(redirectTarget: string): boolean {
@@ -89,10 +87,9 @@ export function StripeActionButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idempotencyKey }),
-        redirect: "manual",
       });
 
-      const redirectTarget = getRedirectTarget(response);
+      const redirectTarget = await getRedirectTarget(response);
       if (!redirectTarget) {
         throw new Error("Expected redirect response.");
       }
