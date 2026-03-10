@@ -10,9 +10,11 @@ import {
 } from "@/core/lib/stripe";
 import { routes } from "@/core/data/routes";
 
-export async function POST() {
+export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
-  const baseUrl = getStripeBaseUrl();
+
+  const baseUrl =
+    getStripeBaseUrl() ?? new URL(request.url).origin;
 
   if (!userId) {
     return NextResponse.redirect(

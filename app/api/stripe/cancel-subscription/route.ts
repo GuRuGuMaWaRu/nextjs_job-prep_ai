@@ -15,10 +15,11 @@ import { routes } from "@/core/data/routes";
  * The user keeps Pro until then; the webhook will set plan to free when the
  * subscription ends.
  */
-export async function POST() {
+export async function POST(request: Request) {
   const { userId } = await getCurrentUser();
 
-  const baseUrl = getStripeBaseUrl();
+  const baseUrl =
+    getStripeBaseUrl() ?? new URL(request.url).origin;
 
   if (!userId) {
     return NextResponse.redirect(

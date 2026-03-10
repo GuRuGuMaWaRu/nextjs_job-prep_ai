@@ -52,15 +52,16 @@ export function isStripeConfigured(): boolean {
 }
 
 /**
- * Builds the upgrade page URL with an optional error code for redirect-on-error.
+ * Builds the absolute upgrade page URL with an error code for redirect-on-error.
  * Use when form POST handlers (checkout, portal, cancel) fail so the user is
  * sent back to the upgrade page with a message instead of a raw text response.
+ * Callers must pass an absolute origin (e.g. from getStripeBaseUrl() or
+ * request.url) — NextResponse.redirect() in Route Handlers requires absolute URLs.
  */
 export function getUpgradeErrorRedirect(
   errorCode: string,
-  baseUrl: string | null,
+  baseUrl: string,
 ): string {
   const query = `?error=${encodeURIComponent(errorCode)}`;
-  if (baseUrl) return `${baseUrl}${routes.upgrade}${query}`;
-  return `${routes.upgrade}${query}`;
+  return `${baseUrl}${routes.upgrade}${query}`;
 }
