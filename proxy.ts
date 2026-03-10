@@ -51,14 +51,18 @@ const aj = arcjet({
 });
 
 export default async function middleware(req: NextRequest) {
-  // TODO: the proposed idea is not to call arcJet when we try to create a new interview
-  const decision = await aj.protect(req);
+  const { pathname } = req.nextUrl;
 
+  // Skip Arcjet and auth for Stripe webhooks; they use signature verification in the route.
+  if (pathname === "/api/stripe/webhooks") {
+    return NextResponse.next();
+  }
+
+  // Arcjet protection
+  const decision = await aj.protect(req);
   if (decision.isDenied()) {
     return new Response(null, { status: 403 });
   }
-
-  const { pathname } = req.nextUrl;
 
   // Allow public routes
   if (isPublicRoute(pathname)) {

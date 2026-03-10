@@ -444,8 +444,10 @@ function Footer() {
         <Link href="#" className="hover:text-foreground transition-colors">
           Terms of Service
         </Link>
-        <Link href="#" className="hover:text-foreground transition-colors">
-          Contact
+        <Link
+          href="mailto:contact@landr.example.com"
+          className="hover:text-foreground transition-colors">
+          Contact us
         </Link>
       </div>
     </footer>

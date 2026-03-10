@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { UserTable } from "@/core/drizzle/schema";
+import type { UserPlan } from "@/core/drizzle/schema/user";
 import { db } from "@/core/drizzle/db";
 import { revalidateUserCache } from "@/core/features/users/dbCache";
 
@@ -27,4 +28,43 @@ export async function getUserByIdDb(id: string) {
   });
 
   return user;
+}
+
+export async function getUserByStripeCustomerIdDb(stripeCustomerId: string) {
+  const users = await db
+    .select()
+    .from(UserTable)
+    .where(eq(UserTable.stripeCustomerId, stripeCustomerId));
+
+  if (users.length > 1) {
+    throw new Error(
+      `Data integrity violation: multiple users share stripe_customer_id "${stripeCustomerId}"`,
+    );
+  }
+
+  return users[0] ?? null;
+}
+
+export async function updateUserPlanAndStripeIdsDb(
+  userId: string,
+  payload: {
+    plan: UserPlan;
+    stripeCustomerId?: string | null;
+    stripeSubscriptionId?: string | null;
+  },
+) {
+  await db
+    .update(UserTable)
+    .set({
+      plan: payload.plan,
+      ...(payload.stripeCustomerId !== undefined && {
+        stripeCustomerId: payload.stripeCustomerId,
+      }),
+      ...(payload.stripeSubscriptionId !== undefined && {
+        stripeSubscriptionId: payload.stripeSubscriptionId,
+      }),
+    })
+    .where(eq(UserTable.id, userId));
+
+  revalidateUserCache(userId);
 }
