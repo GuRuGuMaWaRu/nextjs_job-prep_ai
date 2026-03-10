@@ -14,6 +14,25 @@ import { PlanCardsSection } from "./PlanCardsSection";
 import { PlanCardsSkeleton } from "./PlanCardsSkeleton";
 import { HeadlineSection, HeadlineWithPlan } from "./HeadlineSection";
 
+/** User-facing messages for Stripe form POST error redirects. */
+const STRIPE_ERROR_MESSAGES: Record<string, string> = {
+  unauthorized: "Please sign in to continue.",
+  stripe_not_configured:
+    "Billing is not available right now. Please try again later.",
+  config: "Something went wrong. Please try again later.",
+  no_subscription:
+    "No active subscription found. You are already on the Free plan.",
+  cancel_failed:
+    "Failed to cancel subscription. Try again or use Manage subscription.",
+  user_not_found: "We couldn't find your account. Please try again.",
+  already_pro: "You already have an active Pro subscription.",
+  existing_subscription:
+    "You have an existing subscription. Use Manage subscription on this page to update payment or cancel.",
+  checkout_failed: "Failed to start checkout. Please try again.",
+  no_customer: "No billing customer found. Upgrade to Pro first.",
+  portal_failed: "Failed to open billing portal. Please try again.",
+};
+
 type UpgradePageProps = {
   searchParams?:
     | Promise<Record<string, string | string[] | undefined>>
@@ -26,6 +45,20 @@ export default async function UpgradePage(props: UpgradePageProps) {
     rawParams instanceof Promise ? await rawParams : rawParams;
   const canceled = searchParams.canceled === "true";
   const canceledSubscription = searchParams.canceled_subscription === "true";
+
+  const rawError = searchParams.error;
+  const errorCode =
+    typeof rawError === "string"
+      ? rawError
+      : Array.isArray(rawError)
+        ? rawError[0]
+        : undefined;
+  const errorMessage =
+    errorCode && STRIPE_ERROR_MESSAGES[errorCode]
+      ? STRIPE_ERROR_MESSAGES[errorCode]
+      : errorCode
+        ? STRIPE_ERROR_MESSAGES.config
+        : null;
 
   let success = false;
   if (searchParams.success === "true") {
@@ -62,6 +95,13 @@ export default async function UpgradePage(props: UpgradePageProps) {
       </div>
 
       <div className="space-y-16">
+        {errorMessage && (
+          <div
+            className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm text-red-800 dark:text-red-200"
+            role="alert">
+            {errorMessage}
+          </div>
+        )}
         {success && (
           <div
             className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-center text-sm text-green-800 dark:text-green-200"

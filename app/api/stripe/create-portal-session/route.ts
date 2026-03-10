@@ -5,39 +5,49 @@ import { getUser } from "@/core/features/users/actions";
 import {
   getStripe,
   getStripeBaseUrl,
+  getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/lib/stripe";
 import { routes } from "@/core/data/routes";
 
 export async function POST() {
   const { userId } = await getCurrentUser();
+  const baseUrl = getStripeBaseUrl();
 
   if (!userId) {
-    return new NextResponse("Unauthorized", { status: 401 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("unauthorized", baseUrl),
+      302,
+    );
   }
 
   if (!isStripeConfigured()) {
-    return new NextResponse("Stripe is not configured", { status: 503 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      302,
+    );
   }
 
   const stripe = getStripe();
   if (!stripe) {
-    return new NextResponse("Stripe is not configured", { status: 503 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      302,
+    );
   }
 
   const user = await getUser(userId);
   if (!user?.stripeCustomerId) {
-    return new NextResponse(
-      "No billing customer found. Upgrade to Pro first.",
-      { status: 400 },
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("no_customer", baseUrl),
+      302,
     );
   }
 
-  const baseUrl = getStripeBaseUrl();
   if (!baseUrl) {
-    return new NextResponse(
-      "APP_URL is not configured. Set APP_URL in .env for Stripe redirects.",
-      { status: 503 },
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("config", baseUrl),
+      302,
     );
   }
 
@@ -51,16 +61,17 @@ export async function POST() {
     });
   } catch (err) {
     console.error("Stripe portal session creation failed:", err);
-    return new NextResponse(
-      "Failed to create billing portal session. Please try again.",
-      { status: 500 },
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("portal_failed", baseUrl),
+      302,
     );
   }
 
   if (!portalSession.url) {
-    return new NextResponse("Failed to create portal session", {
-      status: 500,
-    });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("portal_failed", baseUrl),
+      302,
+    );
   }
 
   return NextResponse.redirect(portalSession.url, 302);

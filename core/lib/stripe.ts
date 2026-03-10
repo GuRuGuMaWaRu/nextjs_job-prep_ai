@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 
+import { routes } from "@/core/data/routes";
 import { env } from "@/core/data/env/server";
 
 let stripeInstance: Stripe | null = null;
@@ -48,4 +49,18 @@ export function isStripeConfigured(): boolean {
       hasPriceOrProduct &&
       getStripeBaseUrl(),
   );
+}
+
+/**
+ * Builds the upgrade page URL with an optional error code for redirect-on-error.
+ * Use when form POST handlers (checkout, portal, cancel) fail so the user is
+ * sent back to the upgrade page with a message instead of a raw text response.
+ */
+export function getUpgradeErrorRedirect(
+  errorCode: string,
+  baseUrl: string | null,
+): string {
+  const query = `?error=${encodeURIComponent(errorCode)}`;
+  if (baseUrl) return `${baseUrl}${routes.upgrade}${query}`;
+  return `${routes.upgrade}${query}`;
 }

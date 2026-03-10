@@ -5,6 +5,7 @@ import { getUser } from "@/core/features/users/actions";
 import {
   getStripe,
   getStripeBaseUrl,
+  getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/lib/stripe";
 import { env } from "@/core/data/env/server";
@@ -12,18 +13,28 @@ import { routes } from "@/core/data/routes";
 
 export async function POST() {
   const { userId } = await getCurrentUser();
+  const baseUrl = getStripeBaseUrl();
 
   if (!userId) {
-    return new NextResponse("Unauthorized", { status: 401 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("unauthorized", baseUrl),
+      302,
+    );
   }
 
   if (!isStripeConfigured()) {
-    return new NextResponse("Stripe is not configured", { status: 503 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      302,
+    );
   }
 
   const stripe = getStripe();
   if (!stripe) {
-    return new NextResponse("Stripe is not configured", { status: 503 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      302,
+    );
   }
 
   let priceId = env.STRIPE_PRO_PRICE_ID;
@@ -40,39 +51,41 @@ export async function POST() {
         : (defaultPrice?.id ?? undefined);
 
     if (!priceId) {
-      return new NextResponse(
-        "Pro product has no default price. Add a price in Stripe Dashboard or set STRIPE_PRO_PRICE_ID.",
-        { status: 503 },
+      return NextResponse.redirect(
+        getUpgradeErrorRedirect("config", baseUrl),
+        302,
       );
     }
   }
 
   if (!priceId) {
-    return new NextResponse(
-      "Set STRIPE_PRO_PRICE_ID (price_...) or STRIPE_PRO_PRODUCT_ID (prod_...) in .env",
-      { status: 503 },
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("config", baseUrl),
+      302,
     );
   }
 
   const user = await getUser(userId);
   if (!user) {
-    return new NextResponse("User not found", { status: 404 });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("user_not_found", baseUrl),
+      302,
+    );
   }
 
   if (user.plan === "pro" || user.stripeSubscriptionId) {
-    const message =
-      user.plan === "pro"
-        ? "You already have an active Pro subscription."
-        : "You have an existing subscription that needs attention. Use \"Manage subscription\" on the Upgrade page to update your payment method or cancel.";
-
-    return new NextResponse(message, { status: 409 });
+    const errorCode =
+      user.plan === "pro" ? "already_pro" : "existing_subscription";
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect(errorCode, baseUrl),
+      302,
+    );
   }
 
-  const baseUrl = getStripeBaseUrl();
   if (!baseUrl) {
-    return new NextResponse(
-      "APP_URL is not configured. Set APP_URL in .env for Stripe redirects.",
-      { status: 503 },
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("config", baseUrl),
+      302,
     );
   }
 
@@ -106,16 +119,17 @@ export async function POST() {
     session = await stripe.checkout.sessions.create(sessionParams);
   } catch (err) {
     console.error("Stripe checkout session creation failed:", err);
-    return new NextResponse(
-      "Failed to create checkout session. Please try again.",
-      { status: 500 },
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("checkout_failed", baseUrl),
+      302,
     );
   }
 
   if (!session.url) {
-    return new NextResponse("Failed to create checkout session", {
-      status: 500,
-    });
+    return NextResponse.redirect(
+      getUpgradeErrorRedirect("checkout_failed", baseUrl),
+      302,
+    );
   }
 
   return NextResponse.redirect(session.url, 302);
