@@ -82,13 +82,6 @@ export async function POST() {
     );
   }
 
-  if (!baseUrl) {
-    return NextResponse.redirect(
-      getUpgradeErrorRedirect("config", baseUrl),
-      302,
-    );
-  }
-
   const successUrl = `${baseUrl}${routes.upgrade}?success=true&session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${baseUrl}${routes.upgrade}?canceled=true`;
 

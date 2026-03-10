@@ -42,13 +42,6 @@ export async function POST() {
     );
   }
 
-  if (!baseUrl) {
-    return NextResponse.redirect(
-      getUpgradeErrorRedirect("config", baseUrl),
-      302,
-    );
-  }
-
   const user = await getUser(userId);
   if (!user?.stripeSubscriptionId) {
     return NextResponse.redirect(

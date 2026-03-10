@@ -44,13 +44,6 @@ export async function POST() {
     );
   }
 
-  if (!baseUrl) {
-    return NextResponse.redirect(
-      getUpgradeErrorRedirect("config", baseUrl),
-      302,
-    );
-  }
-
   const returnUrl = `${baseUrl}${routes.upgrade}`;
 
   let portalSession;
