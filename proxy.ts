@@ -33,7 +33,7 @@ function shouldRunArcjet(pathname: string): boolean {
     return false;
   }
 
-  return pathname.startsWith("/api") || pathname.startsWith("/trpc");
+  return pathname.startsWith("/api");
 }
 
 //** Arcjet instance */
