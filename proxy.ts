@@ -1,8 +1,9 @@
 import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/next";
 import { NextRequest, NextResponse } from "next/server";
 
-import { env } from "./core/data/env/server";
-import { routes } from "./core/data/routes";
+import { env } from "@/core/data/env/server";
+import { SESSION_COOKIE_NAME } from "@/core/features/auth/constants";
+import { routes } from "@/core/data/routes";
 
 //** Public routes that don't require authentication
 const EXACT_PUBLIC_ROUTES = ["/"];
@@ -71,11 +72,6 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow public routes
-  if (isPublicRoute(pathname)) {
-    return NextResponse.next();
-  }
-
   // Arcjet protection for API/TRPC traffic only.
   if (shouldRunArcjet(pathname)) {
     const decision = await aj.protect(req);
@@ -84,18 +80,20 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // Check for session token in cookies
-  const sessionToken = req.cookies.get("session_token")?.value;
+  const isPublic = isPublicRoute(pathname);
+  const hasSessionToken = !!req.cookies.get(SESSION_COOKIE_NAME)?.value;
 
-  if (!sessionToken) {
-    // Redirect to sign in if no session token
-    const signInUrl = new URL(routes.signIn, req.url);
-    signInUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(signInUrl);
+  if (isPublic) {
+    if (!hasSessionToken) return NextResponse.next();
+    // Let the route handler validate the token and redirect to /app or clear and redirect to /
+    return NextResponse.redirect(new URL(routes.api.validateSession, req.url));
+  }
+
+  if (!hasSessionToken) {
+    return NextResponse.redirect(new URL(routes.signIn, req.url));
   }
 
   // Session validation happens in server components via getCurrentUser()
-  // We just check for token presence here for performance
   return NextResponse.next();
 }
 

@@ -14,6 +14,7 @@ import {
   createSession,
   deleteSession,
   extendSessionIfNeeded,
+  validateSession,
 } from "@/core/features/auth/session";
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
@@ -244,4 +245,21 @@ export async function getCurrentUser({
     user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
     redirectToSignIn: () => redirect(routes.signIn),
   };
+}
+
+export async function validateSessionAction(token: string): Promise<boolean> {
+  try {
+    const session = await validateSession(token);
+
+    if (!session) {
+      await deleteSessionCookie();
+
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Session validation error:", error);
+    return false;
+  }
 }
