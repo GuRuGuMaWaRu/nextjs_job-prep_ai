@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, type ComponentProps, type FormEvent, type ReactNode } from "react";
+import {
+  useState,
+  type ComponentProps,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 import { Button } from "@/core/components/ui/button";
 import { routes } from "@/core/data/routes";
@@ -51,7 +56,9 @@ function shouldClearIdempotencyKey(redirectTarget: string): boolean {
 
     if (parsed.searchParams.get("success") === "true") return true;
     if (parsed.searchParams.get("canceled") === "true") return true;
-    if (parsed.searchParams.get("canceled_subscription") === "true") return true;
+    if (parsed.searchParams.get("canceled_subscription") === "true") {
+      return true;
+    }
 
     return false;
   } catch {
@@ -102,6 +109,7 @@ export function StripeActionButton({
       return;
     } catch {
       setErrorMessage("Could not complete billing action. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
   }

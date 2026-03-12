@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/core/features/auth/actions";
-import { getUser } from "@/core/features/users/actions";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -17,14 +16,15 @@ import { routes } from "@/core/data/routes";
  * subscription ends.
  */
 export async function POST(request: Request) {
-  const { userId } = await getCurrentUser();
+  const { userId, user } = await getCurrentUser({ allData: true });
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
-    request.headers.get("content-type")?.toLowerCase().includes("application/json") ??
-    false;
+    request.headers
+      .get("content-type")
+      ?.toLowerCase()
+      .includes("application/json") ?? false;
 
-  const baseUrl =
-    getStripeBaseUrl() ?? new URL(request.url).origin;
+  const baseUrl = getStripeBaseUrl() ?? new URL(request.url).origin;
   const createRedirectResponse = (redirectUrl: string) =>
     wantsJson
       ? NextResponse.json({ redirectUrl })
@@ -49,7 +49,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await getUser(userId);
   if (!user?.stripeSubscriptionId) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("no_subscription", baseUrl),

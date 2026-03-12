@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/core/features/auth/actions";
-import { getUser } from "@/core/features/users/actions";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -13,14 +12,15 @@ import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
-  const { userId } = await getCurrentUser();
+  const { userId, user } = await getCurrentUser({ allData: true });
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
-    request.headers.get("content-type")?.toLowerCase().includes("application/json") ??
-    false;
+    request.headers
+      .get("content-type")
+      ?.toLowerCase()
+      .includes("application/json") ?? false;
 
-  const baseUrl =
-    getStripeBaseUrl() ?? new URL(request.url).origin;
+  const baseUrl = getStripeBaseUrl() ?? new URL(request.url).origin;
   const createRedirectResponse = (redirectUrl: string) =>
     wantsJson
       ? NextResponse.json({ redirectUrl })
@@ -67,7 +67,6 @@ export async function POST(request: Request) {
     return createRedirectResponse(getUpgradeErrorRedirect("config", baseUrl));
   }
 
-  const user = await getUser(userId);
   if (!user) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("user_not_found", baseUrl),
