@@ -12,7 +12,7 @@ import {
 import { getUserSubscriptionInfo } from "@/core/features/auth/permissions";
 import { isStripeConfigured } from "@/core/lib/stripe";
 
-import { StripeActionButton } from "./StripeActionButton";
+import { StripeActionButton } from "./_StripeActionButton";
 
 const STRIPE_CHECKOUT_URL = "/api/stripe/create-checkout-session";
 const STRIPE_PORTAL_URL = "/api/stripe/create-portal-session";

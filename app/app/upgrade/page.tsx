@@ -7,12 +7,12 @@ import { canCreateInterview } from "@/core/features/interviews/actions";
 import { getCurrentUser } from "@/core/features/auth/actions";
 import { getStripe } from "@/core/lib/stripe";
 
-import { RevalidateOnStripeReturn } from "./RevalidateOnStripeReturn";
-import { FAQSection } from "./FAQSection";
-import { WhyUpgradeSection } from "./WhyUpgradeSection";
-import { PlanCardsSection } from "./PlanCardsSection";
-import { PlanCardsSkeleton } from "./PlanCardsSkeleton";
-import { HeadlineSection, HeadlineWithPlan } from "./HeadlineSection";
+import { RevalidateOnStripeReturn } from "./_RevalidateOnStripeReturn";
+import { FAQSection } from "./_FAQSection";
+import { WhyUpgradeSection } from "./_WhyUpgradeSection";
+import { PlanCardsSection } from "./_PlanCardsSection";
+import { PlanCardsSkeleton } from "./_PlanCardsSkeleton";
+import { HeadlineSection, HeadlineWithPlan } from "./_HeadlineSection";
 
 /** User-facing messages for Stripe form POST error redirects. */
 const STRIPE_ERROR_MESSAGES: Record<string, string> = {
