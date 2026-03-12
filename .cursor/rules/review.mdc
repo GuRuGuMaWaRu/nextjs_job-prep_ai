@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+
+# Review Context
+
+## Patterns to check
+
+- Error handling: All async operations should use try/catch or the Result pattern
+- Validation: Public API endpoints must validate input before processing
+
+## Files to reference
+
+## Known areas of risk
+
+- Payment operations must be idempotent; check for duplicate handling

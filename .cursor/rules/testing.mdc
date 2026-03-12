@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+# Testing Conventions
+
+## Framework
+
+- Use Jest with React Testing Library for frontend
+- Mock external services, never make real API calls in tests
+
+## Structure
+
+- One test file per source file, named \*.test.ts
+- Group tests with describe blocks by method or behavior
+- Use arrange-act-assert pattern
+
+## Examples to follow
