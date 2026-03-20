@@ -1,9 +1,5 @@
 import { getStripe } from "@/core/lib/stripe";
-
-type AuthenticatedUser = {
-  plan: string;
-  stripeSubscriptionId: string | null;
-};
+import type { AuthUser } from "@/core/features/auth/types";
 
 type CanceledSubscriptionNotice = {
   subscriptionId: string;
@@ -11,7 +7,7 @@ type CanceledSubscriptionNotice = {
 };
 
 async function getCanceledSubscriptionNotice(
-  user: AuthenticatedUser,
+  user: AuthUser,
 ): Promise<CanceledSubscriptionNotice | null> {
   if (user.plan !== "pro") return null;
   if (!user.stripeSubscriptionId) return null;

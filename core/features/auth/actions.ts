@@ -21,6 +21,7 @@ import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
+import type { CurrentUser } from "@/core/features/auth/types";
 
 type AuthFieldErrors = {
   name?: string;
@@ -192,26 +193,6 @@ export async function signOutAction(): Promise<void> {
   // Redirect to landing page
   redirect(routes.landing);
 }
-
-type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  passwordHash: string | null;
-  emailVerified: Date | null;
-  plan: string;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type CurrentUser = {
-  userId: string | null;
-  user?: AuthUser;
-  redirectToSignIn: () => never;
-};
 
 /**
  * Get the current authenticated user from session

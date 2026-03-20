@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getCurrentUser } from "@/core/features/auth/actions";
+import type { AuthUser } from "@/core/features/auth/types";
 import { routes } from "@/core/data/routes";
 
 import { CancelAtPeriodEndBanner } from "./_CancelAtPeriodEndBanner";
@@ -22,18 +23,26 @@ async function AuthCheckAndNavbar({ children }: { children: React.ReactNode }) {
 
   if (userId == null || user == null) return redirect(routes.landing);
 
-  const canceledSubscriptionNotice = await getCanceledSubscriptionNotice(user);
-
   return (
     <>
       <Navbar user={user} />
-      {canceledSubscriptionNotice ? (
-        <CancelAtPeriodEndBanner
-          subscriptionId={canceledSubscriptionNotice.subscriptionId}
-          periodEndUnix={canceledSubscriptionNotice.periodEndUnix}
-        />
-      ) : null}
+      <Suspense fallback={null}>
+        <BannerWrapper user={user} />
+      </Suspense>
       {children}
     </>
+  );
+}
+
+async function BannerWrapper({ user }: { user: AuthUser }) {
+  const canceledSubscriptionNotice = await getCanceledSubscriptionNotice(user);
+
+  if (!canceledSubscriptionNotice) return null;
+
+  return (
+    <CancelAtPeriodEndBanner
+      subscriptionId={canceledSubscriptionNotice.subscriptionId}
+      periodEndUnix={canceledSubscriptionNotice.periodEndUnix}
+    />
   );
 }
