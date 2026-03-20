@@ -1,7 +1,7 @@
 "use client";
 
-import { useReducer, useSyncExternalStore } from "react";
-import { InfoIcon, XIcon } from "lucide-react";
+import { useReducer, useState, useSyncExternalStore } from "react";
+import { InfoIcon } from "lucide-react";
 
 import {
   Alert,
@@ -15,7 +15,9 @@ type CancelAtPeriodEndBannerProps = {
   periodEndUnix?: number | null;
 };
 
-function formatPeriodEndDate(periodEndUnix: number | null | undefined): string | null {
+function formatPeriodEndDate(
+  periodEndUnix: number | null | undefined,
+): string | null {
   if (
     periodEndUnix == null ||
     !Number.isFinite(periodEndUnix) ||
@@ -37,49 +39,63 @@ export function CancelAtPeriodEndBanner({
   subscriptionId,
   periodEndUnix,
 }: CancelAtPeriodEndBannerProps) {
-  const dismissSuffix =
-    periodEndUnix != null && Number.isFinite(periodEndUnix)
-      ? String(periodEndUnix)
-      : "unknown";
+  const hasProperDate =
+    periodEndUnix != null &&
+    Number.isFinite(periodEndUnix) &&
+    periodEndUnix > 0;
+
+  const dismissSuffix = hasProperDate ? String(periodEndUnix) : "unknown";
   const dismissKey = `cancel_at_period_end_banner:${subscriptionId}:${dismissSuffix}`;
 
   const [, rerender] = useReducer((value: number) => value + 1, 0);
+  const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
 
-  const isDismissed = useSyncExternalStore(
+  const isPermanentlyHidden = useSyncExternalStore(
     () => () => undefined,
-    () => window.sessionStorage.getItem(dismissKey) === "1",
+    () => window.localStorage.getItem(dismissKey) === "1",
     () => true,
   );
 
-  if (isDismissed) {
+  if (isTemporarilyHidden || isPermanentlyHidden) {
     return null;
-  } 
+  }
 
-  const moveToFreeDate = formatPeriodEndDate(periodEndUnix);
-  const moveToFreeText = moveToFreeDate ? `on ${moveToFreeDate}` : "at the end of your current billing period.";
-  
+  const moveToFreeText = hasProperDate
+    ? `on ${formatPeriodEndDate(periodEndUnix)}`
+    : "at the end of your current billing period.";
+
   return (
     <div className="container py-3">
-      <Alert className="relative pr-10">
+      <Alert>
         <InfoIcon />
         <div className="space-y-1">
           <AlertTitle>Subscription canceled</AlertTitle>
-          <AlertDescription>
-            Your Pro plan is still active. You will move to the Free plan {moveToFreeText}
+          <AlertDescription className="flex justify-between">
+            <p>
+              Your Pro plan is still active. You will move to the Free plan{" "}
+              {moveToFreeText}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsTemporarilyHidden(true)}>
+                Hide
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  window.localStorage.setItem(dismissKey, "1");
+                  rerender();
+                }}>
+                Don&apos;t show again
+              </Button>
+            </div>
           </AlertDescription>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 absolute top-2 right-2"
-          onClick={() => {
-            window.sessionStorage.setItem(dismissKey, "1");
-            rerender();
-          }}
-          aria-label="Dismiss subscription reminder">
-          <XIcon />
-        </Button>
       </Alert>
     </div>
   );
