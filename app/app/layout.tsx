@@ -65,7 +65,9 @@ async function getCanceledSubscriptionNotice(
     if (!subscription.cancel_at_period_end) return null;
 
     const hasValidPeriodEnd =
-      Number.isFinite(subscription.cancel_at) && subscription.cancel_at != null && subscription.cancel_at > 0;
+      Number.isFinite(subscription.cancel_at) &&
+      subscription.cancel_at != null &&
+      subscription.cancel_at > 0;
     const periodEndUnix = hasValidPeriodEnd ? subscription.cancel_at : null;
 
     if (periodEndUnix != null) {

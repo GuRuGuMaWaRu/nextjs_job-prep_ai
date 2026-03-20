@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { InfoIcon } from "lucide-react";
 
 import {
@@ -31,6 +31,19 @@ function formatPeriodEndDate(
   });
 }
 
+function subscribe(callback: () => void): () => void {
+  window.addEventListener("storage", callback);
+  window.addEventListener("cancel_at_period_end_banner-change", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("cancel_at_period_end_banner-change", callback);
+  };
+}
+
+function getSnapshot(dismissKey: string): boolean {
+  return window.localStorage.getItem(dismissKey) === "1";
+}
+
 /**
  * Reminds users that canceled subscriptions remain Pro until period end.
  * The banner is dismissable per subscription cycle to reduce repeated noise.
@@ -47,12 +60,11 @@ export function CancelAtPeriodEndBanner({
   const dismissSuffix = hasProperDate ? String(periodEndUnix) : "unknown";
   const dismissKey = `cancel_at_period_end_banner:${subscriptionId}:${dismissSuffix}`;
 
-  const [, rerender] = useReducer((value: number) => value + 1, 0);
   const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
 
   const isPermanentlyHidden = useSyncExternalStore(
-    () => () => undefined,
-    () => window.localStorage.getItem(dismissKey) === "1",
+    subscribe,
+    () => getSnapshot(dismissKey),
     () => true,
   );
 
@@ -89,7 +101,9 @@ export function CancelAtPeriodEndBanner({
                 size="sm"
                 onClick={() => {
                   window.localStorage.setItem(dismissKey, "1");
-                  rerender();
+                  window.dispatchEvent(
+                    new Event("cancel_at_period_end_banner-change"),
+                  );
                 }}>
                 Don&apos;t show again
               </Button>
