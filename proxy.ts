@@ -72,6 +72,11 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Skip Arcjet and auth for cron jobs; they use a secret header.
+  if (pathname.startsWith("/api/cron/")) {
+    return NextResponse.next();
+  }
+
   // Arcjet protection for API/TRPC traffic only.
   if (shouldRunArcjet(pathname)) {
     const decision = await aj.protect(req);
