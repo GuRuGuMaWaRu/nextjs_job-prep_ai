@@ -6,6 +6,14 @@ type CanceledSubscriptionNotice = {
   periodEndUnix: number | null;
 };
 
+/**
+ * Retrieves cancellation notice details for a Pro user's Stripe subscription.
+ *
+ * @param user - Authenticated user with `plan` and optional `stripeSubscriptionId`.
+ * @returns Stripe subscription id and scheduled cancel time when the subscription is still
+ *   active but `cancel_at_period_end` is set, and the cancel time is still in the future if known;
+ *   otherwise `null`.
+ */
 async function getCanceledSubscriptionNotice(
   user: AuthUser,
 ): Promise<CanceledSubscriptionNotice | null> {
