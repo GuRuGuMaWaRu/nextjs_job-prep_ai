@@ -73,7 +73,7 @@ export function CancelAtPeriodEndBanner({
   }
 
   const moveToFreeText = hasProperDate
-    ? `on ${formatPeriodEndDate(periodEndUnix)}`
+    ? `on ${formatPeriodEndDate(periodEndUnix)}.`
     : "at the end of your current billing period.";
 
   return (
