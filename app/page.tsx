@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import {
   Mic,
   FileText,
@@ -28,6 +29,7 @@ import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 export default function LandingPage() {
   return (
     <div className="bg-background">
+      <SpeedInsights />
       <Navbar />
       <HeroSection />
       <FeaturesSection />
