@@ -18,6 +18,7 @@ export const env = createEnv({
     STRIPE_PRO_PRICE_ID: z.string().min(1).optional(),
     STRIPE_PRO_PRODUCT_ID: z.string().min(1).optional(),
     APP_URL: z.string().url().optional(),
+    CRON_SECRET: z.string().min(15).max(15),
   },
   createFinalSchema: (env) => {
     return z.object(env).transform((val) => {
