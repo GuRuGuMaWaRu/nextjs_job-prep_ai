@@ -16,37 +16,12 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { eq } from "drizzle-orm";
 
-import {
-  updateUserPlanAndStripeIdsDb,
-  getUserByStripeCustomerIdDb,
-} from "@/core/features/users/db";
+import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
+import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 import { getStripe } from "@/core/lib/stripe";
 import { env } from "@/core/data/env/server";
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
-
-const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
-
-const TERMINAL_SUBSCRIPTION_STATUSES = [
-  "canceled",
-  "incomplete_expired",
-] as const;
-
-function isActiveSubscriptionStatus(
-  status: string,
-): status is (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number] {
-  return ACTIVE_SUBSCRIPTION_STATUSES.includes(
-    status as (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number],
-  );
-}
-
-function isTerminalSubscriptionStatus(
-  status: string,
-): status is (typeof TERMINAL_SUBSCRIPTION_STATUSES)[number] {
-  return TERMINAL_SUBSCRIPTION_STATUSES.includes(
-    status as (typeof TERMINAL_SUBSCRIPTION_STATUSES)[number],
-  );
-}
 
 /**
  * Atomically attempts to claim an event for processing.
@@ -111,35 +86,6 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     plan: "pro",
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscriptionId,
-  });
-}
-
-/**
- * Re-fetches the subscription from Stripe and applies the authoritative state
- * to the local DB. This protects against out-of-order webhook delivery:
- * regardless of which event triggered this call, the user always ends up with
- * the latest Stripe-side subscription status.
- */
-async function syncSubscriptionFromStripe(
-  stripe: Stripe,
-  subscriptionId: string,
-  customerId: string,
-) {
-  const user = await getUserByStripeCustomerIdDb(customerId);
-  if (!user) {
-    throw new Error(
-      `syncSubscriptionFromStripe: no user for customer ${customerId} — will retry`,
-    );
-  }
-
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-  const plan = isActiveSubscriptionStatus(subscription.status) ? "pro" : "free";
-  const terminal = isTerminalSubscriptionStatus(subscription.status);
-
-  await updateUserPlanAndStripeIdsDb(user.id, {
-    plan,
-    stripeSubscriptionId: terminal ? null : subscription.id,
   });
 }
 
