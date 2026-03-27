@@ -4,8 +4,6 @@ import { BackLink } from "@/core/components/BackLink";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { routes } from "@/core/data/routes";
 import { canCreateInterview } from "@/core/features/interviews/actions";
-import { getCurrentUser } from "@/core/features/auth/actions";
-import { getStripe } from "@/core/lib/stripe";
 
 import { RevalidateOnStripeReturn } from "./_RevalidateOnStripeReturn";
 import { FAQSection } from "./_FAQSection";
@@ -13,25 +11,9 @@ import { WhyUpgradeSection } from "./_WhyUpgradeSection";
 import { PlanCardsSection } from "./_PlanCardsSection";
 import { PlanCardsSkeleton } from "./_PlanCardsSkeleton";
 import { HeadlineSection, HeadlineWithPlan } from "./_HeadlineSection";
-
-/** User-facing messages for Stripe form POST error redirects. */
-const STRIPE_ERROR_MESSAGES: Record<string, string> = {
-  unauthorized: "Please sign in to continue.",
-  stripe_not_configured:
-    "Billing is not available right now. Please try again later.",
-  config: "Something went wrong. Please try again later.",
-  no_subscription:
-    "No active subscription found. You are already on the Free plan.",
-  cancel_failed:
-    "Failed to cancel subscription. Try again or use Manage subscription.",
-  user_not_found: "We couldn't find your account. Please try again.",
-  already_pro: "You already have an active Pro subscription.",
-  existing_subscription:
-    "You have an existing subscription. Use Manage subscription on this page to update payment or cancel.",
-  checkout_failed: "Failed to start checkout. Please try again.",
-  no_customer: "No billing customer found. Upgrade to Pro first.",
-  portal_failed: "Failed to open billing portal. Please try again.",
-};
+import { syncSubscriptionOnUpgradePageLoad } from "./syncSubscriptionOnLoad";
+import { getErrorMessage } from "./getErrorMessage";
+import { checkSubscriptionSuccess } from "./checkSubscriptionSuccess";
 
 type UpgradePageProps = {
   searchParams?:
@@ -43,45 +25,16 @@ export default async function UpgradePage(props: UpgradePageProps) {
   const rawParams = props.searchParams ?? {};
   const searchParams =
     rawParams instanceof Promise ? await rawParams : rawParams;
+
   const canceled = searchParams.canceled === "true";
   const canceledSubscription = searchParams.canceled_subscription === "true";
 
   const rawError = searchParams.error;
-  const errorCode =
-    typeof rawError === "string"
-      ? rawError
-      : Array.isArray(rawError)
-        ? rawError[0]
-        : undefined;
-  const errorMessage =
-    errorCode && STRIPE_ERROR_MESSAGES[errorCode]
-      ? STRIPE_ERROR_MESSAGES[errorCode]
-      : errorCode
-        ? STRIPE_ERROR_MESSAGES.config
-        : null;
+  const errorMessage = getErrorMessage(rawError);
 
-  let success = false;
-  if (searchParams.success === "true") {
-    const sessionId =
-      typeof searchParams.session_id === "string"
-        ? searchParams.session_id
-        : null;
-    const stripe = getStripe();
+  await syncSubscriptionOnUpgradePageLoad();
 
-    if (sessionId && stripe) {
-      try {
-        const { userId } = await getCurrentUser();
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-        success =
-          session.payment_status === "paid" &&
-          !!userId &&
-          session.metadata?.userId === userId;
-      } catch {
-        // Invalid or expired session — don't show the success banner.
-      }
-    }
-  }
+  const success = await checkSubscriptionSuccess(searchParams);
 
   return (
     <div className="container py-4 max-w-5xl">
