@@ -13,6 +13,7 @@ import { WhyUpgradeSection } from "./_WhyUpgradeSection";
 import { PlanCardsSection } from "./_PlanCardsSection";
 import { PlanCardsSkeleton } from "./_PlanCardsSkeleton";
 import { HeadlineSection, HeadlineWithPlan } from "./_HeadlineSection";
+import { syncSubscriptionOnUpgradePageLoad } from "./syncSubscriptionOnLoad";
 
 /** User-facing messages for Stripe form POST error redirects. */
 const STRIPE_ERROR_MESSAGES: Record<string, string> = {
@@ -59,6 +60,8 @@ export default async function UpgradePage(props: UpgradePageProps) {
       : errorCode
         ? STRIPE_ERROR_MESSAGES.config
         : null;
+
+  await syncSubscriptionOnUpgradePageLoad();
 
   let success = false;
   if (searchParams.success === "true") {
