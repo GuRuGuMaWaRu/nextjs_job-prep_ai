@@ -22,8 +22,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const startedAtMs = Date.now();
-
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { error: "Stripe not configured" },
@@ -40,12 +38,6 @@ export async function GET(request: NextRequest) {
   }
 
   const userIds = await getUserIdsWithStripeSubscriptionDb(BATCH_LIMIT);
-
-  console.info("[cron:stripe-subscriptions] run started", {
-    batchLimit: BATCH_LIMIT,
-    concurrency: CONCURRENCY,
-    candidates: userIds.length,
-  });
 
   let processed = 0;
   let updated = 0;
@@ -104,11 +96,6 @@ export async function GET(request: NextRequest) {
     errors,
     ...(errorSamples.length > 0 && { errorSamples }),
   };
-
-  console.info("[cron:stripe-subscriptions] run finished", {
-    ...body,
-    elapsedMs: Date.now() - startedAtMs,
-  });
 
   return NextResponse.json(body);
 }
