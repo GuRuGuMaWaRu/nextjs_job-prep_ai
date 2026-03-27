@@ -24,7 +24,7 @@ type Error = string | string[] | undefined;
  * @param error - The error code(s) from the URL query string.
  * @returns A user-facing error message, or null if no error is present.
  */
-export function getErrorMessage(error: Error) {
+export function getErrorMessage(error: Error): string | null {
   const errorCode =
     typeof error === "string"
       ? error
@@ -32,9 +32,11 @@ export function getErrorMessage(error: Error) {
         ? error[0]
         : undefined;
 
-  return errorCode && errorCode in STRIPE_ERROR_MESSAGES
-    ? STRIPE_ERROR_MESSAGES[errorCode]
-    : errorCode
-      ? STRIPE_ERROR_MESSAGES.config
-      : null;
+  if (!errorCode) return null;
+
+  if (Object.hasOwn(STRIPE_ERROR_MESSAGES, errorCode)) {
+    return STRIPE_ERROR_MESSAGES[errorCode];
+  }
+
+  return STRIPE_ERROR_MESSAGES.config;
 }
