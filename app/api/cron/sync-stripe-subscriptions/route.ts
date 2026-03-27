@@ -7,6 +7,8 @@ import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSyn
 import { getStripe, isStripeConfigured } from "@/core/lib/stripe";
 
 const BATCH_LIMIT = 500;
+/** Parallel Stripe retrieves per batch to reduce wall-clock time vs sequential awaits. */
+const CONCURRENCY = 10;
 
 /**
  * Vercel Cron (or any caller with CRON_SECRET): reconciles users who still
@@ -43,14 +45,31 @@ export async function GET(request: NextRequest) {
   let errors = 0;
   const errorSamples: string[] = [];
 
-  for (const userId of userIds) {
-    try {
-      const result = await reconcileUserStripeSubscription(stripe, userId);
+  for (let i = 0; i < userIds.length; i += CONCURRENCY) {
+    const batch = userIds.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(
+      batch.map((userId) => reconcileUserStripeSubscription(stripe, userId)),
+    );
+
+    settled.forEach((entry, idx) => {
+      const userId = batch[idx];
+
+      if (entry.status === "rejected") {
+        errors += 1;
+        const err = entry.reason;
+        const message = err instanceof Error ? err.message : String(err);
+        if (errorSamples.length < 5) {
+          errorSamples.push(`${userId}:${message}`);
+        }
+        return;
+      }
+
+      const result = entry.value;
       processed += 1;
 
       if (result.kind === "skipped") {
         skipped += 1;
-        continue;
+        return;
       }
 
       if (result.kind === "error") {
@@ -58,19 +77,13 @@ export async function GET(request: NextRequest) {
         if (errorSamples.length < 5) {
           errorSamples.push(`${userId}:${result.message}`);
         }
-        continue;
+        return;
       }
 
       if (result.updated) {
         updated += 1;
       }
-    } catch (err) {
-      errors += 1;
-      const message = err instanceof Error ? err.message : String(err);
-      if (errorSamples.length < 5) {
-        errorSamples.push(`${userId}:${message}`);
-      }
-    }
+    });
   }
 
   const body = {
