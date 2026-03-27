@@ -192,11 +192,19 @@ export async function POST(request: Request) {
       await unclaimEvent(event.id);
     } catch (unclaimErr) {
       console.error(
-        "Stripe webhook: unclaimEvent failed (event remains claimed); Stripe will retry:",
-        unclaimErr,
+        "[stripe:webhook] unclaimEvent failed (event remains claimed; Stripe will retry)",
+        {
+          eventId: event.id,
+          eventType: event.type,
+          error: unclaimErr instanceof Error ? unclaimErr.message : String(unclaimErr),
+        },
       );
     }
-    console.error("Stripe webhook handler error:", error);
+    console.error("[stripe:webhook] handler failed", {
+      eventId: event.id,
+      eventType: event.type,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 },
