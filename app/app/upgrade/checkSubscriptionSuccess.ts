@@ -3,6 +3,11 @@ import { getStripe } from "@/core/lib/stripe";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
+/**
+ * Prevents spoofed upgrade success states by confirming Checkout payment and ownership server-side.
+ * @param searchParams - The search parameters from the URL.
+ * @returns True if the subscription is successful, false otherwise.
+ */
 export async function checkSubscriptionSuccess(searchParams: SearchParams) {
   if (searchParams.success !== "true") return false;
 
