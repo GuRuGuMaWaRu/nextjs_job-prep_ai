@@ -11,7 +11,7 @@ alwaysApply: true
 ## Code comments
 
 - Use JSDoc for all exported functions
-- Document "why" not "what" in inline comments
+- Document "why" not "what" in inline comments (does not apply to JSDoc comments)
 - Don't comment obvious code
 
 ## API documentation

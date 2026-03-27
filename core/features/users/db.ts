@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 
 import { UserTable } from "@/core/drizzle/schema";
 import type { UserPlan } from "@/core/drizzle/schema/user";
@@ -28,6 +28,19 @@ export async function getUserByIdDb(id: string) {
   });
 
   return user;
+}
+
+/**
+ * Returns user ids that still reference a Stripe subscription id (reconciliation jobs).
+ */
+export async function getUserIdsWithStripeSubscriptionDb(limit = 500) {
+  const rows = await db
+    .select({ id: UserTable.id })
+    .from(UserTable)
+    .where(isNotNull(UserTable.stripeSubscriptionId))
+    .limit(limit);
+
+  return rows.map((r) => r.id);
 }
 
 export async function getUserByStripeCustomerIdDb(stripeCustomerId: string) {
