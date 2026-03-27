@@ -134,10 +134,31 @@ export async function reconcileUserStripeSubscription(
     return { kind: "ok", updated: isUpdated };
   } catch (err) {
     if (isStripeSubscriptionMissingError(err)) {
+      console.error("[stripeSync] Stripe subscription not found (resource_missing)", {
+        userId,
+        stripeSubscriptionId: user.stripeSubscriptionId,
+      });
+
       const freshUser = await getUserByIdDb(userId);
       if (freshUser?.stripeSubscriptionId !== user.stripeSubscriptionId) {
+        console.warn(
+          "[stripeSync] Skipped downgrade after missing subscription: row changed concurrently",
+          {
+            userId,
+            priorStripeSubscriptionId: user.stripeSubscriptionId,
+            currentStripeSubscriptionId: freshUser?.stripeSubscriptionId ?? null,
+          },
+        );
         return { kind: "ok", updated: false };
       }
+
+      console.error(
+        "[stripeSync] Downgrading user: subscription removed in Stripe",
+        {
+          userId,
+          priorStripeSubscriptionId: user.stripeSubscriptionId,
+        },
+      );
 
       await updateUserPlanAndStripeIdsDb(userId, {
         plan: "free",
@@ -147,6 +168,11 @@ export async function reconcileUserStripeSubscription(
       return { kind: "ok", updated: true };
     }
 
+    console.error("[stripeSync] reconcileUserStripeSubscription failed", {
+      userId,
+      stripeSubscriptionId: user.stripeSubscriptionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
     throw err;
   }
 }
