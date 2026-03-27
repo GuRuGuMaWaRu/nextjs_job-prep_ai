@@ -19,13 +19,17 @@ const STRIPE_ERROR_MESSAGES: Record<string, string> = {
 
 type Error = string | string[] | undefined;
 
+/**
+ * Maps a Stripe error code (from query params) to a user-facing message.
+ * @param error - The error code(s) from the URL query string.
+ * @returns A user-facing error message, or null if no error is present.
+ */
 export function getErrorMessage(error: Error) {
-  const rawError = error;
   const errorCode =
-    typeof rawError === "string"
-      ? rawError
-      : Array.isArray(rawError)
-        ? rawError[0]
+    typeof error === "string"
+      ? error
+      : Array.isArray(error)
+        ? error[0]
         : undefined;
 
   return errorCode && errorCode in STRIPE_ERROR_MESSAGES
