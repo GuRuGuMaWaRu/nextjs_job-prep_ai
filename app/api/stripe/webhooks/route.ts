@@ -19,6 +19,7 @@ import { eq } from "drizzle-orm";
 import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 import { getStripe } from "@/core/lib/stripe";
+import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 import { env } from "@/core/data/env/server";
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
@@ -66,12 +67,12 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   const subscriptionId =
     typeof session.subscription === "string"
       ? session.subscription
-      : session.subscription?.id ?? null;
+      : (session.subscription?.id ?? null);
 
   const customerId =
     typeof session.customer === "string"
       ? session.customer
-      : session.customer?.id ?? null;
+      : (session.customer?.id ?? null);
 
   if (!customerId || !subscriptionId) {
     console.warn(
@@ -108,17 +109,17 @@ export async function POST(request: Request) {
 
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
-    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing stripe-signature" },
+      { status: 400 },
+    );
   }
 
   let body: string;
   try {
     body = await request.text();
   } catch {
-    return NextResponse.json(
-      { error: "Failed to read body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Failed to read body" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -196,14 +197,14 @@ export async function POST(request: Request) {
         {
           eventId: event.id,
           eventType: event.type,
-          error: unclaimErr instanceof Error ? unclaimErr.message : String(unclaimErr),
+          error: toSafeErrorMeta(unclaimErr),
         },
       );
     }
     console.error("[stripe:webhook] handler failed", {
       eventId: event.id,
       eventType: event.type,
-      error: error instanceof Error ? error.message : String(error),
+      error: toSafeErrorMeta(error),
     });
     return NextResponse.json(
       { error: "Webhook handler failed" },
