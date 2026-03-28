@@ -106,7 +106,14 @@ export async function GET(request: NextRequest) {
   };
 
   console.info("[cron:stripe-subscriptions] run finished", {
-    ...body,
+    ok: true,
+    batchLimit: BATCH_LIMIT,
+    candidates: userIds.length,
+    processed,
+    updated,
+    skipped,
+    errors,
+    errorSampleCount: errorSamples.length,
     elapsedMs: Date.now() - startedAtMs,
   });
 
