@@ -3,7 +3,9 @@
  *
  * Idempotency is guaranteed by two mechanisms:
  *   1. Every processed event ID is persisted in the stripe_events table.
- *      Duplicate deliveries (Stripe retries, network replays) are skipped.
+ *      Duplicate deliveries (Stripe retries, network replays) are skipped unless
+ *      the row is flagged `remediation_required` (unclaim failed after a handler
+ *      error) — those return 500 so Stripe keeps retrying until ops fix the row.
  *   2. For subscription-lifecycle events the authoritative Subscription object
  *      is re-fetched from the Stripe API so that out-of-order delivery always
  *      applies the latest state rather than stale event payloads.
@@ -14,80 +16,18 @@
  */
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { eq } from "drizzle-orm";
 
-import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 import { getStripe } from "@/core/lib/stripe";
+import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 import { env } from "@/core/data/env/server";
-import { db } from "@/core/drizzle/db";
-import { StripeEventTable } from "@/core/drizzle/schema";
-
-/**
- * Atomically attempts to claim an event for processing.
- * Uses INSERT ... ON CONFLICT DO NOTHING ... RETURNING so that only one of
- * potentially concurrent invocations for the same event ID "wins" the insert.
- *
- * Returns `true` if the event was successfully claimed (not yet processed).
- * Returns `false` if another invocation already claimed it (duplicate delivery).
- */
-async function claimEvent(
-  eventId: string,
-  eventType: string,
-): Promise<boolean> {
-  const rows = await db
-    .insert(StripeEventTable)
-    .values({ id: eventId, type: eventType })
-    .onConflictDoNothing()
-    .returning({ id: StripeEventTable.id });
-
-  return rows.length > 0;
-}
-
-/**
- * Removes a previously claimed event so Stripe can retry delivery.
- * Called when event processing fails after a successful claim.
- */
-async function unclaimEvent(eventId: string): Promise<void> {
-  await db.delete(StripeEventTable).where(eq(StripeEventTable.id, eventId));
-}
-
-async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
-  if (session.payment_status === "unpaid") {
-    return;
-  }
-
-  const userId = session.metadata?.userId as string | undefined;
-  if (!userId) {
-    console.warn("fulfillCheckoutSession: missing metadata.userId", session.id);
-    return;
-  }
-
-  const subscriptionId =
-    typeof session.subscription === "string"
-      ? session.subscription
-      : session.subscription?.id ?? null;
-
-  const customerId =
-    typeof session.customer === "string"
-      ? session.customer
-      : session.customer?.id ?? null;
-
-  if (!customerId || !subscriptionId) {
-    console.warn(
-      "fulfillCheckoutSession: incomplete session payload — " +
-        `customerId=${customerId}, subscriptionId=${subscriptionId}`,
-      session.id,
-    );
-    return;
-  }
-
-  await updateUserPlanAndStripeIdsDb(userId, {
-    plan: "pro",
-    stripeCustomerId: customerId,
-    stripeSubscriptionId: subscriptionId,
-  });
-}
+import {
+  markStripeEventRemediationRequired,
+  claimEvent,
+  unclaimEvent,
+  fulfillCheckoutSession,
+  checkRemediationRequired,
+} from "@/core/features/billing/webhookHelpers";
 
 export async function POST(request: Request) {
   const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
@@ -108,17 +48,17 @@ export async function POST(request: Request) {
 
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
-    return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing stripe-signature" },
+      { status: 400 },
+    );
   }
 
   let body: string;
   try {
     body = await request.text();
   } catch {
-    return NextResponse.json(
-      { error: "Failed to read body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Failed to read body" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -132,6 +72,22 @@ export async function POST(request: Request) {
   // ── Idempotency: atomically claim the event ────────────────────────
   const claimed = await claimEvent(event.id, event.type);
   if (!claimed) {
+    const remediationRequired = await checkRemediationRequired(event.id);
+
+    if (remediationRequired) {
+      console.error(
+        "[ALERT][stripe:webhook] duplicate delivery for event pending remediation — returning 500 so Stripe keeps retrying",
+        { eventId: event.id, eventType: event.type },
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Stripe webhook event stuck after failed unclaim; remediation required",
+        },
+        { status: 500 },
+      );
+    }
+
     return new NextResponse(null, { status: 200 });
   }
 
@@ -191,12 +147,38 @@ export async function POST(request: Request) {
     try {
       await unclaimEvent(event.id);
     } catch (unclaimErr) {
+      const unclaimMessage =
+        unclaimErr instanceof Error ? unclaimErr.message : String(unclaimErr);
+
       console.error(
-        "Stripe webhook: unclaimEvent failed (event remains claimed); Stripe will retry:",
-        unclaimErr,
+        "[ALERT][stripe:webhook] STUCK EVENT: unclaim failed after handler error; claim row remains — returning 500 and flagging row for remediation (duplicate ACK was unsafe until flagged)",
+        {
+          eventId: event.id,
+          eventType: event.type,
+          unclaimError: unclaimMessage,
+        },
       );
+
+      try {
+        await markStripeEventRemediationRequired(event.id, unclaimMessage);
+      } catch (markErr) {
+        console.error(
+          "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
+          {
+            eventId: event.id,
+            eventType: event.type,
+            unclaimError: unclaimMessage,
+            markError:
+              markErr instanceof Error ? markErr.message : String(markErr),
+          },
+        );
+      }
     }
-    console.error("Stripe webhook handler error:", error);
+    console.error("[stripe:webhook] handler failed", {
+      eventId: event.id,
+      eventType: event.type,
+      error: toSafeErrorMeta(error),
+    });
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 },
