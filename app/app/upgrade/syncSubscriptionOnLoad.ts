@@ -1,6 +1,3 @@
-import { revalidatePath } from "next/cache";
-
-import { routes } from "@/core/data/routes";
 import { getCurrentUser } from "@/core/features/auth/actions";
 import { getUserByIdDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
@@ -35,11 +32,7 @@ export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
   }
 
   try {
-    const result = await reconcileUserStripeSubscription(stripe, userId);
-
-    if (result.kind === "ok" && result.updated) {
-      revalidatePath(routes.upgrade);
-    }
+    await reconcileUserStripeSubscription(stripe, userId);
   } catch (error) {
     console.error("Error syncing subscription:", error);
     // DB updates already revalidate user tags when reconcile succeeds; keep page usable on failure.
