@@ -9,6 +9,16 @@ import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 
 // the column and we only persist a short ops hint, not an unbounded error blob.
 const REMEDIATION_DETAIL_MAX_LEN = 512;
+const POSTGRES_UNDEFINED_COLUMN = "42703";
+
+function isMissingRemediationColumnsError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const withCode = error as Error & { code?: string };
+  return withCode.code === POSTGRES_UNDEFINED_COLUMN;
+}
 
 /**
  * Flags a claimed event row as needing ops intervention (e.g. unclaim/delete failed).
@@ -23,13 +33,23 @@ export async function markStripeEventRemediationRequired(
       ? `${detail.slice(0, REMEDIATION_DETAIL_MAX_LEN - 3)}...`
       : detail;
 
-  await db
-    .update(StripeEventTable)
-    .set({
-      remediationRequired: true,
-      remediationDetail: truncated,
-    })
-    .where(eq(StripeEventTable.id, eventId));
+  try {
+    await db
+      .update(StripeEventTable)
+      .set({
+        remediationRequired: true,
+        remediationDetail: truncated,
+      })
+      .where(eq(StripeEventTable.id, eventId));
+  } catch (error) {
+    // During deploy rollouts the app code can be newer than the DB schema.
+    // Falling back preserves the previous webhook behavior until migrations land.
+    if (isMissingRemediationColumnsError(error)) {
+      return;
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -101,14 +121,22 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
 export async function checkRemediationRequired(
   eventId: string,
 ): Promise<boolean> {
-  const existing = await db
-    .select({
-      remediationRequired: StripeEventTable.remediationRequired,
-    })
-    .from(StripeEventTable)
-    .where(eq(StripeEventTable.id, eventId))
-    .limit(1);
+  try {
+    const existing = await db
+      .select({
+        remediationRequired: StripeEventTable.remediationRequired,
+      })
+      .from(StripeEventTable)
+      .where(eq(StripeEventTable.id, eventId))
+      .limit(1);
 
-  const row = existing[0];
-  return row?.remediationRequired ?? false;
+    const row = existing[0];
+    return row?.remediationRequired ?? false;
+  } catch (error) {
+    if (isMissingRemediationColumnsError(error)) {
+      return false;
+    }
+
+    throw error;
+  }
 }
