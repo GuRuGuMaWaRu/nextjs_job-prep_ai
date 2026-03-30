@@ -1,5 +1,6 @@
-// Must stay in sync with `remediation_detail` varchar length in
-// `core/drizzle/schema/stripeEvent.ts` (512). We truncate so inserts never exceed
+// `REMEDIATION_DETAIL_MAX_LEN` must stay in sync with the `remediation_detail` varchar
+// length in `core/drizzle/schema/stripeEvent.ts` (512). We truncate before insert so
+// values never exceed that column; we only persist a short ops hint, not an unbounded error blob.
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 
@@ -7,7 +8,6 @@ import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
 import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 
-// the column and we only persist a short ops hint, not an unbounded error blob.
 const REMEDIATION_DETAIL_MAX_LEN = 512;
 const POSTGRES_UNDEFINED_COLUMN = "42703";
 
