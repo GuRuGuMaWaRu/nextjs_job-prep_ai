@@ -11,6 +11,9 @@ import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 const REMEDIATION_DETAIL_MAX_LEN = 512;
 const POSTGRES_UNDEFINED_COLUMN = "42703";
 
+/** After `onConflictDoNothing`, a row might disappear before SELECT (e.g. concurrent `unclaimEvent`). */
+const CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS = 5;
+
 function isMissingStripeEventSchemaError(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -78,37 +81,41 @@ export async function claimEvent(
   eventId: string,
   eventType: string,
 ): Promise<ClaimEventResult> {
-  const rows = await db
-    .insert(StripeEventTable)
-    .values({
-      id: eventId,
-      type: eventType,
-      state: "processing",
-    })
-    .onConflictDoNothing()
-    .returning({ id: StripeEventTable.id });
+  for (let attempt = 0; attempt < CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS; attempt++) {
+    const rows = await db
+      .insert(StripeEventTable)
+      .values({
+        id: eventId,
+        type: eventType,
+        state: "processing",
+      })
+      .onConflictDoNothing()
+      .returning({ id: StripeEventTable.id });
 
-  if (rows.length > 0) {
-    return "claimed";
-  }
+    if (rows.length > 0) {
+      return "claimed";
+    }
 
-  const existing = await db
-    .select({ state: StripeEventTable.state })
-    .from(StripeEventTable)
-    .where(eq(StripeEventTable.id, eventId))
-    .limit(1);
+    const existing = await db
+      .select({ state: StripeEventTable.state })
+      .from(StripeEventTable)
+      .where(eq(StripeEventTable.id, eventId))
+      .limit(1);
 
-  const row = existing[0];
-  if (!row) {
-    return "claimed";
-  }
+    const row = existing[0];
+    if (!row) {
+      continue;
+    }
 
-  if (row.state === "processed") {
-    return "duplicate_processed";
-  }
+    if (row.state === "processed") {
+      return "duplicate_processed";
+    }
 
-  if (row.state === "remediation_required") {
-    return "duplicate_remediation";
+    if (row.state === "remediation_required") {
+      return "duplicate_remediation";
+    }
+
+    return "duplicate_in_progress";
   }
 
   return "duplicate_in_progress";
