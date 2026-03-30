@@ -165,33 +165,3 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     stripeSubscriptionId: subscriptionId,
   });
 }
-
-/**
- * Whether the idempotency row for this event is stuck in `remediation_required`.
- *
- * @param eventId — Stripe event id (`evt_…`) used as the primary key in `stripe_events`.
- * @returns `true` if ops must fix the row before duplicates can be ACKed safely.
- * @sideEffects Reads from `stripe_events`; on schema mismatch during rollout, returns `false` without throwing.
- */
-export async function checkRemediationRequired(
-  eventId: string,
-): Promise<boolean> {
-  try {
-    const existing = await db
-      .select({
-        state: StripeEventTable.state,
-      })
-      .from(StripeEventTable)
-      .where(eq(StripeEventTable.id, eventId))
-      .limit(1);
-
-    const row = existing[0];
-    return row?.state === "remediation_required";
-  } catch (error) {
-    if (isMissingStripeEventSchemaError(error)) {
-      return false;
-    }
-
-    throw error;
-  }
-}
