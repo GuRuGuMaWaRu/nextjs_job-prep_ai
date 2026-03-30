@@ -22,6 +22,13 @@
       "when": 1774704540621,
       "tag": "0002_harsh_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1774704600000,
+      "tag": "0003_stripe_event_state",
+      "breakpoints": true
     }
   ]
 }

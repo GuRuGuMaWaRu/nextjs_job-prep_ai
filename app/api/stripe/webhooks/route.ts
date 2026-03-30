@@ -2,10 +2,11 @@
  * Stripe webhook: updates user plan and Stripe IDs on checkout and subscription events.
  *
  * Idempotency is guaranteed by two mechanisms:
- *   1. Every processed event ID is persisted in the stripe_events table.
- *      Duplicate deliveries (Stripe retries, network replays) are skipped unless
- *      the row is flagged `remediation_required` (unclaim failed after a handler
- *      error) — those return 500 so Stripe keeps retrying until ops fix the row.
+ *   1. Every processed event ID is persisted in the stripe_events table with an explicit
+ *      `state` (processing → processed). Duplicate deliveries are skipped unless the row
+ *      is `remediation_required` (unclaim failed after a handler error) — those return 500
+ *      so Stripe keeps retrying until ops fix the row. While `state` is `processing`,
+ *      concurrent duplicates receive 503 so Stripe retries instead of ACKing early.
  *   2. For subscription-lifecycle events the authoritative Subscription object
  *      is re-fetched from the Stripe API so that out-of-order delivery always
  *      applies the latest state rather than stale event payloads.
@@ -15,19 +16,19 @@
  * Then set STRIPE_WEBHOOK_SECRET in .env to the signing secret the CLI prints (whsec_...).
  */
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 
-import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { getStripe } from "@/core/lib/stripe";
-import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 import { env } from "@/core/data/env/server";
 import {
   markStripeEventRemediationRequired,
   claimEvent,
   unclaimEvent,
   fulfillCheckoutSession,
-  checkRemediationRequired,
+  markStripeEventProcessed,
 } from "@/core/features/billing/webhookHelpers";
+import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
+import { getStripe } from "@/core/features/billing/stripe";
+import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 
 export async function POST(request: Request) {
   const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
@@ -70,25 +71,28 @@ export async function POST(request: Request) {
   }
 
   // ── Idempotency: atomically claim the event ────────────────────────
-  const claimed = await claimEvent(event.id, event.type);
-  if (!claimed) {
-    const remediationRequired = await checkRemediationRequired(event.id);
+  const claimResult = await claimEvent(event.id, event.type);
 
-    if (remediationRequired) {
-      console.error(
-        "[ALERT][stripe:webhook] duplicate delivery for event pending remediation — returning 500 so Stripe keeps retrying",
-        { eventId: event.id, eventType: event.type },
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Stripe webhook event stuck after failed unclaim; remediation required",
-        },
-        { status: 500 },
-      );
-    }
-
+  if (claimResult === "duplicate_processed") {
     return new NextResponse(null, { status: 200 });
+  }
+
+  if (claimResult === "duplicate_in_progress") {
+    return new NextResponse(null, { status: 503 });
+  }
+
+  if (claimResult === "duplicate_remediation") {
+    console.error(
+      "[ALERT][stripe:webhook] duplicate delivery for event pending remediation — returning 500 so Stripe keeps retrying",
+      { eventType: event.type },
+    );
+    return NextResponse.json(
+      {
+        error:
+          "Stripe webhook event stuck after failed unclaim; remediation required",
+      },
+      { status: 500 },
+    );
   }
 
   try {
@@ -108,8 +112,7 @@ export async function POST(request: Request) {
       case "checkout.session.async_payment_failed": {
         const session = event.data.object as Stripe.Checkout.Session;
         console.warn(
-          "checkout.session.async_payment_failed: session",
-          session.id,
+          "checkout.session.async_payment_failed: async payment failed for checkout session",
           "userId",
           session.metadata?.userId,
         );
@@ -143,6 +146,8 @@ export async function POST(request: Request) {
       default:
         break;
     }
+
+    await markStripeEventProcessed(event.id);
   } catch (error) {
     try {
       await unclaimEvent(event.id);
@@ -153,7 +158,6 @@ export async function POST(request: Request) {
       console.error(
         "[ALERT][stripe:webhook] STUCK EVENT: unclaim failed after handler error; claim row remains — returning 500 and flagging row for remediation (duplicate ACK was unsafe until flagged)",
         {
-          eventId: event.id,
           eventType: event.type,
           unclaimError: unclaimMessage,
         },
@@ -165,7 +169,6 @@ export async function POST(request: Request) {
         console.error(
           "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
           {
-            eventId: event.id,
             eventType: event.type,
             unclaimError: unclaimMessage,
             markError:
@@ -175,7 +178,6 @@ export async function POST(request: Request) {
       }
     }
     console.error("[stripe:webhook] handler failed", {
-      eventId: event.id,
       eventType: event.type,
       error: toSafeErrorMeta(error),
     });
