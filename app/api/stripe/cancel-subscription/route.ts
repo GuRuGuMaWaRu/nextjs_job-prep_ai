@@ -7,7 +7,7 @@ import {
   getIdempotencyKeyFromRequest,
   getUpgradeErrorRedirect,
   isStripeConfigured,
-} from "@/core/lib/stripe";
+} from "@/core/features/billing/stripe";
 import { routes } from "@/core/data/routes";
 
 /**

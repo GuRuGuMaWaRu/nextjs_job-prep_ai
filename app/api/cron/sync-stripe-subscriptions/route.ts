@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/core/data/env/server";
 import { getUserIdsWithStripeSubscriptionDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
-import { getStripe, isStripeConfigured } from "@/core/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 
 const BATCH_LIMIT = 500;
 /** Parallel Stripe retrieves per batch to reduce wall-clock time vs sequential awaits. */

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 
 import { getCurrentUser } from "@/core/features/auth/actions";
 import {
@@ -7,7 +8,7 @@ import {
   getIdempotencyKeyFromRequest,
   getUpgradeErrorRedirect,
   isStripeConfigured,
-} from "@/core/lib/stripe";
+} from "@/core/features/billing/stripe";
 import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
     sessionParams.customer_email = user.email;
   }
 
-  let session;
+  let session: Stripe.Checkout.Session;
   try {
     session = await stripe.checkout.sessions.create(
       sessionParams,

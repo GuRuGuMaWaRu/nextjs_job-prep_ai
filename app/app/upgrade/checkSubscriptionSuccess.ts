@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/core/features/auth/actions";
-import { getStripe } from "@/core/lib/stripe";
+import { getStripe } from "@/core/features/billing/stripe";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

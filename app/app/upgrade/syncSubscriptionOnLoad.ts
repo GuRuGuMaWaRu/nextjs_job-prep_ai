@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/core/features/auth/actions";
 import { getUserByIdDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
-import { getStripe, isStripeConfigured } from "@/core/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 
 /**
  * Aligns plan and Stripe subscription fields with Stripe when the user opens the
