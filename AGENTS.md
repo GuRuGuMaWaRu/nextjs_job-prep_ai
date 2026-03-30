@@ -7,4 +7,4 @@
 
 ## General Rules
 
-- Never ever log customer emails, payment information or any other sensitive data.
+- Never ever log customer emails.

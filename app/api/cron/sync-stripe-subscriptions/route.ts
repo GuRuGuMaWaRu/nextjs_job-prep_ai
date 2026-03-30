@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/core/data/env/server";
 import { getUserIdsWithStripeSubscriptionDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
-import { getStripe, isStripeConfigured } from "@/core/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 
 const BATCH_LIMIT = 500;
 /** Parallel Stripe retrieves per batch to reduce wall-clock time vs sequential awaits. */
@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const startedAtMs = Date.now();
+
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { error: "Stripe not configured" },
@@ -38,6 +40,12 @@ export async function GET(request: NextRequest) {
   }
 
   const userIds = await getUserIdsWithStripeSubscriptionDb(BATCH_LIMIT);
+
+  console.info("[cron:stripe-subscriptions] run started", {
+    batchLimit: BATCH_LIMIT,
+    concurrency: CONCURRENCY,
+    candidates: userIds.length,
+  });
 
   let processed = 0;
   let updated = 0;
@@ -96,6 +104,18 @@ export async function GET(request: NextRequest) {
     errors,
     ...(errorSamples.length > 0 && { errorSamples }),
   };
+
+  console.info("[cron:stripe-subscriptions] run finished", {
+    ok: true,
+    batchLimit: BATCH_LIMIT,
+    candidates: userIds.length,
+    processed,
+    updated,
+    skipped,
+    errors,
+    errorSampleCount: errorSamples.length,
+    elapsedMs: Date.now() - startedAtMs,
+  });
 
   return NextResponse.json(body);
 }

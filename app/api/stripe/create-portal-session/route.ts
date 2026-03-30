@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 
 import { getCurrentUser } from "@/core/features/auth/actions";
 import {
@@ -7,7 +8,7 @@ import {
   getIdempotencyKeyFromRequest,
   getUpgradeErrorRedirect,
   isStripeConfigured,
-} from "@/core/lib/stripe";
+} from "@/core/features/billing/stripe";
 import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
 
   const returnUrl = `${baseUrl}${routes.upgrade}`;
 
-  let portalSession;
+  let portalSession: Stripe.BillingPortal.Session;
   try {
     portalSession = await stripe.billingPortal.sessions.create(
       {

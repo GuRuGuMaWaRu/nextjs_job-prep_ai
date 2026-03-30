@@ -10,7 +10,7 @@ import {
   CardDescription,
 } from "@/core/components/ui/card";
 import { getUserSubscriptionInfo } from "@/core/features/auth/permissions";
-import { isStripeConfigured } from "@/core/lib/stripe";
+import { isStripeConfigured } from "@/core/features/billing/stripe";
 
 import { StripeActionButton } from "./_StripeActionButton";
 

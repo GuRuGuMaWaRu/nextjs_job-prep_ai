@@ -1,5 +1,5 @@
-import { getStripe } from "@/core/lib/stripe";
 import type { AuthUser } from "@/core/features/auth/types";
+import { getStripe } from "@/core/features/billing/stripe";
 
 type CanceledSubscriptionNotice = {
   subscriptionId: string;
