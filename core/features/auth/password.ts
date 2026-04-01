@@ -6,13 +6,21 @@ import {
 } from "@/core/features/auth/constants";
 
 /**
+ * Applies Unicode NFC so the same passphrase matches across NFD/NFC inputs
+ * (e.g. different OS or paste sources).
+ */
+export function normalizePassword(password: string): string {
+  return password.normalize("NFC");
+}
+
+/**
  * Hash a password using bcrypt
  * @param password - Plain text password
  * @returns Hashed password
  */
 export async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
-  return bcrypt.hash(password, saltRounds);
+  return bcrypt.hash(normalizePassword(password), saltRounds);
 }
 
 /**
@@ -25,7 +33,7 @@ export async function verifyPassword(
   password: string,
   hash: string
 ): Promise<boolean> {
-  return bcrypt.compare(password, hash);
+  return bcrypt.compare(normalizePassword(password), hash);
 }
 
 /**
@@ -37,14 +45,16 @@ export function validatePassword(password: string): {
   isValid: boolean;
   error?: string;
 } {
-  if (password.length < MIN_PASSWORD_LENGTH) {
+  const normalized = normalizePassword(password);
+
+  if (normalized.length < MIN_PASSWORD_LENGTH) {
     return {
       isValid: false,
       error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
     };
   }
 
-  if (password.length > MAX_PASSWORD_LENGTH) {
+  if (normalized.length > MAX_PASSWORD_LENGTH) {
     return {
       isValid: false,
       error: `Password must be less than ${MAX_PASSWORD_LENGTH} characters`,
@@ -52,8 +62,8 @@ export function validatePassword(password: string): {
   }
 
   // Check for at least one letter and one number
-  const hasLetter = /[a-zA-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
+  const hasLetter = /[a-zA-Z]/.test(normalized);
+  const hasNumber = /[0-9]/.test(normalized);
 
   if (!hasLetter || !hasNumber) {
     return {
