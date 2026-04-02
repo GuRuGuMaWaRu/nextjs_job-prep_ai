@@ -228,6 +228,20 @@
   }
 }
 
+@layer components {
+  .landr-logo-mark {
+    @apply inline-block size-6 shrink-0 bg-primary;
+    mask-image: url("/landr-logo.svg");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-image: url("/landr-logo.svg");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+  }
+}
+
 .custom-pricing-table.cl-pricingTableCard__pro {
   @apply border-primary/50 my-0 py-9 relative overflow-visible;
 

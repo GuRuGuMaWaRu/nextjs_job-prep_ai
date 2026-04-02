@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import {
   BookOpenIcon,
-  BrainCircuitIcon,
   CircleArrowUpIcon,
   FileSlidersIcon,
   LogOut,
@@ -42,7 +41,7 @@ export function Navbar({
     <nav className="h-header border-b flex items-center justify-between container">
       {/* Left side - Logo and App Name */}
       <Link href={routes.app} className="flex items-center gap-2">
-        <BrainCircuitIcon className="size-6 text-primary" />
+        <span className="landr-logo-mark" aria-hidden />
         <span className="text-xl font-bold">Landr</span>
       </Link>
 
