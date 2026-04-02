@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -194,41 +195,61 @@ export async function signOutAction(): Promise<void> {
   redirect(routes.landing);
 }
 
+const getSessionCached = cache(async () => {
+  const token = await getSessionToken();
+  if (!token) return null;
+  return extendSessionIfNeeded(token);
+});
+
+const getCurrentUserCached = cache(
+  async (allData: boolean): Promise<CurrentUser> => {
+    try {
+      const session = await getSessionCached();
+
+      if (!session) {
+        return {
+          userId: null,
+          redirectToSignIn: () => redirect(routes.signIn),
+        };
+      }
+
+      const userId = session.userId;
+
+      return {
+        userId,
+        user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
+        redirectToSignIn: () => redirect(routes.signIn),
+      };
+    } catch (error) {
+      console.error(
+        "getCurrentUserCached: session or user load failed:",
+        error,
+      );
+
+      return {
+        userId: null,
+        redirectToSignIn: () => redirect(routes.signIn),
+      };
+    }
+  },
+);
+
 /**
- * Get the current authenticated user from session
+ * Get the current authenticated user from session (session row only; no user table fetch).
  *
- * @param options.allData - Whether to fetch full user data from database
  * @returns Object with userId, optional user data, and redirectToSignIn helper
  */
-export async function getCurrentUser({
-  allData = false,
-}: { allData?: boolean } = {}): Promise<CurrentUser> {
-  const token = await getSessionToken();
+export async function getCurrentUser(): Promise<CurrentUser> {
+  return getCurrentUserCached(false);
+}
 
-  if (!token) {
-    return {
-      userId: null,
-      redirectToSignIn: () => redirect(routes.signIn),
-    };
-  }
-
-  // Validate and potentially extend the session
-  const session = await extendSessionIfNeeded(token);
-
-  if (!session) {
-    return {
-      userId: null,
-      redirectToSignIn: () => redirect(routes.signIn),
-    };
-  }
-
-  const userId = session.userId;
-
-  return {
-    userId,
-    user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
-    redirectToSignIn: () => redirect(routes.signIn),
-  };
+/**
+ * Same as {@link getCurrentUser} but loads the full user row from the database.
+ *
+ * @returns Object with userId, user, and redirectToSignIn helper
+ */
+export async function getCurrentUserWithProfile(): Promise<CurrentUser> {
+  return getCurrentUserCached(true);
 }
 
 export async function validateSessionAction(token: string): Promise<boolean> {

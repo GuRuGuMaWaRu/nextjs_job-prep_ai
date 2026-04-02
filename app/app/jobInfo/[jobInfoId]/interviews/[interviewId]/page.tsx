@@ -18,7 +18,7 @@ import {
   generateInterviewFeedbackAction,
   getInterviewById,
 } from "@/core/features/interviews/actions";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserWithProfile } from "@/core/features/auth/actions";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
@@ -42,7 +42,7 @@ export default async function InterviewPage({
     return <InterviewNotFound jobInfoId={jobInfoId} />;
   }
 
-  const interview = getCurrentUser().then(
+  const interview = getCurrentUserWithProfile().then(
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
@@ -115,7 +115,7 @@ async function SuspendedMessages({
 }: {
   interview: Promise<{ humeChatId: string | null }>;
 }) {
-  const { user, redirectToSignIn } = await getCurrentUser({ allData: true });
+  const { user, redirectToSignIn } = await getCurrentUserWithProfile();
   if (user == null) return redirectToSignIn();
   const { humeChatId } = await interview;
   if (humeChatId == null) return notFound();

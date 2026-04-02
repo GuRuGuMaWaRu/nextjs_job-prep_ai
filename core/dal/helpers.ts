@@ -1,4 +1,7 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
+import {
+  getCurrentUser,
+  getCurrentUserWithProfile,
+} from "@/core/features/auth/actions";
 
 /**
  * Custom error classes for better error handling throughout the application
@@ -65,7 +68,7 @@ export async function requireUser(): Promise<string> {
  * Throws UnauthorizedError if not authenticated
  */
 export async function requireUserWithData() {
-  const { userId, user } = await getCurrentUser({ allData: true });
+  const { userId, user } = await getCurrentUserWithProfile();
 
   if (!userId || !user) {
     throw new UnauthorizedError();
