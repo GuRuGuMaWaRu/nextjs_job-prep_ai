@@ -206,22 +206,31 @@ const getCurrentUserCached = cache(
       };
     }
 
-    const session = await extendSessionIfNeeded(token);
+    try {
+      const session = await extendSessionIfNeeded(token);
 
-    if (!session) {
+      if (!session) {
+        return {
+          userId: null,
+          redirectToSignIn: () => redirect(routes.signIn),
+        };
+      }
+
+      const userId = session.userId;
+
+      return {
+        userId,
+        user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
+        redirectToSignIn: () => redirect(routes.signIn),
+      };
+    } catch (error) {
+      console.error("getCurrentUserCached: session or user load failed:", error);
+
       return {
         userId: null,
         redirectToSignIn: () => redirect(routes.signIn),
       };
     }
-
-    const userId = session.userId;
-
-    return {
-      userId,
-      user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
-      redirectToSignIn: () => redirect(routes.signIn),
-    };
   },
 );
 
