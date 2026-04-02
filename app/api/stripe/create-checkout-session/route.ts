@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserWithProfile } from "@/core/features/auth/actions";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -13,7 +13,7 @@ import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
-  const { userId, user } = await getCurrentUser({ allData: true });
+  const { userId, user } = await getCurrentUserWithProfile();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers

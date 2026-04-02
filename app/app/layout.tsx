@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserWithProfile } from "@/core/features/auth/actions";
 import type { AuthUser } from "@/core/features/auth/types";
 import { routes } from "@/core/data/routes";
 
@@ -19,7 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 async function AuthCheckAndNavbar({ children }: { children: React.ReactNode }) {
-  const { userId, user } = await getCurrentUser({ allData: true });
+  const { userId, user } = await getCurrentUserWithProfile();
 
   if (userId == null || user == null) return redirect(routes.landing);
 

@@ -98,7 +98,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(routes.signIn, req.url));
   }
 
-  // Session validation happens in server components via getCurrentUser()
+  // Session validation happens in server components via getCurrentUser / getCurrentUserWithProfile
   return NextResponse.next();
 }
 
