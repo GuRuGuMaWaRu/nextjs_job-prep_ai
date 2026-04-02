@@ -195,19 +195,16 @@ export async function signOutAction(): Promise<void> {
   redirect(routes.landing);
 }
 
+const getSessionCached = cache(async () => {
+  const token = await getSessionToken();
+  if (!token) return null;
+  return extendSessionIfNeeded(token);
+});
+
 const getCurrentUserCached = cache(
   async (allData: boolean): Promise<CurrentUser> => {
-    const token = await getSessionToken();
-
-    if (!token) {
-      return {
-        userId: null,
-        redirectToSignIn: () => redirect(routes.signIn),
-      };
-    }
-
     try {
-      const session = await extendSessionIfNeeded(token);
+      const session = await getSessionCached();
 
       if (!session) {
         return {
@@ -224,7 +221,10 @@ const getCurrentUserCached = cache(
         redirectToSignIn: () => redirect(routes.signIn),
       };
     } catch (error) {
-      console.error("getCurrentUserCached: session or user load failed:", error);
+      console.error(
+        "getCurrentUserCached: session or user load failed:",
+        error,
+      );
 
       return {
         userId: null,
