@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -19,7 +19,7 @@ import { db } from "@/core/drizzle/db";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { provider: string } },
+  { params }: { params: Promise<{ provider: string }> },
 ) {
   const { provider: rawProvider } = await params;
 

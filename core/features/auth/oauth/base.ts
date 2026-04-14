@@ -13,16 +13,31 @@ const CODE_VERIFIER_COOKIE_KEY = "oauth_code_verifier";
 const STATE_COOKIE_KEY = "oauth_state";
 const COOKIE_EXPIRATION_SECONDS = 60 * 10; // 10 minutes
 
+type ResolvedOAuthUser = { id: string; email: string; name: string };
+
+type UserInfoWithParser<T> = {
+  schema: z.ZodSchema<T>;
+  parser: (data: T) => ResolvedOAuthUser;
+};
+
+type UserInfoWithResolver<T> = {
+  schema: z.ZodSchema<T>;
+  resolveUser: (args: {
+    data: T;
+    accessToken: string;
+    tokenType: string;
+  }) => Promise<ResolvedOAuthUser>;
+};
+
+type OAuthUserInfo<T> = UserInfoWithParser<T> | UserInfoWithResolver<T>;
+
 type OAuthClientConfig<T> = {
   provider: OAuthProvider;
   clientId: string;
   clientSecret: string;
   scopes: string[];
   urls: { auth: string; token: string; user: string };
-  userInfo: {
-    schema: z.ZodSchema<T>;
-    parser: (data: T) => { id: string; email: string; name: string };
-  };
+  userInfo: OAuthUserInfo<T>;
 };
 
 export class OAuthClient<T> {
@@ -35,14 +50,7 @@ export class OAuthClient<T> {
     token: string;
     user: string;
   };
-  private readonly userInfo: {
-    schema: z.ZodSchema<T>;
-    parser: (data: T) => {
-      id: string;
-      email: string;
-      name: string;
-    };
-  };
+  private readonly userInfo: OAuthUserInfo<T>;
   private readonly tokenSchema = z.object({
     access_token: z.string(),
     token_type: z.string(),
@@ -111,6 +119,14 @@ export class OAuthClient<T> {
       const { data, success, error } = this.userInfo.schema.safeParse(rawData);
       if (!success) {
         throw new InvalidUserError(error);
+      }
+
+      if ("resolveUser" in this.userInfo) {
+        return await this.userInfo.resolveUser({
+          data,
+          accessToken,
+          tokenType,
+        });
       }
 
       return this.userInfo.parser(data);
