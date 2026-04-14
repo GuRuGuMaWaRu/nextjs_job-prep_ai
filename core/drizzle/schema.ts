@@ -5,3 +5,4 @@ export * from "./schema/jobInfo";
 export * from "./schema/interview";
 export * from "./schema/question";
 export * from "./schema/stripeEvent";
+export * from "./schema/userOAuthAccount";

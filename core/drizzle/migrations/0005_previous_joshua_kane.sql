@@ -1,0 +1,1 @@
+ALTER TABLE "user_oauth_accounts" ALTER COLUMN "userId" SET DATA TYPE varchar;

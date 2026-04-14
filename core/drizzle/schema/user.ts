@@ -5,6 +5,7 @@ import { JobInfoTable } from "./jobInfo";
 import { createdAt, updatedAt } from "../schemaHelpers";
 import { PasswordResetTokenTable, VerificationTokenTable } from "./token";
 import { SessionTable } from "./session";
+import { UserOAuthAccountTable } from "./userOAuthAccount";
 
 // User plan types
 export const userPlans = ["free", "pro"] as const;
@@ -19,12 +20,15 @@ export const UserTable = pgTable("users", {
   emailVerified: timestamp("email_verified", { withTimezone: true }),
   plan: varchar({ length: 50 }).notNull().default("free"),
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).unique(),
-  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }).unique(),
+  stripeSubscriptionId: varchar("stripe_subscription_id", {
+    length: 255,
+  }).unique(),
   createdAt,
   updatedAt,
 });
 
 export const usersRelations = relations(UserTable, ({ many }) => ({
+  oAuthAccounts: many(UserOAuthAccountTable),
   jobInfos: many(JobInfoTable),
   verificationTokens: many(VerificationTokenTable),
   passwordResetTokens: many(PasswordResetTokenTable),

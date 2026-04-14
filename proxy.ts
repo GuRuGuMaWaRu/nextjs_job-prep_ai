@@ -7,7 +7,7 @@ import { routes } from "@/core/data/routes";
 
 //** Public routes that don't require authentication
 const EXACT_PUBLIC_ROUTES = ["/"];
-const PREFIX_PUBLIC_ROUTES = ["/sign-in", "/sign-up"];
+const PREFIX_PUBLIC_ROUTES = ["/sign-in", "/sign-up", "/api/oauth"];
 
 //** Check if route is public */
 function isPublicRoute(pathname: string): boolean {
