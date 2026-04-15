@@ -1,23 +1,20 @@
 import { NextRequest } from "next/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { eq, and } from "drizzle-orm";
 import z from "zod";
 
-import {
-  OAuthProvider,
-  oAuthProviders,
-  UserTable,
-  UserOAuthAccountTable,
-} from "@/core/drizzle/schema";
+import { oAuthProviders } from "@/core/drizzle/schema";
 import { routes } from "@/core/data/routes";
 import { getOAuthClient } from "@/core/features/auth/oauth/base";
+import { connectUserToAccount } from "@/core/features/auth/oauth/connectUser";
 import { getOAuthConfig } from "@/core/features/auth/oauth/config";
-import { OAuthMissingEmailError } from "@/core/features/auth/oauth/errors";
-import { generateUserId } from "@/core/features/auth/tokens";
+import {
+  OAuthMissingEmailError,
+  OAuthNoVerifiedEmailError,
+  OAuthUnverifiedEmailError,
+} from "@/core/features/auth/oauth/errors";
 import { createSession } from "@/core/features/auth/session";
 import { setSessionCookie } from "@/core/features/auth/cookies";
-import { db } from "@/core/drizzle/db";
 
 export async function GET(
   request: NextRequest,
@@ -52,63 +49,17 @@ export async function GET(
       redirect(`${routes.signIn}?oauthError=oauth_missing_email`);
     }
 
+    if (error instanceof OAuthUnverifiedEmailError) {
+      redirect(`${routes.signIn}?oauthError=oauth_unverified_email`);
+    }
+
+    if (error instanceof OAuthNoVerifiedEmailError) {
+      redirect(`${routes.signIn}?oauthError=oauth_no_verified_email`);
+    }
+
     console.error("OAuth error:", error);
     redirect(`${routes.signIn}?oauthError=oauth_failed`);
   }
 
   redirect(routes.app);
-}
-
-function connectUserToAccount(
-  oAuthUser: { id: string; email: string; name: string },
-  provider: OAuthProvider,
-) {
-  return db.transaction(async (tx) => {
-    const existingOAuthAccount = await tx.query.UserOAuthAccountTable.findFirst(
-      {
-        where: and(
-          eq(UserOAuthAccountTable.provider, provider),
-          eq(UserOAuthAccountTable.providerAccountId, oAuthUser.id),
-        ),
-        columns: { userId: true },
-      },
-    );
-
-    if (existingOAuthAccount != null) {
-      return { id: existingOAuthAccount.userId };
-    }
-
-    let user = await tx.query.UserTable.findFirst({
-      where: eq(UserTable.email, oAuthUser.email),
-      columns: { id: true },
-    });
-
-    if (user == null) {
-      const userId = generateUserId();
-      const [newUser] = await tx
-        .insert(UserTable)
-        .values({
-          id: userId,
-          email: oAuthUser.email,
-          name: oAuthUser.name,
-          passwordHash: null,
-          image: null,
-          emailVerified: null,
-        })
-        .returning({ id: UserTable.id });
-
-      user = newUser;
-    }
-
-    await tx
-      .insert(UserOAuthAccountTable)
-      .values({
-        userId: user.id,
-        provider,
-        providerAccountId: oAuthUser.id,
-      })
-      .onConflictDoNothing();
-
-    return user;
-  });
 }

@@ -10,6 +10,7 @@ export const discordUserSchema = z.object({
     (val) => (val === "" ? null : val),
     z.string().email().nullish(),
   ),
+  verified: z.boolean().optional(),
   username: z.string(),
   global_name: z.string().nullable(),
 });
@@ -30,6 +31,7 @@ export async function resolveDiscordOAuthUser(data: DiscordUserPayload) {
     id: data.id,
     email: email.toLowerCase(),
     name: data.global_name ?? data.username,
+    emailVerified: data.verified === true,
   };
 }
 

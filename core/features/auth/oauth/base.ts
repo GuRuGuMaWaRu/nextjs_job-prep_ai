@@ -22,7 +22,13 @@ const CODE_VERIFIER_COOKIE_KEY = "oauth_code_verifier";
 const STATE_COOKIE_KEY = "oauth_state";
 const COOKIE_EXPIRATION_SECONDS = 60 * 10; // 10 minutes
 
-type ResolvedOAuthUser = { id: string; email: string; name: string };
+export type ResolvedOAuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  /** True when the identity provider asserts this email address is verified. */
+  emailVerified: boolean;
+};
 
 type UserInfoWithParser<T> = {
   schema: z.ZodSchema<T>;

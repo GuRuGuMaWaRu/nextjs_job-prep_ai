@@ -95,6 +95,7 @@ describe("resolveDiscordOAuthUser", () => {
     const parsed = discordUserSchema.parse({
       ...basePayload,
       email: "nelly@discord.com",
+      verified: true,
       global_name: "Display",
     });
 
@@ -102,6 +103,19 @@ describe("resolveDiscordOAuthUser", () => {
       id: "80351110224678912",
       email: "nelly@discord.com",
       name: "Display",
+      emailVerified: true,
+    });
+  });
+
+  it("sets emailVerified false when Discord verified is false", async () => {
+    const parsed = discordUserSchema.parse({
+      ...basePayload,
+      email: "nelly@discord.com",
+      verified: false,
+    });
+
+    await expect(resolveDiscordOAuthUser(parsed)).resolves.toMatchObject({
+      emailVerified: false,
     });
   });
 
@@ -109,11 +123,13 @@ describe("resolveDiscordOAuthUser", () => {
     const parsed = discordUserSchema.parse({
       ...basePayload,
       email: "nelly@discord.com",
+      verified: true,
       global_name: null,
     });
 
     await expect(resolveDiscordOAuthUser(parsed)).resolves.toMatchObject({
       name: "Nelly",
+      emailVerified: true,
     });
   });
 
@@ -121,10 +137,12 @@ describe("resolveDiscordOAuthUser", () => {
     const parsed = discordUserSchema.parse({
       ...basePayload,
       email: "Nelly@Discord.COM",
+      verified: true,
     });
 
     await expect(resolveDiscordOAuthUser(parsed)).resolves.toMatchObject({
       email: "nelly@discord.com",
+      emailVerified: true,
     });
   });
 });

@@ -2,6 +2,13 @@ import { z } from "zod";
 
 import { OAuthClient } from "./base";
 import type { OAuthProviderCredentials } from "./config";
+import { OAuthNoVerifiedEmailError } from "./errors";
+
+type GithubEmailEntry = {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+};
 
 const githubUserEmailsSchema = z.array(
   z.object({
@@ -30,50 +37,61 @@ export function createGithubOAuthClient(credentials: OAuthProviderCredentials) {
         email: z.string().email().nullable(),
       }),
       resolveUser: async ({ data, accessToken, tokenType }) => {
-        let email = data.email;
-
         try {
-          if (email == null) {
-            const response = await fetch("https://api.github.com/user/emails", {
-              headers: {
-                Authorization: `${tokenType} ${accessToken}`,
-                Accept: "application/vnd.github+json",
-              },
+          const response = await fetch("https://api.github.com/user/emails", {
+            headers: {
+              Authorization: `${tokenType} ${accessToken}`,
+              Accept: "application/vnd.github+json",
+            },
+          });
+
+          const rawEmails = await response.json();
+          const parsed = githubUserEmailsSchema.safeParse(rawEmails);
+
+          if (!parsed.success) {
+            throw new Error("Invalid GitHub user emails response", {
+              cause: parsed.error,
             });
-
-            const rawEmails = await response.json();
-            const parsed = githubUserEmailsSchema.safeParse(rawEmails);
-
-            if (!parsed.success) {
-              throw new Error("Invalid GitHub user emails response", {
-                cause: parsed.error,
-              });
-            }
-
-            const fromList =
-              parsed.data.find((e) => e.primary && e.verified) ??
-              parsed.data.find((e) => e.primary) ??
-              parsed.data.find((e) => e.verified) ??
-              parsed.data[0];
-
-            email = fromList?.email ?? null;
           }
+
+          const email = selectGithubEmailFromVerifiedList(parsed.data);
+
+          if (email == null) {
+            throw new OAuthNoVerifiedEmailError("github");
+          }
+
+          return {
+            id: String(data.id),
+            email,
+            name: data.name ?? data.login,
+            emailVerified: true,
+          };
         } catch (error) {
+          if (error instanceof OAuthNoVerifiedEmailError) {
+            throw error;
+          }
           throw new Error("Failed to fetch GitHub user emails", {
             cause: error,
           });
         }
-
-        if (email == null) {
-          throw new Error("GitHub did not return an accessible email");
-        }
-
-        return {
-          id: String(data.id),
-          email,
-          name: data.name ?? data.login,
-        };
       },
     },
   });
+}
+
+/**
+ * Picks primary+verified, else first verified GitHub email; returns lowercased email or null.
+ */
+export function selectGithubEmailFromVerifiedList(
+  emails: GithubEmailEntry[],
+): string | null {
+  const primaryVerified = emails.find((e) => e.primary && e.verified);
+  const firstVerified = emails.find((e) => e.verified);
+  const chosen = primaryVerified ?? firstVerified;
+
+  if (chosen == null) {
+    return null;
+  }
+
+  return chosen.email.toLowerCase();
 }

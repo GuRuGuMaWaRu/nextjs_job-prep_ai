@@ -103,6 +103,32 @@ class OAuthMissingEmailError extends Error {
   }
 }
 
+/**
+ * Thrown when the IdP returned an email that is not verified, but an account with that email already exists.
+ */
+class OAuthUnverifiedEmailError extends Error {
+  readonly provider: OAuthProvider;
+
+  constructor(provider: OAuthProvider) {
+    super(`OAuth email is not verified by provider: ${provider}`);
+    this.name = "OAuthUnverifiedEmailError";
+    this.provider = provider;
+  }
+}
+
+/**
+ * Thrown when the provider exposes no verified email (e.g. GitHub verified list empty).
+ */
+class OAuthNoVerifiedEmailError extends Error {
+  readonly provider: OAuthProvider;
+
+  constructor(provider: OAuthProvider) {
+    super(`OAuth provider did not return a verified email: ${provider}`);
+    this.name = "OAuthNoVerifiedEmailError";
+    this.provider = provider;
+  }
+}
+
 export {
   OAuthNotConfiguredError,
   InvalidTokenError,
@@ -111,4 +137,6 @@ export {
   InvalidStateError,
   InvalidCodeVerifierError,
   OAuthMissingEmailError,
+  OAuthUnverifiedEmailError,
+  OAuthNoVerifiedEmailError,
 };
