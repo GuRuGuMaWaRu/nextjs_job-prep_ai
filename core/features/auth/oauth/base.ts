@@ -168,6 +168,15 @@ export class OAuthClient<T> {
         }).toString(),
       });
 
+      if (!response.ok) {
+        const bodyPreview = await readResponseBodyPreview(response);
+        throw new InvalidTokenError(
+          response.status,
+          response.statusText,
+          bodyPreview,
+        );
+      }
+
       const rawData = await response.json();
 
       const { data, success, error } = this.tokenSchema.safeParse(rawData);
@@ -181,6 +190,9 @@ export class OAuthClient<T> {
         tokenType: data.token_type,
       };
     } catch (error) {
+      if (error instanceof InvalidTokenError) {
+        throw error;
+      }
       throw new Error("Failed to fetch token", { cause: error });
     }
   }
@@ -200,8 +212,30 @@ export function getOAuthClient(provider: OAuthProvider) {
 }
 
 class InvalidTokenError extends Error {
-  constructor(zodError: z.ZodError) {
-    super("Invalid token", { cause: zodError });
+  readonly status?: number;
+  readonly statusText?: string;
+  readonly bodyPreview?: string;
+
+  constructor(zodError: z.ZodError);
+  constructor(status: number, statusText: string, bodyPreview: string);
+  constructor(arg1: z.ZodError | number, arg2?: string, arg3?: string) {
+    if (arg1 instanceof z.ZodError) {
+      super("Invalid token", { cause: arg1 });
+      this.name = "InvalidTokenError";
+      return;
+    }
+
+    const status = arg1;
+    const statusText = arg2 ?? "";
+    const bodyPreview = arg3 ?? "";
+    const detail = bodyPreview.trim() ? `: ${bodyPreview.trim()}` : "";
+
+    super(`OAuth token request failed (${status} ${statusText})${detail}`);
+
+    this.name = "InvalidTokenError";
+    this.status = status;
+    this.statusText = statusText;
+    this.bodyPreview = bodyPreview;
   }
 }
 
