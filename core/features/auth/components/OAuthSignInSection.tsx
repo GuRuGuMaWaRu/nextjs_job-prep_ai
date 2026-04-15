@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/core/components/ui/button";
-import { OAuthProvider } from "@/core/drizzle/schema";
+import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
 import { signInWithOAuthAction } from "@/core/features/auth/actions";
 
 /**
@@ -61,31 +61,59 @@ function GithubMarkIcon({ className }: { className?: string }) {
   );
 }
 
-export function OAuthSignInSection() {
+function assertNever(x: never): never {
+  throw new Error(`Unexpected: ${x}`);
+}
+
+function oauthProviderButton(provider: OAuthProvider) {
+  switch (provider) {
+    case "discord":
+      return {
+        label: "Discord",
+        Icon: DiscordIcon,
+      };
+    case "google":
+      return {
+        label: "Google",
+        Icon: GoogleIcon,
+      };
+    case "github":
+      return {
+        label: "Github",
+        Icon: GithubMarkIcon,
+      };
+    default:
+      return assertNever(provider);
+  }
+}
+
+export function OAuthSignInSection({
+  configuredOAuthProviders,
+}: {
+  configuredOAuthProviders: OAuthProvider[];
+}) {
+  if (configuredOAuthProviders.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-2">
-        <Button
-          variant="outline"
-          className="w-full justify-center"
-          onClick={async () => await signInWithOAuthAction("discord")}>
-          <DiscordIcon className="size-4" />
-          Discord
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full justify-center"
-          onClick={async () => await signInWithOAuthAction("google")}>
-          <GoogleIcon className="size-4" />
-          Google
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full justify-center"
-          onClick={async () => await signInWithOAuthAction("github")}>
-          <GithubMarkIcon className="size-4" />
-          Github
-        </Button>
+        {configuredOAuthProviders.map((provider) => {
+          const { label, Icon } = oauthProviderButton(provider);
+
+          return (
+            <Button
+              key={provider}
+              variant="outline"
+              className="w-full justify-center"
+              type="button"
+              onClick={async () => await signInWithOAuthAction(provider)}>
+              <Icon className="size-4" />
+              {label}
+            </Button>
+          );
+        })}
       </div>
 
       <div className="relative">

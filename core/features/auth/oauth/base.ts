@@ -3,11 +3,20 @@ import crypto from "crypto";
 
 import { env } from "@/core/data/env/server";
 import type { Cookies } from "@/core/features/auth/oauth/types";
+import { getOAuthConfig } from "@/core/features/auth/oauth/config";
 import type { OAuthProvider } from "@/core/drizzle/schema";
 
 import { createDiscordOAuthClient } from "./discord";
 import { createGoogleOAuthClient } from "./google";
 import { createGithubOAuthClient } from "./github";
+import {
+  OAuthNotConfiguredError,
+  InvalidStateError,
+  OAuthUserInfoHttpError,
+  InvalidUserError,
+  InvalidTokenError,
+  InvalidCodeVerifierError,
+} from "./errors";
 
 const CODE_VERIFIER_COOKIE_KEY = "oauth_code_verifier";
 const STATE_COOKIE_KEY = "oauth_state";
@@ -199,76 +208,21 @@ export class OAuthClient<T> {
 }
 
 export function getOAuthClient(provider: OAuthProvider) {
+  const credentials = getOAuthConfig(provider);
+
+  if (credentials == null) {
+    throw new OAuthNotConfiguredError(provider);
+  }
+
   switch (provider) {
     case "discord":
-      return createDiscordOAuthClient();
+      return createDiscordOAuthClient(credentials);
     case "google":
-      return createGoogleOAuthClient();
+      return createGoogleOAuthClient(credentials);
     case "github":
-      return createGithubOAuthClient();
+      return createGithubOAuthClient(credentials);
     default:
       throw new Error(`Unsupported provider: ${provider}` as never);
-  }
-}
-
-class InvalidTokenError extends Error {
-  readonly status?: number;
-  readonly statusText?: string;
-  readonly bodyPreview?: string;
-
-  constructor(zodError: z.ZodError);
-  constructor(status: number, statusText: string, bodyPreview: string);
-  constructor(arg1: z.ZodError | number, arg2?: string, arg3?: string) {
-    if (arg1 instanceof z.ZodError) {
-      super("Invalid token", { cause: arg1 });
-      this.name = "InvalidTokenError";
-      return;
-    }
-
-    const status = arg1;
-    const statusText = arg2 ?? "";
-    const bodyPreview = arg3 ?? "";
-    const detail = bodyPreview.trim() ? `: ${bodyPreview.trim()}` : "";
-
-    super(`OAuth token request failed (${status} ${statusText})${detail}`);
-
-    this.name = "InvalidTokenError";
-    this.status = status;
-    this.statusText = statusText;
-    this.bodyPreview = bodyPreview;
-  }
-}
-
-class InvalidUserError extends Error {
-  constructor(zodError: z.ZodError) {
-    super("Invalid user", { cause: zodError });
-  }
-}
-
-class OAuthUserInfoHttpError extends Error {
-  readonly status: number;
-  readonly statusText: string;
-  readonly bodyPreview: string;
-
-  constructor(status: number, statusText: string, bodyPreview: string) {
-    const detail = bodyPreview.trim() ? `: ${bodyPreview.trim()}` : "";
-    super(`OAuth user info request failed (${status} ${statusText})${detail}`);
-    this.name = "OAuthUserInfoHttpError";
-    this.status = status;
-    this.statusText = statusText;
-    this.bodyPreview = bodyPreview;
-  }
-}
-
-class InvalidStateError extends Error {
-  constructor() {
-    super("Invalid state");
-  }
-}
-
-class InvalidCodeVerifierError extends Error {
-  constructor() {
-    super("Invalid code verifier");
   }
 }
 

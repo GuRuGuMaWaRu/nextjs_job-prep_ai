@@ -15,11 +15,16 @@ import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { PasswordInput } from "@/core/components/ui/password-input";
 import { routes } from "@/core/data/routes";
+import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
 import { signInAction } from "@/core/features/auth/actions";
 import { OAuthSignInSection } from "@/core/features/auth/components/OAuthSignInSection";
 import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQueryErrorBanner";
 
-export function SignInForm() {
+export function SignInForm({
+  configuredOAuthProviders,
+}: {
+  configuredOAuthProviders: OAuthProvider[];
+}) {
   const [state, action, isPending] = useActionState(signInAction, null);
 
   return (
@@ -35,7 +40,9 @@ export function SignInForm() {
           <OAuthQueryErrorBanner formError={state?.error} />
         </Suspense>
 
-        <OAuthSignInSection />
+        <OAuthSignInSection
+          configuredOAuthProviders={configuredOAuthProviders}
+        />
 
         <form action={action} className="space-y-4">
           <div className="space-y-2">

@@ -22,6 +22,7 @@ import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
 import { getOAuthClient } from "@/core/features/auth/oauth/base";
+import { getOAuthConfig } from "@/core/features/auth/oauth/config";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 import type { CurrentUser } from "@/core/features/auth/types";
@@ -273,6 +274,10 @@ export async function validateSessionAction(token: string): Promise<boolean> {
 }
 
 export async function signInWithOAuthAction(provider: OAuthProvider) {
+  if (getOAuthConfig(provider) == null) {
+    redirect(`${routes.signIn}?oauthError=oauth_not_configured`);
+  }
+
   const oAuthClient = getOAuthClient(provider);
 
   redirect(oAuthClient.createAuthUrl(await cookies()));

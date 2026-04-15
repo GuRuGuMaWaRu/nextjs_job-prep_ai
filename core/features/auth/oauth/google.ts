@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { env } from "@/core/data/env/server";
 import { OAuthClient } from "./base";
+import type { OAuthProviderCredentials } from "./config";
 
-export function createGoogleOAuthClient() {
+export function createGoogleOAuthClient(credentials: OAuthProviderCredentials) {
   return new OAuthClient({
     provider: "google",
-    clientId: env.GOOGLE_CLIENT_ID!,
-    clientSecret: env.GOOGLE_CLIENT_SECRET!,
+    clientId: credentials.clientId,
+    clientSecret: credentials.clientSecret,
     scopes: ["profile", "email"],
     urls: {
       auth: "https://accounts.google.com/o/oauth2/auth",

@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { env } from "@/core/data/env/server";
+
 import { OAuthClient } from "./base";
+import type { OAuthProviderCredentials } from "./config";
 
 const githubUserEmailsSchema = z.array(
   z.object({
@@ -10,11 +11,11 @@ const githubUserEmailsSchema = z.array(
   }),
 );
 
-export function createGithubOAuthClient() {
+export function createGithubOAuthClient(credentials: OAuthProviderCredentials) {
   return new OAuthClient({
     provider: "github",
-    clientId: env.GITHUB_CLIENT_ID!,
-    clientSecret: env.GITHUB_CLIENT_SECRET!,
+    clientId: credentials.clientId,
+    clientSecret: credentials.clientSecret,
     scopes: ["user:email", "read:user"],
     urls: {
       auth: "https://github.com/login/oauth/authorize",

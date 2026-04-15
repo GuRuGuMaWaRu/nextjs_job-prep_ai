@@ -1,13 +1,15 @@
 import { z } from "zod";
 
-import { env } from "@/core/data/env/server";
 import { OAuthClient } from "./base";
+import type { OAuthProviderCredentials } from "./config";
 
-export function createDiscordOAuthClient() {
+export function createDiscordOAuthClient(
+  credentials: OAuthProviderCredentials,
+) {
   return new OAuthClient({
     provider: "discord",
-    clientId: env.DISCORD_CLIENT_ID!,
-    clientSecret: env.DISCORD_CLIENT_SECRET!,
+    clientId: credentials.clientId,
+    clientSecret: credentials.clientSecret,
     scopes: ["identify", "email"],
     urls: {
       auth: "https://discord.com/oauth2/authorize",

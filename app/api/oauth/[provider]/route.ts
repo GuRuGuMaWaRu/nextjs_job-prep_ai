@@ -12,6 +12,7 @@ import {
 } from "@/core/drizzle/schema";
 import { routes } from "@/core/data/routes";
 import { getOAuthClient } from "@/core/features/auth/oauth/base";
+import { getOAuthConfig } from "@/core/features/auth/oauth/config";
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createSession } from "@/core/features/auth/session";
 import { setSessionCookie } from "@/core/features/auth/cookies";
@@ -29,6 +30,10 @@ export async function GET(
 
   if (typeof code !== "string" || typeof state !== "string") {
     redirect(`${routes.signIn}?oauthError=oauth_failed`);
+  }
+
+  if (getOAuthConfig(provider) == null) {
+    redirect(`${routes.signIn}?oauthError=oauth_not_configured`);
   }
 
   try {
@@ -54,13 +59,18 @@ function connectUserToAccount(
   provider: OAuthProvider,
 ) {
   return db.transaction(async (tx) => {
-    const existingOAuthAccount = await tx.query.UserOAuthAccountTable.findFirst({
-      where: and(eq(UserOAuthAccountTable.provider, provider), eq(UserOAuthAccountTable.providerAccountId, oAuthUser.id)),
-      columns: { userId: true },
-    });
+    const existingOAuthAccount = await tx.query.UserOAuthAccountTable.findFirst(
+      {
+        where: and(
+          eq(UserOAuthAccountTable.provider, provider),
+          eq(UserOAuthAccountTable.providerAccountId, oAuthUser.id),
+        ),
+        columns: { userId: true },
+      },
+    );
 
     if (existingOAuthAccount != null) {
-      return { id: existingOAuthAccount.userId};
+      return { id: existingOAuthAccount.userId };
     }
 
     let user = await tx.query.UserTable.findFirst({
