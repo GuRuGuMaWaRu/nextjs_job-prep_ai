@@ -114,6 +114,15 @@ export class OAuthClient<T> {
         },
       });
 
+      if (!response.ok) {
+        const bodyPreview = await readResponseBodyPreview(response);
+        throw new OAuthUserInfoHttpError(
+          response.status,
+          response.statusText,
+          bodyPreview,
+        );
+      }
+
       const rawData = await response.json();
 
       const { data, success, error } = this.userInfo.schema.safeParse(rawData);
@@ -131,6 +140,12 @@ export class OAuthClient<T> {
 
       return this.userInfo.parser(data);
     } catch (error) {
+      if (error instanceof InvalidUserError) {
+        throw error;
+      }
+      if (error instanceof OAuthUserInfoHttpError) {
+        throw error;
+      }
       throw new Error("Failed to fetch user", { cause: error });
     }
   }
@@ -196,6 +211,21 @@ class InvalidUserError extends Error {
   }
 }
 
+class OAuthUserInfoHttpError extends Error {
+  readonly status: number;
+  readonly statusText: string;
+  readonly bodyPreview: string;
+
+  constructor(status: number, statusText: string, bodyPreview: string) {
+    const detail = bodyPreview.trim() ? `: ${bodyPreview.trim()}` : "";
+    super(`OAuth user info request failed (${status} ${statusText})${detail}`);
+    this.name = "OAuthUserInfoHttpError";
+    this.status = status;
+    this.statusText = statusText;
+    this.bodyPreview = bodyPreview;
+  }
+}
+
 class InvalidStateError extends Error {
   constructor() {
     super("Invalid state");
@@ -243,4 +273,14 @@ function getCodeVerifier(cookies: Pick<Cookies, "get">): string {
     throw new InvalidCodeVerifierError();
   }
   return codeVerifier;
+}
+
+const MAX_HTTP_ERROR_BODY_PREVIEW = 512;
+
+async function readResponseBodyPreview(response: Response): Promise<string> {
+  const text = await response.text();
+  if (text.length <= MAX_HTTP_ERROR_BODY_PREVIEW) {
+    return text;
+  }
+  return `${text.slice(0, MAX_HTTP_ERROR_BODY_PREVIEW)}…`;
 }
