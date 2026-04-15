@@ -90,6 +90,19 @@ class InvalidCodeVerifierError extends Error {
   }
 }
 
+/**
+ * Thrown when the identity provider did not return an email (e.g. Discord omits email when absent).
+ */
+class OAuthMissingEmailError extends Error {
+  readonly provider: OAuthProvider;
+
+  constructor(provider: OAuthProvider) {
+    super(`OAuth provider did not return an email: ${provider}`);
+    this.name = "OAuthMissingEmailError";
+    this.provider = provider;
+  }
+}
+
 export {
   OAuthNotConfiguredError,
   InvalidTokenError,
@@ -97,4 +110,5 @@ export {
   OAuthUserInfoHttpError,
   InvalidStateError,
   InvalidCodeVerifierError,
+  OAuthMissingEmailError,
 };

@@ -3,6 +3,8 @@ import { useSearchParams } from "next/navigation";
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   oauth_failed: "Failed to connect. Please try again.",
   oauth_not_configured: "That sign-in method is not available.",
+  oauth_missing_email:
+    "Sign-in did not return an email. Add or verify an email with that provider, or sign in another way.",
 };
 
 export function OAuthQueryErrorBanner({ formError }: { formError?: string }) {
