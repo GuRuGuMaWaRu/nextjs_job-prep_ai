@@ -2,7 +2,10 @@
 
 import { Button } from "@/core/components/ui/button";
 import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
-import { signInWithOAuthAction } from "@/core/features/auth/actions";
+import {
+  signInWithOAuthAction,
+  type SignInWithOAuthOptions,
+} from "@/core/features/auth/actions";
 
 /**
  * Lucide deprecated brand icons (see lucide#670). Inline SVGs keep OAuth marks
@@ -89,8 +92,10 @@ function oauthProviderButton(provider: OAuthProvider) {
 
 export function OAuthSignInSection({
   configuredOAuthProviders,
+  oauthErrorReturn = "sign-in",
 }: {
   configuredOAuthProviders: OAuthProvider[];
+  oauthErrorReturn?: SignInWithOAuthOptions["errorReturn"];
 }) {
   if (configuredOAuthProviders.length === 0) {
     return null;
@@ -108,7 +113,11 @@ export function OAuthSignInSection({
               variant="outline"
               className="w-full justify-center"
               type="button"
-              onClick={async () => await signInWithOAuthAction(provider)}>
+              onClick={async () =>
+                await signInWithOAuthAction(provider, {
+                  errorReturn: oauthErrorReturn,
+                })
+              }>
               <Icon className="size-4" />
               {label}
             </Button>

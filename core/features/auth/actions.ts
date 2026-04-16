@@ -23,6 +23,11 @@ import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
 import { getOAuthClient } from "@/core/features/auth/oauth/base";
 import { getOAuthConfig } from "@/core/features/auth/oauth/config";
+import {
+  clearOAuthErrorReturnCookie,
+  setOAuthErrorReturnForNextOAuth,
+  type OAuthErrorReturn,
+} from "@/core/features/auth/oauth/oauthErrorReturn";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 import type { CurrentUser } from "@/core/features/auth/types";
@@ -273,10 +278,29 @@ export async function validateSessionAction(token: string): Promise<boolean> {
   }
 }
 
-export async function signInWithOAuthAction(provider: OAuthProvider) {
+export type SignInWithOAuthOptions = {
+  /** Where to send the user if OAuth fails after the IdP redirect. Defaults to sign-in. */
+  errorReturn?: OAuthErrorReturn;
+};
+
+/**
+ * Starts the OAuth authorization redirect. Sets a short-lived cookie when `errorReturn` is
+ * `"sign-up"` so the callback can send errors back to `/sign-up`.
+ */
+export async function signInWithOAuthAction(
+  provider: OAuthProvider,
+  options?: SignInWithOAuthOptions,
+) {
+  const errorReturn = options?.errorReturn ?? "sign-in";
+
   if (getOAuthConfig(provider) == null) {
-    redirect(`${routes.signIn}?oauthError=oauth_not_configured`);
+    await clearOAuthErrorReturnCookie();
+    const path =
+      errorReturn === "sign-up" ? routes.signUp : routes.signIn;
+    redirect(`${path}?oauthError=oauth_not_configured`);
   }
+
+  await setOAuthErrorReturnForNextOAuth(errorReturn);
 
   const oAuthClient = getOAuthClient(provider);
 
