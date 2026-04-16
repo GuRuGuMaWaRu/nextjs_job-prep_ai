@@ -7,6 +7,7 @@ const customJestConfig = {
   testEnvironment: "node",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^@core/(.*)$": "<rootDir>/core/$1",
   },
 };
 
