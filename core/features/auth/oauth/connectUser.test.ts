@@ -108,6 +108,13 @@ describe("connectUserToAccount", () => {
   });
 
   it("reuses user by email and updates emailVerified when needed", async () => {
+    const updateSet = jest.fn().mockReturnValue({
+      where: jest.fn().mockResolvedValue(undefined),
+    });
+    const updateMock = jest.fn().mockReturnValue({
+      set: updateSet,
+    });
+
     mockTransaction.mockImplementation(async (fn) => {
       const tx = {
         query: {
@@ -126,7 +133,7 @@ describe("connectUserToAccount", () => {
           }
           throw new Error("Unexpected UserTable insert when matching by email");
         }),
-        update: jest.fn(() => chainUpdate()),
+        update: updateMock,
       };
       return fn(tx as never);
     });
@@ -144,6 +151,12 @@ describe("connectUserToAccount", () => {
     ).resolves.toEqual({ id: "by-email" });
 
     expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(updateMock).toHaveBeenCalledWith(UserTable);
+    expect(updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailVerified: expect.any(Date),
+      }),
+    );
   });
 
   it("creates a user when insert returns a row", async () => {
