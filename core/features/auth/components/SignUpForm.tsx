@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
 
 import { Button } from "@/core/components/ui/button";
@@ -15,9 +15,16 @@ import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { PasswordInput } from "@/core/components/ui/password-input";
 import { routes } from "@/core/data/routes";
+import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
 import { signUpAction } from "@/core/features/auth/actions";
+import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQueryErrorBanner";
+import { OAuthSignInSection } from "@/core/features/auth/components/OAuthSignInSection";
 
-export function SignUpForm() {
+export function SignUpForm({
+  configuredOAuthProviders,
+}: {
+  configuredOAuthProviders: OAuthProvider[];
+}) {
   const [state, action, isPending] = useActionState(signUpAction, null);
 
   return (
@@ -28,13 +35,17 @@ export function SignUpForm() {
           Enter your information to create a new account
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <Suspense fallback={null}>
+          <OAuthQueryErrorBanner formError={state?.error} />
+        </Suspense>
+
+        <OAuthSignInSection
+          configuredOAuthProviders={configuredOAuthProviders}
+          oauthErrorReturn="sign-up"
+        />
+
         <form action={action} className="space-y-4">
-          {state?.error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-              {state.error}
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
@@ -97,7 +108,7 @@ export function SignUpForm() {
           </Button>
         </form>
 
-        <div className="mt-4 text-center text-sm">
+        <div className="text-center text-sm">
           Already have an account?{" "}
           <Link href={routes.signIn} className="text-primary hover:underline">
             Sign in

@@ -13,8 +13,17 @@ import {
   OAuthNoVerifiedEmailError,
   OAuthUnverifiedEmailError,
 } from "@/core/features/auth/oauth/errors";
+import {
+  clearOAuthErrorReturnCookie,
+  getOAuthErrorReturnPathAndClear,
+} from "@/core/features/auth/oauth/oauthErrorReturn";
 import { createSession } from "@/core/features/auth/session";
 import { setSessionCookie } from "@/core/features/auth/cookies";
+
+async function redirectWithOAuthError(oauthErrorKey: string): Promise<never> {
+  const path = await getOAuthErrorReturnPathAndClear();
+  redirect(`${path}?oauthError=${oauthErrorKey}`);
+}
 
 export async function GET(
   request: NextRequest,
@@ -27,17 +36,17 @@ export async function GET(
   const parsedProvider = z.enum(oAuthProviders).safeParse(rawProvider);
 
   if (!parsedProvider.success) {
-    redirect(`${routes.signIn}?oauthError=oauth_invalid_provider`);
+    return await redirectWithOAuthError("oauth_invalid_provider");
   }
 
   const provider = parsedProvider.data;
 
   if (typeof code !== "string" || typeof state !== "string") {
-    redirect(`${routes.signIn}?oauthError=oauth_failed`);
+    return await redirectWithOAuthError("oauth_failed");
   }
 
   if (getOAuthConfig(provider) == null) {
-    redirect(`${routes.signIn}?oauthError=oauth_not_configured`);
+    return await redirectWithOAuthError("oauth_not_configured");
   }
 
   try {
@@ -52,20 +61,21 @@ export async function GET(
     await setSessionCookie(session.token, session.expiresAt);
   } catch (error) {
     if (error instanceof OAuthMissingEmailError) {
-      redirect(`${routes.signIn}?oauthError=oauth_missing_email`);
+      return await redirectWithOAuthError("oauth_missing_email");
     }
 
     if (error instanceof OAuthUnverifiedEmailError) {
-      redirect(`${routes.signIn}?oauthError=oauth_unverified_email`);
+      return await redirectWithOAuthError("oauth_unverified_email");
     }
 
     if (error instanceof OAuthNoVerifiedEmailError) {
-      redirect(`${routes.signIn}?oauthError=oauth_no_verified_email`);
+      return await redirectWithOAuthError("oauth_no_verified_email");
     }
 
     console.error("OAuth error:", error);
-    redirect(`${routes.signIn}?oauthError=oauth_failed`);
+    return await redirectWithOAuthError("oauth_failed");
   }
 
+  await clearOAuthErrorReturnCookie();
   redirect(routes.app);
 }
