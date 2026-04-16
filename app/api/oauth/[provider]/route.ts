@@ -17,6 +17,7 @@ import {
   clearOAuthErrorReturnCookie,
   getOAuthErrorReturnPathAndClear,
 } from "@/core/features/auth/oauth/oauthErrorReturn";
+import { setLastUsedOAuthProviderCookie } from "@/core/features/auth/oauth/oauthLastUsed";
 import { createSession } from "@/core/features/auth/session";
 import { setSessionCookie } from "@/core/features/auth/cookies";
 
@@ -59,6 +60,7 @@ export async function GET(
 
     const session = await createSession(user.id);
     await setSessionCookie(session.token, session.expiresAt);
+    await setLastUsedOAuthProviderCookie(provider);
   } catch (error) {
     if (error instanceof OAuthMissingEmailError) {
       return await redirectWithOAuthError("oauth_missing_email");

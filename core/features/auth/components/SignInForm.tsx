@@ -22,8 +22,10 @@ import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQuer
 
 export function SignInForm({
   configuredOAuthProviders,
+  lastUsedOAuthProvider,
 }: {
   configuredOAuthProviders: OAuthProvider[];
+  lastUsedOAuthProvider?: OAuthProvider;
 }) {
   const [state, action, isPending] = useActionState(signInAction, null);
 
@@ -42,6 +44,7 @@ export function SignInForm({
 
         <OAuthSignInSection
           configuredOAuthProviders={configuredOAuthProviders}
+          lastUsedOAuthProvider={lastUsedOAuthProvider}
         />
 
         <form action={action} className="space-y-4">
