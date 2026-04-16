@@ -1,4 +1,5 @@
 ---
+description: 
 alwaysApply: true
 ---
 
@@ -10,7 +11,7 @@ alwaysApply: true
 
 ## Code comments
 
-- Use JSDoc for all exported functions
+- Use JSDoc for all exported functions (except React components)
 - Document "why" not "what" in inline comments (does not apply to JSDoc comments)
 - Don't comment obvious code
 
