@@ -1,5 +1,5 @@
 import z from "zod";
-import { OAuthProvider } from "@/core/drizzle/schema";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 /**
  * Thrown when `getOAuthClient` cannot build a client because credentials are missing.

@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import z from "zod";
 
-import { COOKIE_OPTIONS } from "@/core/features/auth/constants";
 import {
   oAuthProviders,
   type OAuthProvider,
-} from "@/core/drizzle/schema/userOAuthAccount";
+} from "@/core/drizzle/schema/oauthProviderIds";
+import { COOKIE_OPTIONS } from "@/core/features/auth/constants";
 
 /** UX hint only; not used for authorization. */
 export const OAUTH_LAST_USED_COOKIE_KEY = "oauth_last_used";

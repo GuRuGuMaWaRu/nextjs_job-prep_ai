@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { SignUpForm } from "@/core/features/auth/components/SignUpForm";
 import { getConfiguredOAuthProviders } from "@/core/features/auth/oauth/config";
 import { getLastUsedOAuthProvider } from "@/core/features/auth/oauth/oauthLastUsed";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 export default function SignUpPage() {
   const configuredOAuthProviders = getConfiguredOAuthProviders();

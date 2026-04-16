@@ -3,7 +3,7 @@
 import { Badge } from "@/core/components/ui/badge";
 import { Button } from "@/core/components/ui/button";
 import { cn } from "@/core/lib/utils";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import {
   signInWithOAuthAction,
   type SignInWithOAuthOptions,

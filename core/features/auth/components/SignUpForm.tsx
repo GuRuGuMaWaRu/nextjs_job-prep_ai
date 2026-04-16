@@ -15,7 +15,7 @@ import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { PasswordInput } from "@/core/components/ui/password-input";
 import { routes } from "@/core/data/routes";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import { signUpAction } from "@/core/features/auth/actions";
 import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQueryErrorBanner";
 import { OAuthSignInSection } from "@/core/features/auth/components/OAuthSignInSection";

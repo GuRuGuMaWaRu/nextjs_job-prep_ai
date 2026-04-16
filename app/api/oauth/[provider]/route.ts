@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import z from "zod";
 
-import { oAuthProviders } from "@/core/drizzle/schema";
+import { oAuthProviders } from "@/core/drizzle/schema/oauthProviderIds";
 import { routes } from "@/core/data/routes";
 import { getOAuthClient } from "@/core/features/auth/oauth/base";
 import { connectUserToAccount } from "@/core/features/auth/oauth/connectUser";

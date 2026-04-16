@@ -1,10 +1,7 @@
 import { eq, and } from "drizzle-orm";
 
-import {
-  OAuthProvider,
-  UserTable,
-  UserOAuthAccountTable,
-} from "@/core/drizzle/schema";
+import { UserOAuthAccountTable, UserTable } from "@/core/drizzle/schema";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import { generateUserId } from "@/core/features/auth/tokens";
 import { db } from "@/core/drizzle/db";
 
