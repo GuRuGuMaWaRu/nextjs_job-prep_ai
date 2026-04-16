@@ -19,6 +19,13 @@ export const env = createEnv({
     STRIPE_PRO_PRODUCT_ID: z.string().min(1).optional(),
     APP_URL: z.string().url().optional(),
     CRON_SECRET: z.string().min(15).max(15),
+    OAUTH_REDIRECT_URL_BASE: z.string().url(),
+    DISCORD_CLIENT_ID: z.string().min(1).optional(),
+    DISCORD_CLIENT_SECRET: z.string().min(1).optional(),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    GITHUB_CLIENT_ID: z.string().min(1).optional(),
+    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
   },
   createFinalSchema: (env) => {
     return z.object(env).transform((val) => {

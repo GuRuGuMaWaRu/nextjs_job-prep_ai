@@ -4,6 +4,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 import { hashPassword, verifyPassword } from "@/core/features/auth/password";
 import {
@@ -20,9 +21,12 @@ import {
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
+import { getOAuthClient } from "@/core/features/auth/oauth/base";
+import { getOAuthConfig } from "@/core/features/auth/oauth/config";
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 import type { CurrentUser } from "@/core/features/auth/types";
+import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
 
 type AuthFieldErrors = {
   name?: string;
@@ -267,4 +271,14 @@ export async function validateSessionAction(token: string): Promise<boolean> {
     console.error("Session validation error:", error);
     return false;
   }
+}
+
+export async function signInWithOAuthAction(provider: OAuthProvider) {
+  if (getOAuthConfig(provider) == null) {
+    redirect(`${routes.signIn}?oauthError=oauth_not_configured`);
+  }
+
+  const oAuthClient = getOAuthClient(provider);
+
+  redirect(oAuthClient.createAuthUrl(await cookies()));
 }

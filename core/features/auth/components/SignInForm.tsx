@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
 
 import { Button } from "@/core/components/ui/button";
@@ -15,9 +15,16 @@ import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { PasswordInput } from "@/core/components/ui/password-input";
 import { routes } from "@/core/data/routes";
+import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
 import { signInAction } from "@/core/features/auth/actions";
+import { OAuthSignInSection } from "@/core/features/auth/components/OAuthSignInSection";
+import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQueryErrorBanner";
 
-export function SignInForm() {
+export function SignInForm({
+  configuredOAuthProviders,
+}: {
+  configuredOAuthProviders: OAuthProvider[];
+}) {
   const [state, action, isPending] = useActionState(signInAction, null);
 
   return (
@@ -28,14 +35,16 @@ export function SignInForm() {
           Enter your email and password to sign in to your account
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form action={action} className="space-y-4">
-          {state?.error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-              {state.error}
-            </div>
-          )}
+      <CardContent className="space-y-4">
+        <Suspense fallback={null}>
+          <OAuthQueryErrorBanner formError={state?.error} />
+        </Suspense>
 
+        <OAuthSignInSection
+          configuredOAuthProviders={configuredOAuthProviders}
+        />
+
+        <form action={action} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -49,7 +58,9 @@ export function SignInForm() {
               required
             />
             {state?.fieldErrors?.email && (
-              <p className="text-sm text-destructive">{state.fieldErrors.email}</p>
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.email}
+              </p>
             )}
           </div>
 
@@ -76,7 +87,7 @@ export function SignInForm() {
           </Button>
         </form>
 
-        <div className="mt-4 text-center text-sm">
+        <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href={routes.signUp} className="text-primary hover:underline">
             Sign up
