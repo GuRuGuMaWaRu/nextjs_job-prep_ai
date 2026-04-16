@@ -11,6 +11,28 @@ import { db } from "@/core/drizzle/db";
 import type { ResolvedOAuthUser } from "./base";
 import { assertOAuthEmailLinkAllowed } from "./oauthLinkPolicy";
 
+type DbTransaction = Parameters<
+  Parameters<typeof db.transaction>[0]
+>[0];
+
+type UserRowEmailState = { id: string; emailVerified: Date | null };
+
+/**
+ * When OAuth reports verified email but the DB row is still unverified, persist verification.
+ */
+async function syncEmailVerifiedFromOAuthIfNeeded(
+  tx: DbTransaction,
+  userRow: UserRowEmailState,
+  oAuthUser: ResolvedOAuthUser,
+) {
+  if (oAuthUser.emailVerified && userRow.emailVerified == null) {
+    await tx
+      .update(UserTable)
+      .set({ emailVerified: new Date() })
+      .where(eq(UserTable.id, userRow.id));
+  }
+}
+
 /**
  * Links an OAuth identity to a user: reuse existing OAuth mapping, match by verified email, or create a user.
  */
@@ -45,7 +67,7 @@ export function connectUserToAccount(
 
     if (existingByEmail == null) {
       const userId = generateUserId();
-      const [newUser] = await tx
+      const inserted = await tx
         .insert(UserTable)
         .values({
           id: userId,
@@ -55,18 +77,34 @@ export function connectUserToAccount(
           image: null,
           emailVerified: oAuthUser.emailVerified ? new Date() : null,
         })
+        .onConflictDoNothing({ target: UserTable.email })
         .returning({ id: UserTable.id });
 
-      user = newUser;
+      const newUser = inserted[0];
+
+      if (newUser != null) {
+        user = newUser;
+      } else {
+        const afterConflict =
+          (await tx.query.UserTable.findFirst({
+            where: eq(UserTable.email, oAuthUser.email),
+            columns: { id: true, emailVerified: true },
+          })) ?? null;
+
+        if (afterConflict == null) {
+          throw new Error("Expected user row after insert conflict on email");
+        }
+
+        assertOAuthEmailLinkAllowed(oAuthUser, afterConflict, provider);
+
+        user = { id: afterConflict.id };
+
+        await syncEmailVerifiedFromOAuthIfNeeded(tx, afterConflict, oAuthUser);
+      }
     } else {
       user = { id: existingByEmail.id };
 
-      if (oAuthUser.emailVerified && existingByEmail.emailVerified == null) {
-        await tx
-          .update(UserTable)
-          .set({ emailVerified: new Date() })
-          .where(eq(UserTable.id, existingByEmail.id));
-      }
+      await syncEmailVerifiedFromOAuthIfNeeded(tx, existingByEmail, oAuthUser);
     }
 
     await tx
