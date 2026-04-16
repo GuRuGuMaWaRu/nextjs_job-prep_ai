@@ -24,7 +24,13 @@ export async function GET(
 
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
-  const provider = z.enum(oAuthProviders).parse(rawProvider);
+  const parsedProvider = z.enum(oAuthProviders).safeParse(rawProvider);
+
+  if (!parsedProvider.success) {
+    redirect(`${routes.signIn}?oauthError=oauth_invalid_provider`);
+  }
+
+  const provider = parsedProvider.data;
 
   if (typeof code !== "string" || typeof state !== "string") {
     redirect(`${routes.signIn}?oauthError=oauth_failed`);
