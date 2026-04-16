@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { env } from "@/core/data/env/server";
 import type { Cookies } from "@/core/features/auth/oauth/types";
 import { getOAuthConfig } from "@/core/features/auth/oauth/config";
-import type { OAuthProvider } from "@/core/drizzle/schema";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 import { createDiscordOAuthClient } from "./discord";
 import { createGoogleOAuthClient } from "./google";

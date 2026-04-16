@@ -15,15 +15,17 @@ import { Input } from "@/core/components/ui/input";
 import { Label } from "@/core/components/ui/label";
 import { PasswordInput } from "@/core/components/ui/password-input";
 import { routes } from "@/core/data/routes";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import { signUpAction } from "@/core/features/auth/actions";
 import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQueryErrorBanner";
 import { OAuthSignInSection } from "@/core/features/auth/components/OAuthSignInSection";
 
 export function SignUpForm({
   configuredOAuthProviders,
+  lastUsedOAuthProvider,
 }: {
   configuredOAuthProviders: OAuthProvider[];
+  lastUsedOAuthProvider?: OAuthProvider;
 }) {
   const [state, action, isPending] = useActionState(signUpAction, null);
 
@@ -42,11 +44,11 @@ export function SignUpForm({
 
         <OAuthSignInSection
           configuredOAuthProviders={configuredOAuthProviders}
+          lastUsedOAuthProvider={lastUsedOAuthProvider}
           oauthErrorReturn="sign-up"
         />
 
         <form action={action} className="space-y-4">
-
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
@@ -60,7 +62,9 @@ export function SignUpForm({
               required
             />
             {state?.fieldErrors?.name && (
-              <p className="text-sm text-destructive">{state.fieldErrors.name}</p>
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.name}
+              </p>
             )}
           </div>
 
@@ -77,7 +81,9 @@ export function SignUpForm({
               required
             />
             {state?.fieldErrors?.email && (
-              <p className="text-sm text-destructive">{state.fieldErrors.email}</p>
+              <p className="text-sm text-destructive">
+                {state.fieldErrors.email}
+              </p>
             )}
           </div>
 

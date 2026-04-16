@@ -1,14 +1,10 @@
 import { env } from "@/core/data/env/server";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import {
+  oAuthProviders,
+  type OAuthProvider,
+} from "@/core/drizzle/schema/oauthProviderIds";
 
-/**
- * Must match `oAuthProviders` in `@/core/drizzle/schema/userOAuthAccount` (avoid importing Drizzle here).
- */
-const ALL_OAUTH_PROVIDERS: readonly OAuthProvider[] = [
-  "google",
-  "github",
-  "discord",
-];
+const ALL_OAUTH_PROVIDERS: readonly OAuthProvider[] = oAuthProviders;
 
 export type OAuthProviderCredentials = {
   clientId: string;

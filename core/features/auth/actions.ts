@@ -31,7 +31,7 @@ import {
 import { getUser } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 import type { CurrentUser } from "@/core/features/auth/types";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 type AuthFieldErrors = {
   name?: string;

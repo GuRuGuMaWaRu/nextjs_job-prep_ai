@@ -1,4 +1,4 @@
-import type { OAuthProvider } from "@/core/drizzle/schema";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 import { OAuthUnverifiedEmailError } from "./errors";
 

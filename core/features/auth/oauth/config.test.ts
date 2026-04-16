@@ -1,4 +1,4 @@
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 const mockEnv: {
   DISCORD_CLIENT_ID?: string;

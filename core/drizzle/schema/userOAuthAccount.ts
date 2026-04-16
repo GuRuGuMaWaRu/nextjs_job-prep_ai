@@ -9,9 +9,8 @@ import {
 
 import { createdAt, updatedAt } from "../schemaHelpers";
 import { UserTable } from "./user";
+import { oAuthProviders } from "./oauthProviderIds";
 
-export const oAuthProviders = ["google", "github", "discord"] as const;
-export type OAuthProvider = (typeof oAuthProviders)[number];
 export const oAuthProviderEnum = pgEnum("oauth_provider", oAuthProviders);
 
 export const UserOAuthAccountTable = pgTable(

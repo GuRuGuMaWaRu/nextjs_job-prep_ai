@@ -1,7 +1,9 @@
 "use client";
 
+import { Badge } from "@/core/components/ui/badge";
 import { Button } from "@/core/components/ui/button";
-import type { OAuthProvider } from "@/core/drizzle/schema/userOAuthAccount";
+import { cn } from "@/core/lib/utils";
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import {
   signInWithOAuthAction,
   type SignInWithOAuthOptions,
@@ -92,9 +94,11 @@ function oauthProviderButton(provider: OAuthProvider) {
 
 export function OAuthSignInSection({
   configuredOAuthProviders,
+  lastUsedOAuthProvider,
   oauthErrorReturn = "sign-in",
 }: {
   configuredOAuthProviders: OAuthProvider[];
+  lastUsedOAuthProvider?: OAuthProvider;
   oauthErrorReturn?: SignInWithOAuthOptions["errorReturn"];
 }) {
   if (configuredOAuthProviders.length === 0) {
@@ -106,20 +110,31 @@ export function OAuthSignInSection({
       <div className="flex flex-col gap-2">
         {configuredOAuthProviders.map((provider) => {
           const { label, Icon } = oauthProviderButton(provider);
+          const isLastUsed = lastUsedOAuthProvider === provider;
 
           return (
             <Button
               key={provider}
               variant="outline"
-              className="w-full justify-center"
+              className={cn(
+                "w-full justify-center gap-2",
+                isLastUsed && "ring-2 ring-primary",
+              )}
               type="button"
               onClick={async () =>
                 await signInWithOAuthAction(provider, {
                   errorReturn: oauthErrorReturn,
                 })
               }>
-              <Icon className="size-4" />
-              {label}
+              <Icon className="size-4 shrink-0" />
+              <span className="min-w-0">{label}</span>
+              {isLastUsed && (
+                <Badge
+                  variant="secondary"
+                  className="shrink-0 text-muted-foreground">
+                  Last used
+                </Badge>
+              )}
             </Button>
           );
         })}
