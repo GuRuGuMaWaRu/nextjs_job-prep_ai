@@ -14,6 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@core/components/ui/dropdown-menu";
@@ -32,7 +33,7 @@ const navLinks = [
 export function Navbar({
   user,
 }: {
-  user: { name: string; image: string | null };
+  user: { name: string; email: string; image: string | null };
 }) {
   const { jobInfoId } = useParams();
   const pathName = usePathname();
@@ -73,6 +74,18 @@ export function Navbar({
             <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col gap-1 max-w-[12rem]">
+                <span className="text-sm font-semibold truncate">
+                  {user.name}
+                </span>
+                <span className="text-xs text-muted-foreground/80 truncate">
+                  {user.email}
+                </span>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
             <DropdownMenuItem asChild>
               <Link href={routes.upgrade}>
                 <CircleArrowUpIcon className="mr-2" />
