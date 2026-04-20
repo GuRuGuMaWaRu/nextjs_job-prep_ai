@@ -52,6 +52,23 @@ describe("makeProUser", () => {
     expect(user.stripeSubscriptionId).toMatch(/^sub_test_/);
   });
 
+  it("correlates stripe ids with the user id suffix", () => {
+    const user = makeProUser();
+    const suffix = user.id.replace(/^user-/, "");
+
+    expect(user.stripeCustomerId).toBe(`cus_test_${suffix}`);
+    expect(user.stripeSubscriptionId).toBe(`sub_test_${suffix}`);
+  });
+
+  it("advances the shared counter by exactly one per call", () => {
+    const indexOf = (id: string) => Number(id.replace(/^user-/, ""));
+
+    const first = makeProUser();
+    const second = makeUser();
+
+    expect(indexOf(second.id)).toBe(indexOf(first.id) + 1);
+  });
+
   it("accepts overrides that win over pro defaults", () => {
     const user = makeProUser({ plan: "free", stripeCustomerId: null });
 
