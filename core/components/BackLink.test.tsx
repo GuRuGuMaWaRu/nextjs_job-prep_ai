@@ -15,19 +15,20 @@ describe("BackLink", () => {
     expect(link).toHaveAttribute("href", href);
   });
 
-  it("renders with a custom className without breaking the link role", () => {
+  it("applies a custom className to the rendered link", () => {
     const label = "Back";
     const href = "/x";
+    const customClass = "custom-class";
 
     render(
-      <BackLink href={href} className="custom-class">
+      <BackLink href={href} className={customClass}>
         {label}
       </BackLink>,
     );
 
     const link = screen.getByRole("link", { name: label });
 
-    expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", href);
+    expect(link).toHaveClass(customClass);
   });
 });
