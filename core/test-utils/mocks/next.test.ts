@@ -90,6 +90,19 @@ describe("createNextHeadersMock", () => {
     const h = await mock.headers();
 
     expect(h.get("x-test")).toBe("yes");
+    expect(h).toBe(mock.__headers);
+  });
+
+  it("headers() returns the same instance across calls so mutations persist", async () => {
+    const mock = createNextHeadersMock([], { "x-test": "yes" });
+
+    const first = await mock.headers();
+    first.set("x-mutated", "1");
+    const second = await mock.headers();
+
+    expect(second).toBe(first);
+    expect(second.get("x-mutated")).toBe("1");
+    expect(mock.__headers).toBe(first);
   });
 });
 

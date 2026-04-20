@@ -97,14 +97,18 @@ export type NextHeadersMock = {
   headers: jest.Mock;
   /** Test-only accessor for the shared cookie store bound to this mock. */
   __cookieStore: MockCookieStore;
+  /** Test-only accessor for the shared Headers instance bound to this mock. */
+  __headers: Headers;
 };
 
 /**
  * Mock for `next/headers`.
  *
- * Returns a shared `MockCookieStore` so all `await cookies()` calls inside
- * a single test see the same state. A fresh `Headers` instance is returned
- * per `headers()` call.
+ * - `cookies()` resolves to a shared `MockCookieStore`, persisted across
+ *   calls within a single mock so writes are observable on subsequent reads.
+ * - `headers()` resolves to a shared `Headers` instance (mirroring real
+ *   Next.js request-scoped semantics) so repeated `headers()` calls see the
+ *   same state. Access `__headers` for direct seeding or assertions.
  */
 export function createNextHeadersMock(
   initialCookies: CookieRecord[] = [],
@@ -117,6 +121,7 @@ export function createNextHeadersMock(
     cookies: jest.fn(async () => cookieStore),
     headers: jest.fn(async () => headersInstance),
     __cookieStore: cookieStore,
+    __headers: headersInstance,
   };
 }
 
