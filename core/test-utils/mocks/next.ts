@@ -61,6 +61,7 @@ export type MockCookieStore = {
   has: jest.Mock<boolean, [string]>;
   set: jest.Mock<void, [string, string, Record<string, unknown>?]>;
   delete: jest.Mock<void, [string]>;
+  /** Test-only snapshot of all cookies currently in this mock store. */
   _dump: () => CookieRecord[];
 };
 
