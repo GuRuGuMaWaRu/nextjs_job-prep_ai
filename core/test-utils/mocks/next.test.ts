@@ -107,14 +107,23 @@ describe("createNextHeadersMock", () => {
 });
 
 describe("createNextNavigationMock", () => {
-  it("redirect throws a NextRedirectError with the right digest", () => {
+  it("redirect throws a NextRedirectError with the default NEXT_REDIRECT digest", () => {
     const mock = createNextNavigationMock();
 
-    expect(() => mock.redirect("/sign-in")).toThrow(NextRedirectError);
+    try {
+      mock.redirect("/sign-in");
+      throw new Error("expected redirect to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(NextRedirectError);
+      expect((error as NextRedirectError).digest).toBe(
+        "NEXT_REDIRECT;/sign-in",
+      );
+    }
+
     expect(mock.redirect).toHaveBeenCalledWith("/sign-in");
   });
 
-  it("permanentRedirect throws a permanent-redirect digest", () => {
+  it("permanentRedirect throws a NEXT_PERMANENT_REDIRECT digest", () => {
     const mock = createNextNavigationMock();
 
     try {
@@ -128,9 +137,15 @@ describe("createNextNavigationMock", () => {
     }
   });
 
-  it("notFound throws a NextNotFoundError", () => {
+  it("notFound throws a NextNotFoundError with the NEXT_NOT_FOUND digest", () => {
     const mock = createNextNavigationMock();
 
-    expect(() => mock.notFound()).toThrow(NextNotFoundError);
+    try {
+      mock.notFound();
+      throw new Error("expected notFound to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(NextNotFoundError);
+      expect((error as NextNotFoundError).digest).toBe("NEXT_NOT_FOUND");
+    }
   });
 });
