@@ -8,22 +8,25 @@ function nextSessionIndex(): number {
 }
 
 /**
- * Builds a `Session` fixture with defaults that pass `validateSession`
- * semantics (not expired) out of the box.
+ * Builds a `Session` fixture with defaults that pass `validateSession` /
+ * `validateSessionDb` semantics (not expired vs real time) out of the box.
+ *
+ * `createdAt` is fixed for deterministic snapshots; `expiresAt` is anchored to
+ * `Date.now()` so it stays in the future as wall-clock time advances.
  *
  * Overrides are shallow-merged; every call yields a unique id + token.
  */
 export function makeSession(overrides: Partial<Session> = {}): Session {
   const index = nextSessionIndex();
-  const now = new Date("2024-01-01T00:00:00.000Z");
+  const createdAt = new Date("2024-01-01T00:00:00.000Z");
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
   return {
     id: `session-${index}`,
     userId: `user-${index}`,
     token: `token-${index}-${"a".repeat(20)}`,
-    expiresAt: new Date(now.getTime() + oneWeekMs),
-    createdAt: now,
+    expiresAt: new Date(Date.now() + oneWeekMs),
+    createdAt,
     ...overrides,
   };
 }

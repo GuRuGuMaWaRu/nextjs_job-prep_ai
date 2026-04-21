@@ -3,9 +3,14 @@ import { makeExpiredSession, makeSession } from "./session";
 describe("makeSession", () => {
   it("returns a session whose expiresAt is in the future by default", () => {
     const session = makeSession();
-    const now = new Date("2024-01-01T00:00:00.000Z");
 
-    expect(session.expiresAt.getTime()).toBeGreaterThan(now.getTime());
+    expect(session.expiresAt.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("keeps createdAt deterministic for snapshots", () => {
+    const session = makeSession();
+
+    expect(session.createdAt.toISOString()).toBe("2024-01-01T00:00:00.000Z");
   });
 
   it("produces unique id/token/userId on consecutive calls", () => {
