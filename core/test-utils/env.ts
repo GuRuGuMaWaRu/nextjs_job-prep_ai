@@ -44,7 +44,7 @@ export type TestServerEnv = {
 };
 
 const TEST_ENV_DEFAULTS: TestServerEnv = {
-  DATABASE_URL: "postgres://test:test@localhost:5432/test",
+  DATABASE_URL: "postgres://test:test@db.invalid:5432/test",
   ARCJET_KEY: "ajkey_test",
   HUME_API_KEY: "hume_test",
   HUME_SECRET_KEY: "hume_test_secret",
@@ -61,7 +61,9 @@ const TEST_ENV_DEFAULTS: TestServerEnv = {
 /**
  * Returns a fresh test env object with safe placeholder values.
  *
- * Never contains real secrets. Overrides are shallow-merged.
+ * Never contains real secrets. `DATABASE_URL` uses a reserved `.invalid` host so
+ * accidental real DB connections fail fast when env is not fully mocked.
+ * Overrides are shallow-merged.
  */
 export function createTestServerEnv(
   overrides: Partial<TestServerEnv> = {},
