@@ -1,3 +1,4 @@
+import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
 import { makeProUser, makeUser } from "./user";
 
 describe("makeUser", () => {
@@ -38,8 +39,8 @@ describe("makeUser", () => {
     const user = makeUser();
 
     expect(user.createdAt).toBeInstanceOf(Date);
-    expect(user.createdAt.toISOString()).toBe("2024-01-01T00:00:00.000Z");
-    expect(user.updatedAt.toISOString()).toBe("2024-01-01T00:00:00.000Z");
+    expect(user.createdAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
+    expect(user.updatedAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
   });
 });
 

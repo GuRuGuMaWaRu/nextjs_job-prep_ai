@@ -1,3 +1,4 @@
+import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
 import { makeExpiredSession, makeSession } from "./session";
 
 describe("makeSession", () => {
@@ -10,7 +11,7 @@ describe("makeSession", () => {
   it("keeps createdAt deterministic for snapshots", () => {
     const session = makeSession();
 
-    expect(session.createdAt.toISOString()).toBe("2024-01-01T00:00:00.000Z");
+    expect(session.createdAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
   });
 
   it("produces unique id/token/userId on consecutive calls", () => {

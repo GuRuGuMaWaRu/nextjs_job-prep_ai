@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/core/features/auth/types";
+import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
 
 let userCounter = 0;
 
@@ -8,7 +9,7 @@ function nextUserIndex(): number {
 }
 
 function buildUser(index: number, overrides: Partial<AuthUser>): AuthUser {
-  const now = new Date("2024-01-01T00:00:00.000Z");
+  const now = new Date(TEST_FIXTURE_NOW_ISO);
 
   return {
     id: `user-${index}`,

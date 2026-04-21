@@ -1,4 +1,8 @@
 import type { Session } from "@/core/features/auth/session";
+import {
+  TEST_EXPIRED_AT_ISO,
+  TEST_FIXTURE_NOW_ISO,
+} from "@core/test-utils/fixture-dates";
 
 let sessionCounter = 0;
 
@@ -18,7 +22,7 @@ function nextSessionIndex(): number {
  */
 export function makeSession(overrides: Partial<Session> = {}): Session {
   const index = nextSessionIndex();
-  const createdAt = new Date("2024-01-01T00:00:00.000Z");
+  const createdAt = new Date(TEST_FIXTURE_NOW_ISO);
   const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
   return {
@@ -36,7 +40,7 @@ export function makeSession(overrides: Partial<Session> = {}): Session {
  */
 export function makeExpiredSession(overrides: Partial<Session> = {}): Session {
   return makeSession({
-    expiresAt: new Date("2020-01-01T00:00:00.000Z"),
+    expiresAt: new Date(TEST_EXPIRED_AT_ISO),
     ...overrides,
   });
 }
