@@ -139,11 +139,16 @@ export class NextRedirectError extends Error {
   }
 }
 
+/**
+ * Thrown by the mocked `notFound()` to match real Next.js: `Error` with
+ * `digest` and message `NEXT_HTTP_ERROR_FALLBACK;404` (see `not-found.ts` in
+ * the Next.js source).
+ */
 export class NextNotFoundError extends Error {
-  readonly digest = "NEXT_NOT_FOUND";
+  readonly digest = "NEXT_HTTP_ERROR_FALLBACK;404";
 
   constructor() {
-    super("NEXT_NOT_FOUND");
+    super("NEXT_HTTP_ERROR_FALLBACK;404");
     this.name = "NextNotFoundError";
   }
 }

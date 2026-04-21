@@ -137,7 +137,7 @@ describe("createNextNavigationMock", () => {
     }
   });
 
-  it("notFound throws a NextNotFoundError with the NEXT_NOT_FOUND digest", () => {
+  it("notFound throws a NextNotFoundError with the NEXT_HTTP_ERROR_FALLBACK;404 digest", () => {
     const mock = createNextNavigationMock();
 
     try {
@@ -145,7 +145,9 @@ describe("createNextNavigationMock", () => {
       throw new Error("expected notFound to throw");
     } catch (error) {
       expect(error).toBeInstanceOf(NextNotFoundError);
-      expect((error as NextNotFoundError).digest).toBe("NEXT_NOT_FOUND");
+      expect((error as NextNotFoundError).digest).toBe(
+        "NEXT_HTTP_ERROR_FALLBACK;404",
+      );
     }
   });
 });
