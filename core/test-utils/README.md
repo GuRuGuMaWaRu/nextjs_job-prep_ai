@@ -10,12 +10,21 @@ This folder grows incrementally — add a helper only when a real test needs it.
 
 - `env.ts` — `createTestServerEnv`, `createTestClientEnv`. Return safe,
   placeholder env objects for mocking `@/core/data/env/*`.
-- `factories/` — pure data builders: `makeUser`, `makeProUser`,
-  `makeSession`, `makeExpiredSession`.
+- `factories/` — pure data builders:
+  - `makeUser`, `makeProUser`, `makeSession`, `makeExpiredSession`.
+  - `makeStripeSubscription`, `makeStripeCheckoutSession`,
+    `makeStripeEvent`, plus `makeCheckoutSessionCompletedEvent`,
+    `makeCheckoutSessionAsyncPaymentSucceededEvent`,
+    `makeCheckoutSessionAsyncPaymentFailedEvent`,
+    `makeSubscriptionUpdatedEvent`, `makeSubscriptionDeletedEvent`,
+    `makeUnhandledStripeWebhookEvent`.
 - `render.tsx` — `renderWithProviders` that wraps children in
   `ThemeProvider` + `Toaster`, plus a re-export of every RTL export.
 - `mocks/next.ts` — factories for stubbing `next/cache`, `next/headers`,
   and `next/navigation`, plus tagged error classes for redirect / notFound.
+- `mocks/stripe.ts` — `createMockStripe`: a minimal Stripe client stub
+  exposing `webhooks.constructEvent` and `subscriptions.retrieve` as
+  `jest.fn()`s for route and sync tests.
 
 ## Conventions
 
@@ -80,12 +89,35 @@ import { NextRedirectError } from "@core/test-utils/mocks/next";
 await expect(signOutAction()).rejects.toBeInstanceOf(NextRedirectError);
 ```
 
+## Mocking Stripe at the route boundary
+
+The webhook route calls `getStripe()` and then `stripe.webhooks.constructEvent`.
+Tests replace both at the module boundary and feed a prebuilt event fixture
+through the mock instead of signing a real payload:
+
+```ts
+import { createMockStripe } from "@core/test-utils/mocks/stripe";
+import { makeCheckoutSessionCompletedEvent } from "@core/test-utils/factories";
+
+const stripe = createMockStripe();
+
+jest.mock("@/core/features/billing/stripe", () => ({
+  getStripe: () => stripe,
+}));
+
+const event = makeCheckoutSessionCompletedEvent({ userId: "user-1" });
+stripe.webhooks.constructEvent.mockReturnValueOnce(event);
+```
+
+Signature verification failure is simulated by making `constructEvent` throw.
+Collaborators downstream of the route (`webhookHelpers`, `stripeSync`) are
+mocked separately so the route's branching is the unit under test.
+
 ## Planned additions (ship with the PR that first needs them)
 
-- `mocks/stripe.ts` — Stripe client + signed webhook event fixture builder.
 - `mocks/db.ts` — chainable Drizzle query mock.
 - `mocks/ai.ts` — AI SDK stream stubs.
 - `mocks/arcjet.ts` — Arcjet `protect` allow/deny scenarios.
 - `mocks/hume.ts` — Hume API and `@humeai/voice-react` stubs.
-- `factories/jobInfo.ts`, `factories/interview.ts`, `factories/question.ts`,
-  `factories/stripeEvent.ts` — per-feature fixture builders.
+- `factories/jobInfo.ts`, `factories/interview.ts`, `factories/question.ts`
+  — per-feature fixture builders.
