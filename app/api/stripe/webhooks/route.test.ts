@@ -11,7 +11,7 @@ import {
   makeCheckoutSessionAsyncPaymentFailedEvent,
   makeSubscriptionDeletedEvent,
   makeSubscriptionUpdatedEvent,
-  makeUnknownStripeEvent,
+  makeUnhandledStripeWebhookEvent,
   makeStripeCheckoutSession,
   makeStripeSubscription,
   makeStripeEvent,
@@ -387,8 +387,8 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
   });
 
-  it("no-ops on an unknown event type and still marks the event processed", async () => {
-    const event = makeUnknownStripeEvent();
+  it("no-ops on an unhandled event type and still marks the event processed", async () => {
+    const event = makeUnhandledStripeWebhookEvent();
     primeHappyPath(event);
 
     const response = await POST(

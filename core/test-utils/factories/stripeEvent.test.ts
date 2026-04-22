@@ -9,7 +9,7 @@ import {
   makeStripeSubscription,
   makeSubscriptionDeletedEvent,
   makeSubscriptionUpdatedEvent,
-  makeUnknownStripeEvent,
+  makeUnhandledStripeWebhookEvent,
 } from "./stripeEvent";
 
 describe("makeStripeSubscription", () => {
@@ -138,9 +138,9 @@ describe("named Stripe event builders", () => {
     expect(subscription.status).toBe("canceled");
   });
 
-  it("makeUnknownStripeEvent uses a type the webhook does not recognize", () => {
-    const event = makeUnknownStripeEvent();
+  it("makeUnhandledStripeWebhookEvent uses a real type the webhook route does not handle", () => {
+    const event = makeUnhandledStripeWebhookEvent();
 
-    expect(event.type).not.toMatch(/^(checkout|customer)\./);
+    expect(event.type).toBe("invoice.voided");
   });
 });

@@ -9,5 +9,5 @@ export {
   makeCheckoutSessionAsyncPaymentFailedEvent,
   makeSubscriptionUpdatedEvent,
   makeSubscriptionDeletedEvent,
-  makeUnknownStripeEvent,
+  makeUnhandledStripeWebhookEvent,
 } from "./stripeEvent";

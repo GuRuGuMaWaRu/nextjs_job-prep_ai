@@ -187,13 +187,16 @@ export function makeSubscriptionDeletedEvent(
 }
 
 /**
- * Builds an event whose `type` the webhook route does not recognize, so the
- * default branch (no-op, 200) can be asserted.
+ * Builds a real Stripe event (`invoice.voided` is a valid `Stripe.Event.Type`)
+ * that this app's webhook route does not handle, so tests can assert the
+ * default branch (no-op, HTTP 200).
  */
-export function makeUnknownStripeEvent(eventId?: string): Stripe.Event {
+export function makeUnhandledStripeWebhookEvent(
+  eventId?: string,
+): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "invoice.voided" as Stripe.Event.Type,
+    type: "invoice.voided",
     object: {},
   });
 }
