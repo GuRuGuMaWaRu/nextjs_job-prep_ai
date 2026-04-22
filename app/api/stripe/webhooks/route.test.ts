@@ -449,6 +449,7 @@ describe("POST /api/stripe/webhooks — handler failure recovery", () => {
     );
 
     expect(response.status).toBe(500);
+    expect(mockMarkRemediation).toHaveBeenCalledWith(event.id, "unclaim boom");
     expect(mockMarkProcessed).not.toHaveBeenCalled();
   });
 });
