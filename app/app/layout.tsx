@@ -13,12 +13,12 @@ import { getCanceledSubscriptionNotice } from "./_utils";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={<FullScreenLoader className="m-auto h-screen" />}>
-      <AuthCheckAndNavbar>{children}</AuthCheckAndNavbar>
+      <AuthenticatedAppShell>{children}</AuthenticatedAppShell>
     </Suspense>
   );
 }
 
-async function AuthCheckAndNavbar({ children }: { children: React.ReactNode }) {
+async function AuthenticatedAppShell({ children }: { children: React.ReactNode }) {
   const { userId, user } = await getCurrentUserWithProfile();
 
   if (userId == null || user == null) return redirect(routes.landing);
