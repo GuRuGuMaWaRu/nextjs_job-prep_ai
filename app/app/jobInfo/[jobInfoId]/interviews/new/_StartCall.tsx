@@ -77,10 +77,12 @@ export function StartCall({
 
   //** This means Hume prevents us from having an interview, so we need to show a toast */
   useEffect(() => {
-    if (readyState === VoiceReadyState.CLOSED && !messages.length) {
-      errorToast(HUME_UNAVAILABLE_MESSAGE);
+    if (readyState !== VoiceReadyState.CLOSED || messages.length > 0) {
+      return;
     }
-  }, [jobInfo.id, messages.length, readyState, router]);
+
+    errorToast(HUME_UNAVAILABLE_MESSAGE);
+  }, [messages.length, readyState]);
 
   const handleStartInterview = async () => {
     const res = await createInterviewAction({ jobInfoId: jobInfo.id });
