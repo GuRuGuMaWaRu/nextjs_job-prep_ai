@@ -13,14 +13,14 @@ const nodeConfig = createJestConfig({
   ...sharedConfig,
   displayName: "node",
   testEnvironment: "node",
-  testMatch: ["<rootDir>/**/*.test.ts"],
+  testMatch: ["**/*.test.ts"],
 });
 
 const jsdomConfig = createJestConfig({
   ...sharedConfig,
   displayName: "jsdom",
   testEnvironment: "jsdom",
-  testMatch: ["<rootDir>/**/*.test.tsx"],
+  testMatch: ["**/*.test.tsx"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
 });
 
