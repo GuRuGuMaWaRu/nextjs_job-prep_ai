@@ -1,5 +1,7 @@
 import type Stripe from "stripe";
 
+import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
+
 import {
   makeCheckoutSessionAsyncPaymentFailedEvent,
   makeCheckoutSessionAsyncPaymentSucceededEvent,
@@ -100,7 +102,9 @@ describe("named Stripe event builders", () => {
   it("makeCheckoutSessionCompletedEvent has the correct type and nested session", () => {
     const event = makeCheckoutSessionCompletedEvent({ userId: "user-c1" });
 
-    expect(event.type).toBe("checkout.session.completed");
+    expect(event.type).toBe(
+      STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted,
+    );
     const session = event.data.object as Stripe.Checkout.Session;
     expect(session.metadata?.userId).toBe("user-c1");
     expect(session.payment_status).toBe("paid");
@@ -109,7 +113,9 @@ describe("named Stripe event builders", () => {
   it("makeCheckoutSessionAsyncPaymentSucceededEvent builds the success variant", () => {
     const event = makeCheckoutSessionAsyncPaymentSucceededEvent();
 
-    expect(event.type).toBe("checkout.session.async_payment_succeeded");
+    expect(event.type).toBe(
+      STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded,
+    );
     const session = event.data.object as Stripe.Checkout.Session;
     expect(session.payment_status).toBe("paid");
   });
@@ -117,7 +123,9 @@ describe("named Stripe event builders", () => {
   it("makeCheckoutSessionAsyncPaymentFailedEvent defaults paymentStatus to unpaid", () => {
     const event = makeCheckoutSessionAsyncPaymentFailedEvent();
 
-    expect(event.type).toBe("checkout.session.async_payment_failed");
+    expect(event.type).toBe(
+      STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed,
+    );
     const session = event.data.object as Stripe.Checkout.Session;
     expect(session.payment_status).toBe("unpaid");
   });
@@ -125,7 +133,7 @@ describe("named Stripe event builders", () => {
   it("makeSubscriptionUpdatedEvent wraps an active subscription", () => {
     const event = makeSubscriptionUpdatedEvent();
 
-    expect(event.type).toBe("customer.subscription.updated");
+    expect(event.type).toBe(STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated);
     const subscription = event.data.object as Stripe.Subscription;
     expect(subscription.status).toBe("active");
   });
@@ -133,7 +141,7 @@ describe("named Stripe event builders", () => {
   it("makeSubscriptionDeletedEvent defaults the subscription status to canceled", () => {
     const event = makeSubscriptionDeletedEvent();
 
-    expect(event.type).toBe("customer.subscription.deleted");
+    expect(event.type).toBe(STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted);
     const subscription = event.data.object as Stripe.Subscription;
     expect(subscription.status).toBe("canceled");
   });
@@ -141,6 +149,6 @@ describe("named Stripe event builders", () => {
   it("makeUnhandledStripeWebhookEvent uses a real type the webhook route does not handle", () => {
     const event = makeUnhandledStripeWebhookEvent();
 
-    expect(event.type).toBe("invoice.voided");
+    expect(event.type).toBe(STRIPE_WEBHOOK_EVENT_TYPES.invoiceVoided);
   });
 });

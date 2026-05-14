@@ -26,6 +26,7 @@ import {
   fulfillCheckoutSession,
   markStripeEventProcessed,
 } from "@/core/features/billing/webhookHelpers";
+import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 import { getStripe } from "@/core/features/billing/stripe";
 import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
@@ -97,24 +98,24 @@ export async function POST(request: Request) {
 
   try {
     switch (event.type) {
-      case "checkout.session.completed":
-      case "checkout.session.async_payment_succeeded": {
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted:
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded: {
         const session = event.data.object as Stripe.Checkout.Session;
         await fulfillCheckoutSession(session);
         break;
       }
 
-      case "checkout.session.async_payment_failed": {
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed: {
         const session = event.data.object as Stripe.Checkout.Session;
         console.warn(
-          "checkout.session.async_payment_failed: async payment failed for checkout session",
+          `${STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed}: async payment failed for checkout session`,
           "userId",
           session.metadata?.userId,
         );
         break;
       }
 
-      case "customer.subscription.updated": {
+      case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated: {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId =
           typeof subscription.customer === "string"
@@ -126,7 +127,7 @@ export async function POST(request: Request) {
         break;
       }
 
-      case "customer.subscription.deleted": {
+      case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted: {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId =
           typeof subscription.customer === "string"

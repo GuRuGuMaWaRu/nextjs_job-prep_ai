@@ -12,6 +12,8 @@
 
 import type Stripe from "stripe";
 
+import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
+
 let eventCounter = 0;
 let sessionCounter = 0;
 let subscriptionCounter = 0;
@@ -131,7 +133,7 @@ export function makeCheckoutSessionCompletedEvent(
 ): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "checkout.session.completed",
+    type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted,
     object: makeStripeCheckoutSession(sessionOverrides),
   });
 }
@@ -142,7 +144,7 @@ export function makeCheckoutSessionAsyncPaymentSucceededEvent(
 ): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "checkout.session.async_payment_succeeded",
+    type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded,
     object: makeStripeCheckoutSession(sessionOverrides),
   });
 }
@@ -153,7 +155,7 @@ export function makeCheckoutSessionAsyncPaymentFailedEvent(
 ): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "checkout.session.async_payment_failed",
+    type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed,
     object: makeStripeCheckoutSession({
       paymentStatus: "unpaid",
       ...sessionOverrides,
@@ -167,7 +169,7 @@ export function makeSubscriptionUpdatedEvent(
 ): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "customer.subscription.updated",
+    type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated,
     object: makeStripeSubscription(subscriptionOverrides),
   });
 }
@@ -178,7 +180,7 @@ export function makeSubscriptionDeletedEvent(
 ): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "customer.subscription.deleted",
+    type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted,
     object: makeStripeSubscription({
       status: "canceled",
       ...subscriptionOverrides,
@@ -196,7 +198,7 @@ export function makeUnhandledStripeWebhookEvent(
 ): Stripe.Event {
   return makeStripeEvent({
     id: eventId,
-    type: "invoice.voided",
+    type: STRIPE_WEBHOOK_EVENT_TYPES.invoiceVoided,
     object: {},
   });
 }

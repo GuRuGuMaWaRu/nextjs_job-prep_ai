@@ -44,6 +44,7 @@ jest.mock("@/core/features/users/stripeSync", () => ({
 }));
 
 import { getStripe } from "@/core/features/billing/stripe";
+import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import {
   claimEvent,
   fulfillCheckoutSession,
@@ -250,7 +251,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
       subscriptionId: "sub_test_42",
     });
     const event = makeStripeEvent({
-      type: "checkout.session.completed",
+      type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted,
       object: session,
     });
     primeHappyPath(event);
@@ -302,7 +303,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
       status: "active",
     });
     const event = makeStripeEvent({
-      type: "customer.subscription.updated",
+      type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated,
       object: subscription,
     });
     primeHappyPath(event);
@@ -329,7 +330,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
       status: "active",
     } as unknown as Stripe.Subscription;
     const event = makeStripeEvent({
-      type: "customer.subscription.updated",
+      type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated,
       object: subscription,
     });
     primeHappyPath(event);
@@ -354,7 +355,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
       status: "active",
     } as unknown as Stripe.Subscription;
     const event = makeStripeEvent({
-      type: "customer.subscription.updated",
+      type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated,
       object: subscription,
     });
     primeHappyPath(event);
