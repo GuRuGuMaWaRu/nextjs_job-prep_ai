@@ -13,63 +13,41 @@ import {
   UserOAuthAccountTable,
   UserTable,
 } from "@/core/drizzle/schema";
+import {
+  createDrizzleMutationChainMock,
+  createMockDrizzleDb,
+  createMockDrizzleTableQuery,
+} from "@core/test-utils/mocks/db";
 
 import { connectUserToAccount } from "@/core/features/auth/oauth/connectUser";
 import { OAuthUnverifiedEmailError } from "@/core/features/auth/oauth/errors";
 
 const mockTransaction = db.transaction as jest.MockedFunction<typeof db.transaction>;
 
-function chainUserInsert(insertReturning: { id: string }[]) {
-  return {
-    values: jest.fn().mockReturnValue({
-      onConflictDoNothing: jest.fn().mockReturnValue({
-        returning: jest.fn().mockResolvedValue(insertReturning),
-      }),
-    }),
-  };
-}
-
-function chainOAuthInsert() {
-  return {
-    values: jest.fn().mockReturnValue({
-      onConflictDoNothing: jest.fn().mockResolvedValue(undefined),
-    }),
-  };
-}
-
-function chainUpdate() {
-  return {
-    set: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue(undefined),
-    }),
-  };
-}
-
 /** Shared tx shape: no OAuth link, email first null then row after insert conflict. */
 function createMockTxForInsertConflictRace() {
-  return {
+  const userQuery = createMockDrizzleTableQuery();
+  userQuery.findFirst
+    .mockResolvedValueOnce(null)
+    .mockResolvedValueOnce({
+      id: "winner-id",
+      emailVerified: null,
+    });
+
+  return createMockDrizzleDb({
     query: {
-      UserOAuthAccountTable: {
-        findFirst: jest.fn().mockResolvedValue(null),
-      },
-      UserTable: {
-        findFirst: jest
-          .fn()
-          .mockResolvedValueOnce(null)
-          .mockResolvedValueOnce({
-            id: "winner-id",
-            emailVerified: null,
-          }),
-      },
+      UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+      UserTable: userQuery,
     },
-    insert: jest.fn((table: unknown) => {
+    insert: (table) => {
       if (table === UserTable) {
-        return chainUserInsert([]);
+        return [];
       }
-      return chainOAuthInsert();
-    }),
-    update: jest.fn(() => chainUpdate()),
-  };
+
+      return undefined;
+    },
+    update: undefined,
+  });
 }
 
 describe("connectUserToAccount", () => {
@@ -79,16 +57,14 @@ describe("connectUserToAccount", () => {
 
   it("returns existing user when OAuth account is already linked", async () => {
     mockTransaction.mockImplementation(async (fn) => {
-      const tx = {
+      const tx = createMockDrizzleDb({
         query: {
-          UserOAuthAccountTable: {
-            findFirst: jest.fn().mockResolvedValue({ userId: "prior-user" }),
-          },
-          UserTable: { findFirst: jest.fn() },
+          UserOAuthAccountTable: createMockDrizzleTableQuery({
+            findFirst: { userId: "prior-user" },
+          }),
+          UserTable: createMockDrizzleTableQuery(),
         },
-        insert: jest.fn(),
-        update: jest.fn(),
-      };
+      });
       return fn(tx as never);
     });
 
@@ -108,33 +84,27 @@ describe("connectUserToAccount", () => {
   });
 
   it("reuses user by email and updates emailVerified when needed", async () => {
-    const updateSet = jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue(undefined),
-    });
+    const updateChain = createDrizzleMutationChainMock();
     const updateMock = jest.fn().mockReturnValue({
-      set: updateSet,
+      set: updateChain.set,
     });
 
     mockTransaction.mockImplementation(async (fn) => {
-      const tx = {
+      const tx = createMockDrizzleDb({
         query: {
-          UserOAuthAccountTable: {
-            findFirst: jest.fn().mockResolvedValue(null),
-          },
-          UserTable: {
-            findFirst: jest
-              .fn()
-              .mockResolvedValue({ id: "by-email", emailVerified: null }),
-          },
+          UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+          UserTable: createMockDrizzleTableQuery({
+            findFirst: { id: "by-email", emailVerified: null },
+          }),
         },
-        insert: jest.fn((table: unknown) => {
+        insert: (table) => {
           if (table === UserOAuthAccountTable) {
-            return chainOAuthInsert();
+            return undefined;
           }
           throw new Error("Unexpected UserTable insert when matching by email");
-        }),
-        update: updateMock,
-      };
+        },
+      });
+      tx.update = updateMock;
       return fn(tx as never);
     });
 
@@ -152,7 +122,7 @@ describe("connectUserToAccount", () => {
 
     expect(mockTransaction).toHaveBeenCalledTimes(1);
     expect(updateMock).toHaveBeenCalledWith(UserTable);
-    expect(updateSet).toHaveBeenCalledWith(
+    expect(updateChain.set).toHaveBeenCalledWith(
       expect.objectContaining({
         emailVerified: expect.any(Date),
       }),
@@ -161,23 +131,18 @@ describe("connectUserToAccount", () => {
 
   it("creates a user when insert returns a row", async () => {
     mockTransaction.mockImplementation(async (fn) => {
-      const tx = {
+      const tx = createMockDrizzleDb({
         query: {
-          UserOAuthAccountTable: {
-            findFirst: jest.fn().mockResolvedValue(null),
-          },
-          UserTable: {
-            findFirst: jest.fn().mockResolvedValue(null),
-          },
+          UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+          UserTable: createMockDrizzleTableQuery({ findFirst: null }),
         },
-        insert: jest.fn((table) => {
+        insert: (table) => {
           if (table === UserTable) {
-            return chainUserInsert([{ id: "generated-user-id" }]);
+            return [{ id: "generated-user-id" }];
           }
-          return chainOAuthInsert();
-        }),
-        update: jest.fn(),
-      };
+          return undefined;
+        },
+      });
       return fn(tx as never);
     });
 

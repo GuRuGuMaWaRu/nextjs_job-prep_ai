@@ -25,6 +25,8 @@ This folder grows incrementally — add a helper only when a real test needs it.
 - `mocks/stripe.ts` — `createMockStripe`: a minimal Stripe client stub
   exposing `webhooks.constructEvent` and `subscriptions.retrieve` as
   `jest.fn()`s for route and sync tests.
+- `mocks/db.ts` — Drizzle query and chainable mutation mock helpers for
+  database-backed unit tests.
 
 ## Conventions
 
@@ -115,7 +117,6 @@ mocked separately so the route's branching is the unit under test.
 
 ## Planned additions (ship with the PR that first needs them)
 
-- `mocks/db.ts` — chainable Drizzle query mock.
 - `mocks/ai.ts` — AI SDK stream stubs.
 - `mocks/arcjet.ts` — Arcjet `protect` allow/deny scenarios.
 - `mocks/hume.ts` — Hume API and `@humeai/voice-react` stubs.
