@@ -11,6 +11,41 @@ can be referenced across future implementation chats.
 - Treat the first coverage report as a baseline. Add conservative thresholds
   only after the initial gaps are understood.
 
+## Baseline Snapshot
+
+Date: 2026-05-15
+
+Commands run:
+
+- `npm test`
+- `npm run test:coverage`
+
+Result:
+
+- Initial `npm test` failed in PowerShell before Jest started because the
+  unsigned `npm.ps1` shim is blocked by the local execution policy.
+- After installing dependencies from `package-lock.json` with `npm.cmd ci`,
+  `npm.cmd test` passed: 20 test suites, 130 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 20 test suites, 130 tests, 0 snapshots.
+- Initial coverage summary: 68.09% statements, 66.49% branches, 60.43%
+  functions, and 71.83% lines.
+
+Notable blockers and warnings:
+
+- The repo had no `node_modules` directory at the start of the baseline run, so
+  the first script execution through `npm.cmd` could not find `jest`.
+- Jest emits repeated `baseline-browser-mapping` warnings that the local data is
+  over two months old. This did not block test or coverage execution.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage baseline task.
+
+Recommendation:
+
+Start the next coverage slice with fast, low-mock targets in `core/lib`, route
+metadata in `core/data/routes.ts`, and then the first permission or schema
+helpers. Defer broad thresholds until these gaps are covered and the OAuth
+modules are reviewed as a separate, mock-heavy slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
