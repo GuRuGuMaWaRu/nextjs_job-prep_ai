@@ -46,6 +46,55 @@ metadata in `core/data/routes.ts`, and then the first permission or schema
 helpers. Defer broad thresholds until these gaps are covered and the OAuth
 modules are reviewed as a separate, mock-heavy slice.
 
+## Progress Notes
+
+### Pure Logic Slice - 2026-05-15
+
+Files/tests added:
+
+- `core/lib/assertUUID.test.ts`
+- `core/lib/toSafeErrorMeta.test.ts`
+- `core/lib/utils.test.ts`
+- `core/data/routes.test.ts`
+- `core/features/auth/schemas.test.ts`
+- `core/features/jobInfos/schemas.test.ts`
+- `core/features/jobInfos/lib/formatters.test.ts`
+- `core/features/questions/formatters.test.ts`
+
+Commands run:
+
+- `npm.cmd ci`
+- `npm.cmd test -- core/lib/assertUUID.test.ts core/lib/toSafeErrorMeta.test.ts core/lib/utils.test.ts core/data/routes.test.ts core/features/jobInfos/lib/formatters.test.ts core/features/questions/formatters.test.ts core/features/jobInfos/schemas.test.ts core/features/auth/schemas.test.ts`
+- `npm test`
+- `npm.cmd test`
+- `npm run test:coverage`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Focused slice passed: 8 test suites, 29 tests, 0 snapshots.
+- `npm test` and `npm run test:coverage` still fail in PowerShell before Jest
+  starts because the unsigned `npm.ps1` shim is blocked by the local execution
+  policy.
+- `npm.cmd test` passed: 28 test suites, 159 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 28 test suites, 159 tests, 0 snapshots.
+- Updated coverage summary: 69.57% statements, 66.18% branches, 65.33%
+  functions, and 72.6% lines.
+
+Notes:
+
+- Jest continues to emit repeated `baseline-browser-mapping` warnings that the
+  local data is over two months old. This did not block test or coverage
+  execution.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Continue with the next low-mock slice by covering `core/features/auth/password.ts`
+and lightweight permission behavior with module-level auth/user mocks. After
+that, move into service-layer tests using the existing database mock helpers.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
