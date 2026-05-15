@@ -95,6 +95,54 @@ Continue with the next low-mock slice by covering `core/features/auth/password.t
 and lightweight permission behavior with module-level auth/user mocks. After
 that, move into service-layer tests using the existing database mock helpers.
 
+### Password and Permission Helpers Slice - 2026-05-15
+
+Files/tests added:
+
+- `core/features/auth/password.test.ts`
+- `core/features/auth/permissions.test.ts`
+- `core/features/questions/permissions.test.ts`
+- `core/features/interviews/permissions.test.ts`
+- `core/features/resumeAnalysis/permissions.test.ts`
+
+Commands run:
+
+- `npm.cmd ci`
+- `npm.cmd test -- core/features/auth/password.test.ts core/features/auth/permissions.test.ts`
+- `npm.cmd test -- core/features/auth/password.test.ts core/features/auth/permissions.test.ts core/features/questions/permissions.test.ts core/features/interviews/permissions.test.ts core/features/resumeAnalysis/permissions.test.ts`
+- `npm test`
+- `npm.cmd test`
+- `npm run test:coverage`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Initial focused run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd ci` installed dependencies from `package-lock.json`.
+- Focused slice passed: 5 test suites, 26 tests, 0 snapshots.
+- `npm test` and `npm run test:coverage` still fail in PowerShell before Jest
+  starts because the unsigned `npm.ps1` shim is blocked by the local execution
+  policy.
+- `npm.cmd test` passed: 33 test suites, 185 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 33 test suites, 185 tests, 0 snapshots.
+- Updated coverage summary: 73.85% statements, 72.15% branches, 69.18%
+  functions, and 76.9% lines.
+
+Notes:
+
+- Jest continues to emit repeated `baseline-browser-mapping` warnings that the
+  local data is over two months old. This did not block test or coverage
+  execution.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Move next into service-layer tests for `core/features/jobInfos/service.ts`,
+`core/features/interviews/service.ts`, and `core/features/questions/service.ts`
+using the existing database mock helpers. Keep API routes and OAuth base-flow
+coverage as separate mock-heavy slices.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
