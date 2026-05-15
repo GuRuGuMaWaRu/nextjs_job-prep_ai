@@ -14,3 +14,16 @@ describe("jestConfig", () => {
     expect(configSource).not.toContain('testMatch: ["<rootDir>/**/*.test.tsx"]');
   });
 });
+
+describe("package scripts", () => {
+  it("exposes a coverage command for tracking test coverage", () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(process.cwd(), "package.json"), "utf8"),
+    );
+
+    expect(packageJson.scripts).toMatchObject({
+      test: "jest",
+      "test:coverage": "jest --coverage",
+    });
+  });
+});

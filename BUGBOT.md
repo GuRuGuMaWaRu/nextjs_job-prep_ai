@@ -16,7 +16,6 @@
     coverage.
   - Stripe webhook route branching and Stripe fixture helpers have coverage.
 - Planned next coverage helpers:
-  - `core/test-utils/mocks/db.ts` for chainable Drizzle query mocks.
   - `core/test-utils/mocks/ai.ts` for AI SDK stream stubs.
   - `core/test-utils/mocks/arcjet.ts` for allow/deny protection scenarios.
   - `core/test-utils/mocks/hume.ts` for Hume API and voice-react stubs.
