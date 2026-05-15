@@ -249,7 +249,7 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 ## Development Notes
 
-- There is currently no test runner script in `package.json`. If you add tests, follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts` file per source file).
+- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts` file per source file).
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
 - The middleware intentionally skips Arcjet checks for Stripe routes and applies Arcjet mainly to `/api/**`.
 - Neon is a strong fit for Vercel deployments because it provides managed Postgres with straightforward hosted connection management (no containerized DB required in production).
