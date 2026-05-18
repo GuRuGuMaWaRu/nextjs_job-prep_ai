@@ -19,28 +19,23 @@ import {
   getQuestionsService,
   insertQuestionService,
 } from "@/core/features/questions/service";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeQuestion } from "@/core/test-utils/factories";
+import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetQuestionsDal = jest.mocked(getQuestionsDal);
 const mockGetQuestionByIdDal = jest.mocked(getQuestionByIdDal);
 const mockInsertQuestionDal = jest.mocked(insertQuestionDal);
 
-const SIGNED_IN_USER_ID = "user-1";
-
-function makeCurrentUser(userId: string | null) {
-  return {
-    userId,
-    redirectToSignIn: jest.fn(() => {
-      throw new Error("redirect");
-    }),
-  };
-}
+const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("question service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(makeCurrentUser(SIGNED_IN_USER_ID));
+    mockGetCurrentUser.mockResolvedValue(
+      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
+    );
   });
 
   it("gets questions for a job info without requiring authentication", async () => {

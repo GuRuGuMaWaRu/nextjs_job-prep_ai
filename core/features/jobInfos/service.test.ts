@@ -30,7 +30,12 @@ import {
   updateJobInfoService,
   verifyJobInfoAccessService,
 } from "@/core/features/jobInfos/service";
+import {
+  TEST_OTHER_USER_ID,
+  TEST_USER_ID,
+} from "@/core/test-utils/constants";
 import { makeJobInfo } from "@/core/test-utils/factories";
+import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockCreateJobInfoDal = jest.mocked(createJobInfoDal);
@@ -47,22 +52,15 @@ const jobInfoInput = {
   description: "Build thoughtful product interfaces.",
 };
 
-const SIGNED_IN_USER_ID = "user-1";
-const OTHER_USER_ID = "user-2";
-
-function makeCurrentUser(userId: string | null) {
-  return {
-    userId,
-    redirectToSignIn: jest.fn(() => {
-      throw new Error("redirect");
-    }),
-  };
-}
+const SIGNED_IN_USER_ID = TEST_USER_ID;
+const OTHER_USER_ID = TEST_OTHER_USER_ID;
 
 describe("job info service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(makeCurrentUser(SIGNED_IN_USER_ID));
+    mockGetCurrentUser.mockResolvedValue(
+      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
+    );
   });
 
   it("creates a job info for the signed-in user", async () => {

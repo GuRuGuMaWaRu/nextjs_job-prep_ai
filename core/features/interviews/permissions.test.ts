@@ -33,6 +33,7 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkInterviewPermission } from "./permissions";
@@ -40,7 +41,8 @@ import { checkInterviewPermission } from "./permissions";
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetInterviewCountDb = jest.mocked(getInterviewCountDb);
-const SIGNED_IN_USER_ID = "user-1";
+
+const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkInterviewPermission", () => {
   beforeEach(() => {
@@ -86,5 +88,4 @@ describe("checkInterviewPermission", () => {
 
     await expect(checkInterviewPermission()).resolves.toBe(false);
   });
-
 });

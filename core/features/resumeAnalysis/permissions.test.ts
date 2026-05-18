@@ -18,17 +18,16 @@ jest.mock("@/core/features/auth/permissions", () => ({
 }));
 
 import { getCurrentUser } from "@/core/features/auth/actions";
-import {
-  hasPermission,
-  PERMISSIONS,
-} from "@/core/features/auth/permissions";
+import { hasPermission, PERMISSIONS } from "@/core/features/auth/permissions";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkResumeAnalysisPermission } from "./permissions";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockHasPermission = jest.mocked(hasPermission);
-const SIGNED_IN_USER_ID = "user-1";
+
+const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkResumeAnalysisPermission", () => {
   beforeEach(() => {

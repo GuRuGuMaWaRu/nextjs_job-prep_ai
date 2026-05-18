@@ -1,4 +1,7 @@
-import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
+import {
+  TEST_FIXTURE_NOW_ISO,
+  TEST_USER_ID,
+} from "@/core/test-utils/constants";
 import { makeCurrentUser, makeProUser, makeUser } from "./user";
 
 describe("makeUser", () => {
@@ -82,7 +85,7 @@ describe("makeCurrentUser", () => {
   it("returns an authenticated current-user fixture by default", () => {
     const currentUser = makeCurrentUser();
 
-    expect(currentUser.userId).toBe("user-1");
+    expect(currentUser.userId).toBe(TEST_USER_ID);
     expect(currentUser.redirectToSignIn).toEqual(expect.any(Function));
   });
 

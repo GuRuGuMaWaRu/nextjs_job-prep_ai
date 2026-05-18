@@ -33,6 +33,7 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getQuestionCountDb } from "@/core/features/questions/db";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkQuestionsPermission } from "./permissions";
@@ -40,7 +41,8 @@ import { checkQuestionsPermission } from "./permissions";
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetQuestionCountDb = jest.mocked(getQuestionCountDb);
-const SIGNED_IN_USER_ID = "user-1";
+
+const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkQuestionsPermission", () => {
   beforeEach(() => {

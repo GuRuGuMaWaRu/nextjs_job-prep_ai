@@ -21,11 +21,12 @@ import {
   makeProUser,
   makeUser,
 } from "@/core/test-utils/factories/user";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetUser = jest.mocked(getUser);
 
-const SIGNED_IN_USER_ID = "user-1";
+const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("auth permission helpers", () => {
   beforeEach(() => {

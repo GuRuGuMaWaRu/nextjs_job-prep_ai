@@ -1,5 +1,5 @@
 import type { JobInfoTable } from "@/core/drizzle/schema";
-import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/fixture-dates";
+import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/constants";
 
 let jobInfoCounter = 0;
 

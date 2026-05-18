@@ -1,6 +1,6 @@
 import type { InterviewTable } from "@/core/drizzle/schema";
 import { makeJobInfo } from "@/core/test-utils/factories/jobInfo";
-import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/fixture-dates";
+import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/constants";
 
 let interviewCounter = 0;
 

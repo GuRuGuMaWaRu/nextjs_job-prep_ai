@@ -40,7 +40,13 @@ import {
 } from "@/core/features/interviews/service";
 import { INTERVIEW_SERVICE_ERRORS } from "@/core/features/interviews/serviceErrors";
 import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
+import {
+  TEST_OTHER_USER_ID,
+  TEST_USER_ID,
+  TEST_USER_NAME,
+} from "@/core/test-utils/constants";
 import { makeInterview, makeJobInfo, makeUser } from "@/core/test-utils/factories";
+import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 const mockRefresh = jest.mocked(refresh);
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
@@ -53,32 +59,21 @@ const mockGenerateAiInterviewFeedback = jest.mocked(
   generateAiInterviewFeedback,
 );
 
-const SIGNED_IN_USER_ID = "user-1";
-const OTHER_USER_ID = "user-2";
-const SIGNED_IN_USER_NAME = "Ada";
-
-function makeCurrentUser(
-  userId: string | null,
-  user = makeUser({ id: userId ?? SIGNED_IN_USER_ID }),
-) {
-  return {
-    userId,
-    user,
-    redirectToSignIn: jest.fn(() => {
-      throw new Error("redirect");
-    }),
-  };
-}
+const SIGNED_IN_USER_ID = TEST_USER_ID;
+const OTHER_USER_ID = TEST_OTHER_USER_ID;
+const SIGNED_IN_USER_NAME = TEST_USER_NAME;
 
 describe("interview service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(makeCurrentUser(SIGNED_IN_USER_ID));
+    mockGetCurrentUser.mockResolvedValue(
+      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
+    );
     mockGetCurrentUserWithProfile.mockResolvedValue(
-      makeCurrentUser(
-        SIGNED_IN_USER_ID,
-        makeUser({ id: SIGNED_IN_USER_ID, name: SIGNED_IN_USER_NAME }),
-      ),
+      makeCurrentUser({
+        userId: SIGNED_IN_USER_ID,
+        user: makeUser({ id: SIGNED_IN_USER_ID, name: SIGNED_IN_USER_NAME }),
+      }),
     );
   });
 
