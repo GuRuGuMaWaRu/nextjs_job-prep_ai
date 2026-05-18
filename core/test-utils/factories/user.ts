@@ -1,4 +1,4 @@
-import type { AuthUser } from "@/core/features/auth/types";
+import type { AuthUser, CurrentUser } from "@/core/features/auth/types";
 import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
 
 let userCounter = 0;
@@ -55,4 +55,16 @@ export function makeProUser(overrides: Partial<AuthUser> = {}): AuthUser {
     stripeSubscriptionId: `sub_test_${index}`,
     ...overrides,
   });
+}
+
+export function makeCurrentUser(
+  overrides: Partial<CurrentUser> = {},
+): CurrentUser {
+  return {
+    userId: "user-1",
+    redirectToSignIn: jest.fn(() => {
+      throw new Error("redirect");
+    }),
+    ...overrides,
+  };
 }

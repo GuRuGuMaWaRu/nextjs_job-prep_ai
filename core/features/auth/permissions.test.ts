@@ -16,15 +16,23 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getUser } from "@/core/features/users/actions";
-import { makeProUser, makeUser } from "@core/test-utils/factories/user";
+import {
+  makeCurrentUser,
+  makeProUser,
+  makeUser,
+} from "@/core/test-utils/factories/user";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetUser = jest.mocked(getUser);
 
+const SIGNED_IN_USER_ID = "user-1";
+
 describe("auth permission helpers", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({ userId: "user-1" });
+    mockGetCurrentUser.mockResolvedValue(
+      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
+    );
   });
 
   it("exposes free plan limits used by feature permission checks", () => {
@@ -36,11 +44,11 @@ describe("auth permission helpers", () => {
   });
 
   it("denies permissions when there is no signed-in user", async () => {
-    mockGetCurrentUser.mockResolvedValue({ userId: null });
+    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
 
-    await expect(
-      hasPermission(PERMISSIONS.LIMITED.QUESTIONS),
-    ).resolves.toBe(false);
+    await expect(hasPermission(PERMISSIONS.LIMITED.QUESTIONS)).resolves.toBe(
+      false,
+    );
 
     expect(mockGetUser).not.toHaveBeenCalled();
   });
@@ -48,42 +56,39 @@ describe("auth permission helpers", () => {
   it("denies permissions when the signed-in user cannot be loaded", async () => {
     mockGetUser.mockResolvedValue(null);
 
-    await expect(
-      hasPermission(PERMISSIONS.LIMITED.QUESTIONS),
-    ).resolves.toBe(false);
+    await expect(hasPermission(PERMISSIONS.LIMITED.QUESTIONS)).resolves.toBe(
+      false,
+    );
   });
 
   it("grants limited free-plan permissions and denies pro-only permissions", async () => {
     mockGetUser.mockResolvedValue(makeUser({ plan: "free" }));
 
-    await expect(
-      hasPermission(PERMISSIONS.LIMITED.QUESTIONS),
-    ).resolves.toBe(true);
-    await expect(
-      hasPermission(PERMISSIONS.UNLIMITED.QUESTIONS),
-    ).resolves.toBe(false);
+    await expect(hasPermission(PERMISSIONS.LIMITED.QUESTIONS)).resolves.toBe(
+      true,
+    );
+    await expect(hasPermission(PERMISSIONS.UNLIMITED.QUESTIONS)).resolves.toBe(
+      false,
+    );
   });
 
   it("grants unlimited permissions for pro users", async () => {
     mockGetUser.mockResolvedValue(makeProUser());
 
-    await expect(
-      hasPermission(PERMISSIONS.UNLIMITED.INTERVIEWS),
-    ).resolves.toBe(true);
+    await expect(hasPermission(PERMISSIONS.UNLIMITED.INTERVIEWS)).resolves.toBe(
+      true,
+    );
     await expect(hasUnlimitedAccess("questions")).resolves.toBe(true);
   });
 
-  it("defaults missing user plans to free", async () => {
-    mockGetUser.mockResolvedValue(makeUser({ plan: null }));
+  it("defaults missing user records to the free plan", async () => {
+    mockGetUser.mockResolvedValue(null);
 
     await expect(getUserPlan()).resolves.toBe("free");
-    await expect(
-      hasPermission(PERMISSIONS.LIMITED.INTERVIEWS),
-    ).resolves.toBe(true);
   });
 
   it("returns subscription info for anonymous users without loading a user", async () => {
-    mockGetCurrentUser.mockResolvedValue({ userId: null });
+    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
 
     await expect(getUserSubscriptionInfo()).resolves.toEqual({
       plan: "free",

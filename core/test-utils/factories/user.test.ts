@@ -1,5 +1,5 @@
 import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
-import { makeProUser, makeUser } from "./user";
+import { makeCurrentUser, makeProUser, makeUser } from "./user";
 
 describe("makeUser", () => {
   it("returns a user with default free-plan shape and unverified oauth-free defaults", () => {
@@ -75,5 +75,20 @@ describe("makeProUser", () => {
 
     expect(user.plan).toBe("free");
     expect(user.stripeCustomerId).toBeNull();
+  });
+});
+
+describe("makeCurrentUser", () => {
+  it("returns an authenticated current-user fixture by default", () => {
+    const currentUser = makeCurrentUser();
+
+    expect(currentUser.userId).toBe("user-1");
+    expect(currentUser.redirectToSignIn).toEqual(expect.any(Function));
+  });
+
+  it("accepts overrides for anonymous-user scenarios", () => {
+    const currentUser = makeCurrentUser({ userId: null });
+
+    expect(currentUser.userId).toBeNull();
   });
 });
