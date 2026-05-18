@@ -143,6 +143,54 @@ Move next into service-layer tests for `core/features/jobInfos/service.ts`,
 using the existing database mock helpers. Keep API routes and OAuth base-flow
 coverage as separate mock-heavy slices.
 
+### Service Layer Slice - 2026-05-18
+
+Files/tests added:
+
+- `core/features/jobInfos/service.test.ts`
+- `core/features/interviews/service.test.ts`
+- `core/features/questions/service.test.ts`
+- `core/features/jobInfos/serviceErrors.ts`
+- `core/features/interviews/serviceErrors.ts`
+- `core/test-utils/factories/jobInfo.ts`
+- `core/test-utils/factories/interview.ts`
+- `core/test-utils/factories/question.ts`
+
+Commands run:
+
+- `npm.cmd ci`
+- `npm.cmd test -- core/features/jobInfos/service.test.ts core/features/interviews/service.test.ts core/features/questions/service.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+
+Result:
+
+- Focused service slice passed: 3 test suites, 25 tests, 0 snapshots.
+- `npm.cmd test -- --runInBand` passed: 36 test suites, 210 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 36 test suites, 210
+  tests, 0 snapshots.
+- Updated coverage summary: 76.44% statements, 74.16% branches, 72.19%
+  functions, and 79.04% lines.
+
+Notes:
+
+- Service-layer tests cover auth delegation, ownership checks, permission and
+  not-found paths, DAL calls, and interview feedback generation behavior.
+- New factories use safe synthetic identifiers and do not include real customer
+  emails.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Move next into server action tests for `core/features/jobInfos/actions.ts`,
+`core/features/interviews/actions.ts`, `core/features/questions/actions.ts`, and
+`core/features/users/actions.ts`. Keep API route coverage as the following
+mock-heavy slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
