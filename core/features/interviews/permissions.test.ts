@@ -33,6 +33,8 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
+import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkInterviewPermission } from "./permissions";
 
@@ -40,10 +42,14 @@ const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetInterviewCountDb = jest.mocked(getInterviewCountDb);
 
+const SIGNED_IN_USER_ID = TEST_USER_ID;
+
 describe("checkInterviewPermission", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({ userId: "user-1" });
+    mockGetCurrentUser.mockResolvedValue(
+      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
+    );
     mockHasPermission.mockResolvedValue(false);
   });
 
@@ -73,7 +79,7 @@ describe("checkInterviewPermission", () => {
 
     await expect(checkInterviewPermission()).resolves.toBe(true);
 
-    expect(mockGetInterviewCountDb).toHaveBeenCalledWith("user-1");
+    expect(mockGetInterviewCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
   });
 
   it("denies limited users at the free interview limit", async () => {
@@ -82,5 +88,4 @@ describe("checkInterviewPermission", () => {
 
     await expect(checkInterviewPermission()).resolves.toBe(false);
   });
-
 });

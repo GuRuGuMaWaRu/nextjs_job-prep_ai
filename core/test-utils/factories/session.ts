@@ -2,7 +2,7 @@ import type { Session } from "@/core/features/auth/session";
 import {
   TEST_EXPIRED_AT_ISO,
   TEST_FIXTURE_NOW_ISO,
-} from "@core/test-utils/fixture-dates";
+} from "@/core/test-utils/constants";
 
 let sessionCounter = 0;
 

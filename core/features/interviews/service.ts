@@ -11,6 +11,7 @@ import {
   insertInterviewDal,
   updateInterviewDal,
 } from "@/core/features/interviews/dal";
+import { INTERVIEW_SERVICE_ERRORS } from "@/core/features/interviews/serviceErrors";
 import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
 
 /**
@@ -71,15 +72,11 @@ export async function updateInterviewService(
   const interview = await getInterviewByIdDal(id);
 
   if (!interview) {
-    throw new PermissionError(
-      "Interview not found or you don't have access to it"
-    );
+    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notFoundOrNoAccess);
   }
 
   if (interview.jobInfo.userId !== userId) {
-    throw new PermissionError(
-      "You don't have permission to update this interview"
-    );
+    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.updateForbidden);
   }
 
   return await updateInterviewDal(id, data);
@@ -96,13 +93,11 @@ export async function generateInterviewFeedbackService(interviewId: string) {
   const interview = await getInterviewByIdService(interviewId, userId);
 
   if (!interview) {
-    throw new PermissionError(
-      "Interview not found or you don't have access to it"
-    );
+    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notFoundOrNoAccess);
   }
 
   if (!interview.humeChatId) {
-    throw new PermissionError("Interview has not been completed yet");
+    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notCompleted);
   }
 
   // Generate feedback
@@ -113,7 +108,7 @@ export async function generateInterviewFeedbackService(interviewId: string) {
   });
 
   if (!feedback) {
-    throw new Error("Failed to generate feedback");
+    throw new Error(INTERVIEW_SERVICE_ERRORS.feedbackGenerationFailed);
   }
 
   // Update interview with feedback

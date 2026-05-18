@@ -33,6 +33,8 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getQuestionCountDb } from "@/core/features/questions/db";
+import { TEST_USER_ID } from "@/core/test-utils/constants";
+import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkQuestionsPermission } from "./permissions";
 
@@ -40,15 +42,19 @@ const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetQuestionCountDb = jest.mocked(getQuestionCountDb);
 
+const SIGNED_IN_USER_ID = TEST_USER_ID;
+
 describe("checkQuestionsPermission", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({ userId: "user-1" });
+    mockGetCurrentUser.mockResolvedValue(
+      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
+    );
     mockHasPermission.mockResolvedValue(false);
   });
 
   it("denies anonymous users without checking plan permissions", async () => {
-    mockGetCurrentUser.mockResolvedValue({ userId: null });
+    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
 
     await expect(checkQuestionsPermission()).resolves.toBe(false);
 
@@ -81,7 +87,7 @@ describe("checkQuestionsPermission", () => {
 
     await expect(checkQuestionsPermission()).resolves.toBe(true);
 
-    expect(mockGetQuestionCountDb).toHaveBeenCalledWith("user-1");
+    expect(mockGetQuestionCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
   });
 
   it("denies limited users at the free question limit", async () => {

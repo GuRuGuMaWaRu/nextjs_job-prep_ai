@@ -14,6 +14,7 @@ import {
   PermissionError,
   NotFoundError,
 } from "@/core/dal/helpers";
+import { JOB_INFO_SERVICE_ERRORS } from "@/core/features/jobInfos/serviceErrors";
 
 /**
  * Service Layer for JobInfo
@@ -57,15 +58,11 @@ export async function updateJobInfoService(
   const existingJobInfo = await getJobInfoDal(id, userId);
 
   if (!existingJobInfo) {
-    throw new NotFoundError(
-      "Job posting not found or you don't have permission to edit it."
-    );
+    throw new NotFoundError(JOB_INFO_SERVICE_ERRORS.notFoundOrNoEditPermission);
   }
 
   if (existingJobInfo.userId !== userId) {
-    throw new PermissionError(
-      "You don't have permission to edit this job posting."
-    );
+    throw new PermissionError(JOB_INFO_SERVICE_ERRORS.editForbidden);
   }
 
   const updated = await updateJobInfoDal(id, data);
@@ -112,9 +109,7 @@ export async function verifyJobInfoAccessService(jobInfoId: string) {
   const jobInfo = await getJobInfoDal(jobInfoId, userId);
 
   if (!jobInfo) {
-    throw new NotFoundError(
-      "Job posting not found or you don't have permission to access it."
-    );
+    throw new NotFoundError(JOB_INFO_SERVICE_ERRORS.notFoundOrNoAccess);
   }
 
   return { jobInfo, userId };
@@ -131,7 +126,7 @@ export async function removeJobInfoService(id: string) {
 
   if (!jobInfo) {
     throw new NotFoundError(
-      "Job posting not found or you don't have permission to delete it."
+      JOB_INFO_SERVICE_ERRORS.notFoundOrNoDeletePermission,
     );
   }
 

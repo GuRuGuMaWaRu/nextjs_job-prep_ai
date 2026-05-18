@@ -1,4 +1,4 @@
-import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
+import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/constants";
 import { makeExpiredSession, makeSession } from "./session";
 
 describe("makeSession", () => {

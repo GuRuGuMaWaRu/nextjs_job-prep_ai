@@ -16,7 +16,7 @@ import {
   createMockDrizzleTableQuery,
   type MockDrizzleDb,
 } from "@core/test-utils/mocks/db";
-import { TEST_FIXTURE_NOW_ISO } from "@core/test-utils/fixture-dates";
+import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/constants";
 import { makeSession } from "@core/test-utils/factories/session";
 import { makeUser } from "@core/test-utils/factories/user";
 
