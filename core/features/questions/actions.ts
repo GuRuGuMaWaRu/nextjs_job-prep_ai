@@ -18,7 +18,13 @@ import {
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionsAction(jobInfoId: string) {
-  return await getQuestionsService(jobInfoId);
+  try {
+    return await getQuestionsService(jobInfoId);
+  } catch (error) {
+    throw new Error(`Failed to get questions for job info "${jobInfoId}".`, {
+      cause: error,
+    });
+  }
 }
 
 /**
@@ -30,7 +36,14 @@ export async function insertQuestionAction(
   jobInfoId: string,
   difficulty: QuestionDifficulty,
 ) {
-  return await insertQuestionService(question, jobInfoId, difficulty);
+  try {
+    return await insertQuestionService(question, jobInfoId, difficulty);
+  } catch (error) {
+    throw new Error(
+      `Failed to insert question for job info "${jobInfoId}" with difficulty "${difficulty}".`,
+      { cause: error },
+    );
+  }
 }
 
 /**
@@ -38,5 +51,11 @@ export async function insertQuestionAction(
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionByIdAction(questionId: string) {
-  return await getQuestionByIdService(questionId);
+  try {
+    return await getQuestionByIdService(questionId);
+  } catch (error) {
+    throw new Error(`Failed to get question "${questionId}".`, {
+      cause: error,
+    });
+  }
 }
