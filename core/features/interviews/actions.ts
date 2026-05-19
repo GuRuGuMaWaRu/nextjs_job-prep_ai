@@ -176,7 +176,12 @@ export async function getInterviewByIdAction(id: string, userId: string) {
  * Used for UI permission checks
  */
 export async function canCreateInterviewAction(): Promise<boolean> {
-  return await checkInterviewPermission();
+  try {
+    return await checkInterviewPermission();
+  } catch (error) {
+    console.error("Error checking interview creation permission:", error);
+    return false;
+  }
 }
 
 /**

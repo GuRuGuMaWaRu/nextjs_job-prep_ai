@@ -412,6 +412,17 @@ describe("interview actions", () => {
     expect(mockCheckInterviewPermission).toHaveBeenCalledWith();
   });
 
+  it("returns false when interview creation permission checks fail", async () => {
+    mockCheckInterviewPermission.mockRejectedValue(new Error("permission"));
+
+    await expect(canCreateInterviewAction()).resolves.toBe(false);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking interview creation permission:",
+      expect.any(Error),
+    );
+  });
+
   it("gets one interview by id through the service", async () => {
     const interview = makeInterview();
     mockGetInterviewByIdService.mockResolvedValue(interview);
