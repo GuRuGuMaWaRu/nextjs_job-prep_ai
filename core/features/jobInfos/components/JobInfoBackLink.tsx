@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { BackLink } from "@/core/components/BackLink";
-import { getJobInfoById } from "@/core/features/jobInfos/actions";
+import { getJobInfoByIdAction } from "@/core/features/jobInfos/actions";
 import { routes } from "@/core/data/routes";
 
 export function JobInfoBackLink({ jobInfoId }: { jobInfoId: string }) {
@@ -15,7 +15,7 @@ export function JobInfoBackLink({ jobInfoId }: { jobInfoId: string }) {
 }
 
 async function JobInfoName({ jobInfoId }: { jobInfoId: string }) {
-  const jobInfo = await getJobInfoById(jobInfoId);
+  const jobInfo = await getJobInfoByIdAction(jobInfoId);
 
   return jobInfo?.name
     ? `Back to "${jobInfo.name}"`

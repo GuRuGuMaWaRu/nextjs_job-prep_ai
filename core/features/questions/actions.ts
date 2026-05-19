@@ -17,7 +17,7 @@ import {
  * Get all questions for a job info
  * Used in pages - errors bubble up to error boundary
  */
-export async function getQuestions(jobInfoId: string) {
+export async function getQuestionsAction(jobInfoId: string) {
   return await getQuestionsService(jobInfoId);
 }
 
@@ -25,10 +25,10 @@ export async function getQuestions(jobInfoId: string) {
  * Insert a new question
  * Used from AI generation - errors bubble up to caller
  */
-export async function insertQuestion(
+export async function insertQuestionAction(
   question: string,
   jobInfoId: string,
-  difficulty: QuestionDifficulty
+  difficulty: QuestionDifficulty,
 ) {
   return await insertQuestionService(question, jobInfoId, difficulty);
 }
@@ -37,6 +37,6 @@ export async function insertQuestion(
  * Get a single question by ID
  * Used in pages - errors bubble up to error boundary
  */
-export async function getQuestionById(questionId: string) {
+export async function getQuestionByIdAction(questionId: string) {
   return await getQuestionByIdService(questionId);
 }

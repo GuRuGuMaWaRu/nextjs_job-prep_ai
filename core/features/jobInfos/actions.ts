@@ -139,7 +139,7 @@ export async function updateJobInfoAction(
  * Get a job info by ID
  * Used in pages to fetch data - throws on error for error boundary to catch
  */
-export async function getJobInfo(id: string) {
+export async function getJobInfoAction(id: string) {
   return await getJobInfoService(id);
 }
 
@@ -147,7 +147,7 @@ export async function getJobInfo(id: string) {
  * Get a job info by ID without ownership check
  * Used when ownership verification happens elsewhere
  */
-export async function getJobInfoById(id: string) {
+export async function getJobInfoByIdAction(id: string) {
   return await getJobInfoByIdService(id);
 }
 
@@ -155,7 +155,7 @@ export async function getJobInfoById(id: string) {
  * Get all job infos for current user
  * Used in pages to fetch list - throws on error for error boundary to catch
  */
-export async function getJobInfos() {
+export async function getJobInfosAction() {
   return await getJobInfosService();
 }
 

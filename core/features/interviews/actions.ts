@@ -3,8 +3,8 @@
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/server";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
@@ -50,7 +50,7 @@ export async function createInterviewAction({
 }: {
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
   if (userId == null) {
     return {
       success: false,
@@ -81,7 +81,7 @@ export async function createInterviewAction({
 
   try {
     // Verify job info exists and user has access
-    const jobInfo = await getJobInfo(jobInfoId);
+    const jobInfo = await getJobInfoAction(jobInfoId);
     if (jobInfo == null) {
       return {
         success: false,
@@ -167,7 +167,7 @@ export async function updateInterviewAction(
  * Get interview by ID
  * Used in pages - errors bubble up to error boundary
  */
-export async function getInterviewById(id: string, userId: string) {
+export async function getInterviewByIdAction(id: string, userId: string) {
   return await getInterviewByIdService(id, userId);
 }
 
@@ -175,7 +175,7 @@ export async function getInterviewById(id: string, userId: string) {
  * Check if user can create an interview
  * Used for UI permission checks
  */
-export async function canCreateInterview(): Promise<boolean> {
+export async function canCreateInterviewAction(): Promise<boolean> {
   return await checkInterviewPermission();
 }
 
@@ -183,7 +183,7 @@ export async function canCreateInterview(): Promise<boolean> {
  * Get all interviews for a job info
  * Used in pages - errors bubble up to error boundary
  */
-export async function getInterviews(jobInfoId: string, userId: string) {
+export async function getInterviewsAction(jobInfoId: string, userId: string) {
   return await getInterviewsService(jobInfoId, userId);
 }
 

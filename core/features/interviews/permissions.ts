@@ -1,5 +1,5 @@
 import { getInterviewCountDb } from "@/core/features/interviews/db";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
   hasPermission,
   FREE_PLAN_LIMITS,
@@ -33,7 +33,7 @@ export async function checkInterviewPermission(): Promise<boolean> {
 }
 
 async function getInterviewCount() {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
   if (userId == null) {
     return 0;
   }

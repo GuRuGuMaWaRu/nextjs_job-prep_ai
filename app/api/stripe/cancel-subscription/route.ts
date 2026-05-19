@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentUserWithProfile } from "@/core/features/auth/actions";
+import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -16,7 +16,7 @@ import { routes } from "@/core/data/routes";
  * subscription ends.
  */
 export async function POST(request: Request) {
-  const { userId, user } = await getCurrentUserWithProfile();
+  const { userId, user } = await getCurrentUserWithProfileAction();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers

@@ -2,10 +2,10 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { routes } from "@/core/data/routes";
 
 import { NewQuestionClientPage } from "./_NewQuestionClientPage";
@@ -28,13 +28,13 @@ export default async function QuestionsPage({
 }
 
 async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
-  const { userId, redirectToSignIn } = await getCurrentUser();
+  const { userId, redirectToSignIn } = await getCurrentUserAction();
   if (userId == null) return redirectToSignIn();
 
   if (!(await checkQuestionsPermission())) redirect(routes.upgrade);
 
-  // getJobInfo now handles auth internally and throws on error
-  const jobInfo = await getJobInfo(jobInfoId);
+  // getJobInfoAction handles auth internally and throws on error
+  const jobInfo = await getJobInfoAction(jobInfoId);
   if (jobInfo == null) return notFound();
 
   return <NewQuestionClientPage jobInfo={jobInfo} />;

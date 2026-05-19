@@ -1,5 +1,5 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
-import { getUser } from "@/core/features/users/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getUserAction } from "@/core/features/users/actions";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 
 /**
@@ -63,13 +63,13 @@ export const FREE_PLAN_LIMITS = {
  * @returns true if user has the permission, false otherwise
  */
 export async function hasPermission(permission: Permission): Promise<boolean> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (!userId) {
     return false;
   }
 
-  const user = await getUser(userId);
+  const user = await getUserAction(userId);
 
   if (!user) {
     return false;
@@ -86,13 +86,13 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
  * @returns The user's plan or "free" if not found
  */
 export async function getUserPlan(): Promise<UserPlan> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (!userId) {
     return "free";
   }
 
-  const user = await getUser(userId);
+  const user = await getUserAction(userId);
 
   return (user?.plan as UserPlan) || "free";
 }
@@ -108,13 +108,13 @@ export type SubscriptionInfo = {
  * for users whose subscription is in a non-terminal but non-active state.
  */
 export async function getUserSubscriptionInfo(): Promise<SubscriptionInfo> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (!userId) {
     return { plan: "free", hasExistingSubscription: false };
   }
 
-  const user = await getUser(userId);
+  const user = await getUserAction(userId);
 
   return {
     plan: (user?.plan as UserPlan) || "free",

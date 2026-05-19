@@ -1,12 +1,12 @@
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentUserAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/users/actions", () => ({
-  getUser: jest.fn(),
+  getUserAction: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
   FREE_PLAN_LIMITS,
   getUserPlan,
@@ -15,7 +15,7 @@ import {
   hasUnlimitedAccess,
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
-import { getUser } from "@/core/features/users/actions";
+import { getUserAction } from "@/core/features/users/actions";
 import {
   makeCurrentUser,
   makeProUser,
@@ -23,8 +23,8 @@ import {
 } from "@/core/test-utils/factories/user";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
-const mockGetUser = jest.mocked(getUser);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
+const mockGetUserAction = jest.mocked(getUserAction);
 
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 
@@ -51,11 +51,11 @@ describe("auth permission helpers", () => {
       false,
     );
 
-    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(mockGetUserAction).not.toHaveBeenCalled();
   });
 
   it("denies permissions when the signed-in user cannot be loaded", async () => {
-    mockGetUser.mockResolvedValue(null);
+    mockGetUserAction.mockResolvedValue(null);
 
     await expect(hasPermission(PERMISSIONS.LIMITED.QUESTIONS)).resolves.toBe(
       false,
@@ -63,7 +63,7 @@ describe("auth permission helpers", () => {
   });
 
   it("grants limited free-plan permissions and denies pro-only permissions", async () => {
-    mockGetUser.mockResolvedValue(makeUser({ plan: "free" }));
+    mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
 
     await expect(hasPermission(PERMISSIONS.LIMITED.QUESTIONS)).resolves.toBe(
       true,
@@ -74,7 +74,7 @@ describe("auth permission helpers", () => {
   });
 
   it("grants unlimited permissions for pro users", async () => {
-    mockGetUser.mockResolvedValue(makeProUser());
+    mockGetUserAction.mockResolvedValue(makeProUser());
 
     await expect(hasPermission(PERMISSIONS.UNLIMITED.INTERVIEWS)).resolves.toBe(
       true,
@@ -83,7 +83,7 @@ describe("auth permission helpers", () => {
   });
 
   it("defaults missing user records to the free plan", async () => {
-    mockGetUser.mockResolvedValue(null);
+    mockGetUserAction.mockResolvedValue(null);
 
     await expect(getUserPlan()).resolves.toBe("free");
   });
@@ -95,11 +95,11 @@ describe("auth permission helpers", () => {
       plan: "free",
       hasExistingSubscription: false,
     });
-    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(mockGetUserAction).not.toHaveBeenCalled();
   });
 
   it("reports the current plan and whether a Stripe subscription exists", async () => {
-    mockGetUser.mockResolvedValue(
+    mockGetUserAction.mockResolvedValue(
       makeProUser({ stripeSubscriptionId: "sub_test_1" }),
     );
 

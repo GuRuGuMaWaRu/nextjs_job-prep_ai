@@ -3,7 +3,7 @@ import {
   FREE_PLAN_LIMITS,
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 
 /**
@@ -12,7 +12,7 @@ import { getQuestionCountDb } from "@/core/features/questions/db";
  * - Free users: up to FREE_PLAN_LIMITS.questions
  */
 export async function checkQuestionsPermission(): Promise<boolean> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (!userId) {
     return false;
@@ -39,7 +39,7 @@ export async function checkQuestionsPermission(): Promise<boolean> {
 }
 
 async function getQuestionCount() {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
   if (userId == null) {
     return 0;
   }

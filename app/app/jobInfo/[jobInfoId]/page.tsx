@@ -11,11 +11,11 @@ import {
   CardTitle,
 } from "@/core/components/ui/card";
 import { BackLink } from "@/core/components/BackLink";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { routes } from "@/core/data/routes";
 import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 
@@ -53,11 +53,11 @@ export default async function JobInfoPage({
 
   assertUUIDor404(jobInfoId);
 
-  const jobInfo = getCurrentUser().then(
+  const jobInfo = getCurrentUserAction().then(
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      const jobInfo = await getJobInfo(jobInfoId);
+      const jobInfo = await getJobInfoAction(jobInfoId);
       if (jobInfo == null) return notFound();
 
       return jobInfo;

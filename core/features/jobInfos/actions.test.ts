@@ -8,8 +8,8 @@ jest.mock("@/core/features/jobInfos/service", () => ({
 }));
 
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
-  getCurrentUserWithProfile: jest.fn(),
+  getCurrentUserAction: jest.fn(),
+  getCurrentUserWithProfileAction: jest.fn(),
 }));
 
 import {
@@ -20,9 +20,9 @@ import {
 } from "@/core/dal/helpers";
 import {
   createJobInfoAction,
-  getJobInfo,
-  getJobInfoById,
-  getJobInfos,
+  getJobInfoAction,
+  getJobInfoByIdAction,
+  getJobInfosAction,
   removeJobInfoAction,
   updateJobInfoAction,
 } from "@/core/features/jobInfos/actions";
@@ -212,7 +212,7 @@ describe("job info actions", () => {
     const jobInfo = makeJobInfo();
     mockGetJobInfoService.mockResolvedValue(jobInfo);
 
-    await expect(getJobInfo(jobInfo.id)).resolves.toBe(jobInfo);
+    await expect(getJobInfoAction(jobInfo.id)).resolves.toBe(jobInfo);
 
     expect(mockGetJobInfoService).toHaveBeenCalledWith(jobInfo.id);
   });
@@ -221,7 +221,7 @@ describe("job info actions", () => {
     const jobInfo = makeJobInfo();
     mockGetJobInfoByIdService.mockResolvedValue(jobInfo);
 
-    await expect(getJobInfoById(jobInfo.id)).resolves.toBe(jobInfo);
+    await expect(getJobInfoByIdAction(jobInfo.id)).resolves.toBe(jobInfo);
 
     expect(mockGetJobInfoByIdService).toHaveBeenCalledWith(jobInfo.id);
   });
@@ -230,7 +230,7 @@ describe("job info actions", () => {
     const jobInfos = [makeJobInfo()];
     mockGetJobInfosService.mockResolvedValue(jobInfos);
 
-    await expect(getJobInfos()).resolves.toBe(jobInfos);
+    await expect(getJobInfosAction()).resolves.toBe(jobInfos);
 
     expect(mockGetJobInfosService).toHaveBeenCalledWith();
   });

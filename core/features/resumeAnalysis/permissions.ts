@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PERMISSIONS, hasPermission } from "@/core/features/auth/permissions";
 
 /**
@@ -7,7 +7,7 @@ import { PERMISSIONS, hasPermission } from "@/core/features/auth/permissions";
  * - Free users: unlimited
  */
 export async function checkResumeAnalysisPermission(): Promise<boolean> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (!userId) {
     return false;

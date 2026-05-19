@@ -16,9 +16,9 @@ import { Skeleton, SkeletonButton } from "@/core/components/Skeleton";
 import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
 import {
   generateInterviewFeedbackAction,
-  getInterviewById,
+  getInterviewByIdAction,
 } from "@/core/features/interviews/actions";
-import { getCurrentUserWithProfile } from "@/core/features/auth/actions";
+import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
@@ -42,11 +42,11 @@ export default async function InterviewPage({
     return <InterviewNotFound jobInfoId={jobInfoId} />;
   }
 
-  const interview = getCurrentUserWithProfile().then(
+  const interview = getCurrentUserWithProfileAction().then(
     async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
-      const interview = await getInterviewById(interviewId, userId);
+      const interview = await getInterviewByIdAction(interviewId, userId);
       if (interview == null) return notFound();
 
       return interview;
@@ -115,7 +115,7 @@ async function SuspendedMessages({
 }: {
   interview: Promise<{ humeChatId: string | null }>;
 }) {
-  const { user, redirectToSignIn } = await getCurrentUserWithProfile();
+  const { user, redirectToSignIn } = await getCurrentUserWithProfileAction();
   if (user == null) return redirectToSignIn();
   const { humeChatId } = await interview;
   if (humeChatId == null) return notFound();

@@ -14,7 +14,7 @@ jest.mock("@/core/data/env/server", () => ({
 }));
 
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentUserAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/interviews/permissions", () => ({
@@ -22,7 +22,7 @@ jest.mock("@/core/features/interviews/permissions", () => ({
 }));
 
 jest.mock("@/core/features/jobInfos/actions", () => ({
-  getJobInfo: jest.fn(),
+  getJobInfoAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/interviews/service", () => ({
@@ -39,14 +39,14 @@ import {
   UnauthorizedError,
 } from "@/core/dal/helpers";
 import arcjet, { request } from "@arcjet/next";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
 import {
-  canCreateInterview,
+  canCreateInterviewAction,
   createInterviewAction,
   generateInterviewFeedbackAction,
-  getInterviewById,
-  getInterviews,
+  getInterviewByIdAction,
+  getInterviewsAction,
   updateInterviewAction,
 } from "@/core/features/interviews/actions";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
@@ -57,7 +57,7 @@ import {
   getInterviewsService,
   updateInterviewService,
 } from "@/core/features/interviews/service";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
@@ -68,9 +68,9 @@ const mockProtect = jest.mocked(
   mockArcjet.mock.results[0].value.protect as jest.Mock,
 );
 const mockRequest = jest.mocked(request);
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockCheckInterviewPermission = jest.mocked(checkInterviewPermission);
-const mockGetJobInfo = jest.mocked(getJobInfo);
+const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockCreateInterviewService = jest.mocked(createInterviewService);
 const mockUpdateInterviewService = jest.mocked(updateInterviewService);
 const mockGetInterviewByIdService = jest.mocked(getInterviewByIdService);
@@ -127,7 +127,7 @@ describe("interview actions", () => {
       });
 
       expect(mockProtect).not.toHaveBeenCalled();
-      expect(mockGetJobInfo).not.toHaveBeenCalled();
+      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
       expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
 
@@ -146,12 +146,14 @@ describe("interview actions", () => {
         userId: TEST_USER_ID,
         requested: 1,
       });
-      expect(mockGetJobInfo).not.toHaveBeenCalled();
+      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
       expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
 
     it("returns an access message when the job info is inaccessible", async () => {
-      mockGetJobInfo.mockResolvedValue(null);
+      mockGetJobInfoAction.mockResolvedValue(
+        null as unknown as Awaited<ReturnType<typeof getJobInfoAction>>,
+      );
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
@@ -160,14 +162,14 @@ describe("interview actions", () => {
         message: INTERVIEW_ACTION_MESSAGES.createJobInfoNotFound,
       });
 
-      expect(mockGetJobInfo).toHaveBeenCalledWith("job-info-1");
+      expect(mockGetJobInfoAction).toHaveBeenCalledWith("job-info-1");
       expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
 
     it("returns the created interview id when creation succeeds", async () => {
       const jobInfo = makeJobInfo({ id: "job-info-1" });
       const interview = makeInterview({ jobInfo, jobInfoId: jobInfo.id });
-      mockGetJobInfo.mockResolvedValue(jobInfo);
+      mockGetJobInfoAction.mockResolvedValue(jobInfo);
       mockCreateInterviewService.mockResolvedValue(interview);
 
       await expect(
@@ -182,7 +184,7 @@ describe("interview actions", () => {
     });
 
     it("maps unauthorized errors to a login message", async () => {
-      mockGetJobInfo.mockResolvedValue(makeJobInfo());
+      mockGetJobInfoAction.mockResolvedValue(makeJobInfo());
       mockCreateInterviewService.mockRejectedValue(new UnauthorizedError());
 
       await expect(
@@ -194,7 +196,7 @@ describe("interview actions", () => {
     });
 
     it("maps database errors to a retry message", async () => {
-      mockGetJobInfo.mockResolvedValue(makeJobInfo());
+      mockGetJobInfoAction.mockResolvedValue(makeJobInfo());
       mockCreateInterviewService.mockRejectedValue(
         new DatabaseError("insert failed"),
       );
@@ -208,7 +210,7 @@ describe("interview actions", () => {
     });
 
     it("maps unexpected errors to the generic retry message", async () => {
-      mockGetJobInfo.mockResolvedValue(makeJobInfo());
+      mockGetJobInfoAction.mockResolvedValue(makeJobInfo());
       mockCreateInterviewService.mockRejectedValue(new Error("boom"));
 
       await expect(
@@ -360,7 +362,7 @@ describe("interview actions", () => {
   it("checks interview creation permission through the permission helper", async () => {
     mockCheckInterviewPermission.mockResolvedValue(false);
 
-    await expect(canCreateInterview()).resolves.toBe(false);
+    await expect(canCreateInterviewAction()).resolves.toBe(false);
 
     expect(mockCheckInterviewPermission).toHaveBeenCalledWith();
   });
@@ -369,9 +371,9 @@ describe("interview actions", () => {
     const interview = makeInterview();
     mockGetInterviewByIdService.mockResolvedValue(interview);
 
-    await expect(getInterviewById(interview.id, TEST_USER_ID)).resolves.toBe(
-      interview,
-    );
+    await expect(
+      getInterviewByIdAction(interview.id, TEST_USER_ID),
+    ).resolves.toBe(interview);
 
     expect(mockGetInterviewByIdService).toHaveBeenCalledWith(
       interview.id,
@@ -383,7 +385,7 @@ describe("interview actions", () => {
     const interviews = [makeInterview()];
     mockGetInterviewsService.mockResolvedValue(interviews);
 
-    await expect(getInterviews("job-info-1", TEST_USER_ID)).resolves.toBe(
+    await expect(getInterviewsAction("job-info-1", TEST_USER_ID)).resolves.toBe(
       interviews,
     );
 

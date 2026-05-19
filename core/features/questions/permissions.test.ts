@@ -1,5 +1,5 @@
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentUserAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/auth/permissions", () => ({
@@ -26,7 +26,7 @@ jest.mock("@/core/features/questions/db", () => ({
   getQuestionCountDb: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
   FREE_PLAN_LIMITS,
   hasPermission,
@@ -38,7 +38,7 @@ import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkQuestionsPermission } from "./permissions";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetQuestionCountDb = jest.mocked(getQuestionCountDb);
 

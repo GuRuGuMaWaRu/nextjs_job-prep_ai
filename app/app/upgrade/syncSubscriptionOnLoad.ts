@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getUserByIdDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
 import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
@@ -8,7 +8,7 @@ import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
  * Upgrade page (lazy reconciliation if webhooks were missed).
  *
  * Uses a direct DB read to detect `stripeSubscriptionId` so a stale cached
- * `getUser` result cannot skip a needed sync. Errors are swallowed so the page
+ * `getUserAction` result cannot skip a needed sync. Errors are swallowed so the page
  * still renders; Stage 1 cron remains a backstop.
  */
 export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
@@ -21,7 +21,7 @@ export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
     return;
   }
 
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
   if (!userId) {
     return;
   }
