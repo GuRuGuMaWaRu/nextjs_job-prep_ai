@@ -30,12 +30,19 @@ const mockHasPermission = jest.mocked(hasPermission);
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkResumeAnalysisPermission", () => {
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
     mockGetCurrentUser.mockResolvedValue(
       makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
     );
     mockHasPermission.mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it("denies anonymous users without checking plan permissions", async () => {
@@ -51,6 +58,17 @@ describe("checkResumeAnalysisPermission", () => {
 
     expect(mockHasPermission).toHaveBeenCalledWith(
       PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
+    );
+  });
+
+  it("returns false when the permission check throws", async () => {
+    mockHasPermission.mockRejectedValue(new Error("permission failed"));
+
+    await expect(checkResumeAnalysisPermission()).resolves.toBe(false);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking resume analysis permission:",
+      expect.any(Error),
     );
   });
 });
