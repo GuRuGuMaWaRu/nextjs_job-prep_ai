@@ -1,6 +1,6 @@
 import { cacheTag } from "next/cache";
 
-import { DatabaseError } from "@/core/dal/helpers";
+import { DatabaseError } from "@/core/dal/errors";
 import {
   getQuestionByIdDb,
   getQuestionsDb,

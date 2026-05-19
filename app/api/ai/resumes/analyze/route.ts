@@ -6,7 +6,7 @@ import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schema
 import {
   PLAN_LIMIT_MESSAGE,
 } from "@/core/lib/errorToast";
-import { NotFoundError, PermissionError } from "@/core/dal/helpers";
+import { NotFoundError, PermissionError } from "@/core/dal/errors";
 
 export async function POST(req: Request) {
   const { userId } = await getCurrentUserAction();

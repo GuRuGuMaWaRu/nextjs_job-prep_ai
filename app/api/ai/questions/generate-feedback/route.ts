@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
-import { UnauthorizedError, DatabaseError } from "@/core/dal/helpers";
+import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
 
 const schema = z.object({
   prompt: z.string().min(1),

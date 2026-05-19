@@ -12,11 +12,11 @@ import {
   insertQuestionAction,
 } from "@/core/features/questions/actions";
 import {
+  DatabaseError,
   NotFoundError,
   PermissionError,
   UnauthorizedError,
-  DatabaseError,
-} from "@/core/dal/helpers";
+} from "@/core/dal/errors";
 
 const schema = z.object({
   prompt: z.enum(questionDifficulties),

@@ -10,13 +10,13 @@ import {
   removeJobInfoService,
 } from "@/core/features/jobInfos/service";
 import { JOB_INFO_ACTION_MESSAGES } from "@/core/features/jobInfos/actionMessages";
+import { ActionResult } from "@/core/dal/helpers";
 import {
-  UnauthorizedError,
+  DatabaseError,
   NotFoundError,
   PermissionError,
-  DatabaseError,
-  ActionResult,
-} from "@/core/dal/helpers";
+  UnauthorizedError,
+} from "@/core/dal/errors";
 
 /**
  * Action Layer for JobInfo

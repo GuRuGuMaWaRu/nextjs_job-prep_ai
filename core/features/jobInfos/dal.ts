@@ -12,7 +12,8 @@ import {
   getJobInfoIdTag,
   getJobInfoGlobalTag,
 } from "@/core/features/jobInfos/dbCache";
-import { ActionResult, DatabaseError } from "@/core/dal/helpers";
+import { DatabaseError } from "@/core/dal/errors";
+import { ActionResult } from "@/core/dal/helpers";
 import { JobInfoTable } from "@/core/drizzle/schema";
 
 /**

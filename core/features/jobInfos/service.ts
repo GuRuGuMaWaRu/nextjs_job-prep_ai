@@ -10,10 +10,10 @@ import {
   removeJobInfoDal,
 } from "@/core/features/jobInfos/dal";
 import {
-  requireUser,
-  PermissionError,
   NotFoundError,
-} from "@/core/dal/helpers";
+  PermissionError,
+} from "@/core/dal/errors";
+import { requireUser } from "@/core/dal/helpers";
 import { JOB_INFO_SERVICE_ERRORS } from "@/core/features/jobInfos/serviceErrors";
 
 /**
