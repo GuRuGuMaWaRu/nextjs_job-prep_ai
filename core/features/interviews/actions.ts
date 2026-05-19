@@ -58,28 +58,28 @@ export async function createInterviewAction({
     };
   }
 
-  // Check permissions
-  const permitted = await checkInterviewPermission();
-  if (!permitted) {
-    return {
-      success: false,
-      message: PLAN_LIMIT_MESSAGE,
-    };
-  }
-
-  // Check rate limit
-  const decision = await aj.protect(await request(), {
-    userId,
-    requested: 1,
-  });
-  if (decision.isDenied()) {
-    return {
-      success: false,
-      message: RATE_LIMIT_MESSAGE,
-    };
-  }
-
   try {
+    // Check permissions
+    const permitted = await checkInterviewPermission();
+    if (!permitted) {
+      return {
+        success: false,
+        message: PLAN_LIMIT_MESSAGE,
+      };
+    }
+
+    // Check rate limit
+    const decision = await aj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+    if (decision.isDenied()) {
+      return {
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
+      };
+    }
+
     // Verify job info exists and user has access
     const jobInfo = await getJobInfoAction(jobInfoId);
     if (jobInfo == null) {

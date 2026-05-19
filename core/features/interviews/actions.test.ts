@@ -131,6 +131,21 @@ describe("interview actions", () => {
       expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
 
+    it("maps permission check failures to the generic retry message", async () => {
+      mockCheckInterviewPermission.mockRejectedValue(new Error("permission"));
+
+      await expect(
+        createInterviewAction({ jobInfoId: "job-info-1" }),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+      });
+
+      expect(mockProtect).not.toHaveBeenCalled();
+      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+      expect(mockCreateInterviewService).not.toHaveBeenCalled();
+    });
+
     it("returns the rate limit message when Arcjet denies the request", async () => {
       mockProtect.mockResolvedValue(denyDecision);
 
@@ -146,6 +161,36 @@ describe("interview actions", () => {
         userId: TEST_USER_ID,
         requested: 1,
       });
+      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+      expect(mockCreateInterviewService).not.toHaveBeenCalled();
+    });
+
+    it("maps request failures to the generic retry message", async () => {
+      mockRequest.mockRejectedValue(new Error("request failed"));
+
+      await expect(
+        createInterviewAction({ jobInfoId: "job-info-1" }),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+      });
+
+      expect(mockProtect).not.toHaveBeenCalled();
+      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+      expect(mockCreateInterviewService).not.toHaveBeenCalled();
+    });
+
+    it("maps Arcjet protection failures to the generic retry message", async () => {
+      mockProtect.mockRejectedValue(new Error("arcjet failed"));
+
+      await expect(
+        createInterviewAction({ jobInfoId: "job-info-1" }),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+      });
+
+      expect(mockRequest).toHaveBeenCalledWith();
       expect(mockGetJobInfoAction).not.toHaveBeenCalled();
       expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
