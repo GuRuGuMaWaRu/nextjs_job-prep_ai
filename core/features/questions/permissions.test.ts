@@ -87,6 +87,7 @@ describe("checkQuestionsPermission", () => {
 
     await expect(checkQuestionsPermission()).resolves.toBe(true);
 
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     expect(mockGetQuestionCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
   });
 
@@ -95,5 +96,7 @@ describe("checkQuestionsPermission", () => {
     mockGetQuestionCountDb.mockResolvedValue(FREE_PLAN_LIMITS.questions);
 
     await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 });

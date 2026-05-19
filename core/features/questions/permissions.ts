@@ -33,15 +33,15 @@ export async function checkQuestionsPermission(): Promise<boolean> {
   }
 
   // Check if user hasn't exceeded free plan limit
-  const questionCount = await getQuestionCount();
+  const questionCount = await getQuestionCount(userId);
 
   return questionCount < FREE_PLAN_LIMITS.questions;
 }
 
-async function getQuestionCount() {
-  const { userId } = await getCurrentUserAction();
+async function getQuestionCount(userId: string | null) {
   if (userId == null) {
     return 0;
   }
+
   return getQuestionCountDb(userId);
 }
