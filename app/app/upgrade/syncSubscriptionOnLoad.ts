@@ -12,26 +12,26 @@ import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
  * still renders; Stage 1 cron remains a backstop.
  */
 export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
-  if (!isStripeConfigured()) {
-    return;
-  }
-
-  const stripe = getStripe();
-  if (!stripe) {
-    return;
-  }
-
-  const { userId } = await getCurrentUserAction();
-  if (!userId) {
-    return;
-  }
-
-  const user = await getUserByIdDb(userId);
-  if (!user?.stripeSubscriptionId) {
-    return;
-  }
-
   try {
+    if (!isStripeConfigured()) {
+      return;
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+      return;
+    }
+
+    const { userId } = await getCurrentUserAction();
+    if (!userId) {
+      return;
+    }
+
+    const user = await getUserByIdDb(userId);
+    if (!user?.stripeSubscriptionId) {
+      return;
+    }
+
     await reconcileUserStripeSubscription(stripe, userId);
   } catch (error) {
     console.error("Error syncing subscription:", error);
