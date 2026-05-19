@@ -1,4 +1,4 @@
-import { cacheTag } from "next/dist/server/use-cache/cache-tag";
+import { cacheTag } from "next/cache";
 
 import { DatabaseError } from "@/core/dal/helpers";
 import type { AuthUser } from "@/core/features/auth/types";
