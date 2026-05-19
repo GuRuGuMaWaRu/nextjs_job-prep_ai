@@ -45,12 +45,19 @@ const mockGetQuestionCountDb = jest.mocked(getQuestionCountDb);
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkQuestionsPermission", () => {
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
     mockGetCurrentUser.mockResolvedValue(
       makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
     );
     mockHasPermission.mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it("denies anonymous users without checking plan permissions", async () => {
@@ -98,5 +105,42 @@ describe("checkQuestionsPermission", () => {
     await expect(checkQuestionsPermission()).resolves.toBe(false);
 
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns false when the current user lookup throws", async () => {
+    mockGetCurrentUser.mockRejectedValue(new Error("session failed"));
+
+    await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(mockHasPermission).not.toHaveBeenCalled();
+    expect(mockGetQuestionCountDb).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking question permission:",
+      expect.any(Error),
+    );
+  });
+
+  it("returns false when the plan permission check throws", async () => {
+    mockHasPermission.mockRejectedValue(new Error("permission failed"));
+
+    await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(mockGetQuestionCountDb).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking question permission:",
+      expect.any(Error),
+    );
+  });
+
+  it("returns false when the question count lookup throws", async () => {
+    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockGetQuestionCountDb.mockRejectedValue(new Error("count failed"));
+
+    await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking question permission:",
+      expect.any(Error),
+    );
   });
 });
