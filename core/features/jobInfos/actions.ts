@@ -9,6 +9,7 @@ import {
   getJobInfosService,
   removeJobInfoService,
 } from "@/core/features/jobInfos/service";
+import { JOB_INFO_ACTION_MESSAGES } from "@/core/features/jobInfos/actionMessages";
 import {
   UnauthorizedError,
   NotFoundError,
@@ -28,14 +29,14 @@ import {
  * Server action called from form submissions
  */
 export async function createJobInfoAction(
-  unsafeData: unknown
+  unsafeData: unknown,
 ): Promise<ActionResult<{ id: string }>> {
   // 1. Validate input (Action's responsibility)
   const validation = jobInfoSchema.safeParse(unsafeData);
   if (!validation.success) {
     return {
       success: false,
-      message: "Invalid job information. Please check all required fields.",
+      message: JOB_INFO_ACTION_MESSAGES.invalidInput,
     };
   }
 
@@ -55,20 +56,20 @@ export async function createJobInfoAction(
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: "You must be logged in to create a job posting.",
+        message: JOB_INFO_ACTION_MESSAGES.createUnauthorized,
       };
     }
 
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: "Failed to save job posting. Please try again.",
+        message: JOB_INFO_ACTION_MESSAGES.createDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: "An unexpected error occurred. Please try again.",
+      message: JOB_INFO_ACTION_MESSAGES.unexpectedError,
     };
   }
 }
@@ -79,13 +80,13 @@ export async function createJobInfoAction(
  */
 export async function updateJobInfoAction(
   id: string,
-  unsafeData: unknown
+  unsafeData: unknown,
 ): Promise<ActionResult<{ id: string }>> {
   const validation = jobInfoSchema.safeParse(unsafeData);
   if (!validation.success) {
     return {
       success: false,
-      message: "Invalid job information. Please check all required fields.",
+      message: JOB_INFO_ACTION_MESSAGES.invalidInput,
     };
   }
 
@@ -102,14 +103,14 @@ export async function updateJobInfoAction(
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: "You must be logged in to update this job posting.",
+        message: JOB_INFO_ACTION_MESSAGES.updateUnauthorized,
       };
     }
 
     if (error instanceof NotFoundError) {
       return {
         success: false,
-        message: "Job posting not found or you don't have access to it.",
+        message: JOB_INFO_ACTION_MESSAGES.updateNotFound,
       };
     }
 
@@ -123,13 +124,13 @@ export async function updateJobInfoAction(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: "Failed to update job posting. Please try again.",
+        message: JOB_INFO_ACTION_MESSAGES.updateDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: "An unexpected error occurred. Please try again.",
+      message: JOB_INFO_ACTION_MESSAGES.unexpectedError,
     };
   }
 }
