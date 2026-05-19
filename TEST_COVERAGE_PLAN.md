@@ -191,6 +191,49 @@ Move next into server action tests for `core/features/jobInfos/actions.ts`,
 `core/features/users/actions.ts`. Keep API route coverage as the following
 mock-heavy slice.
 
+### Job Info Server Actions Slice - 2026-05-19
+
+Files/tests added:
+
+- `core/features/jobInfos/actionMessages.ts`
+- `core/features/jobInfos/actions.test.ts`
+
+Commands run:
+
+- `npm.cmd ci`
+- `npm.cmd test -- core/features/jobInfos/actions.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+
+Result:
+
+- Focused action slice passed: 1 test suite, 16 tests, 0 snapshots.
+- `npm.cmd test -- --runInBand` passed: 37 test suites, 228 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 37 test suites, 228
+  tests, 0 snapshots.
+- Updated coverage summary: 78.14% statements, 75.69% branches, 73.84%
+  functions, and 80.69% lines.
+- `core/features/jobInfos/actions.ts` now reports 100% statements, branches,
+  functions, and lines.
+
+Notes:
+
+- Action tests cover schema validation, successful create/update returns,
+  mapped unauthorized/not-found/permission/database/unexpected errors, and thin
+  read/remove service delegates.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Continue the server action slice with `core/features/interviews/actions.ts`.
+Add a shared Arcjet mock helper if the allow/deny protection scenarios create
+duplication, then cover `core/features/questions/actions.ts` and
+`core/features/users/actions.ts` before moving into API routes.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
