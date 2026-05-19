@@ -3,7 +3,7 @@ import {
   SESSION_DURATION_MS,
   SESSION_REFRESH_THRESHOLD_MS,
 } from "@/core/features/auth/constants";
-import { DatabaseError } from "@/core/dal/helpers";
+import { DatabaseError } from "@/core/dal/errors";
 import {
   createSessionDb,
   deleteAllUserSessionsDb,

@@ -1,6 +1,6 @@
 import { cacheTag } from "next/cache";
 
-import { DatabaseError } from "@/core/dal/helpers";
+import { DatabaseError } from "@/core/dal/errors";
 import type { AuthUser } from "@/core/features/auth/types";
 import { getUserByIdDb } from "@/core/features/users/db";
 import { getUserIdTag } from "@/core/features/users/dbCache";

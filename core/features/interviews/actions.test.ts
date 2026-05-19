@@ -37,7 +37,7 @@ import {
   DatabaseError,
   PermissionError,
   UnauthorizedError,
-} from "@/core/dal/helpers";
+} from "@/core/dal/errors";
 import arcjet, { request } from "@arcjet/next";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";

@@ -284,6 +284,64 @@ Continue the server action slice with `core/features/questions/actions.ts`,
 then cover `core/features/users/actions.ts`. Keep API route coverage as the
 following mock-heavy slice.
 
+### User Action and Service Slice - 2026-05-19
+
+Files/tests added:
+
+- `core/features/users/actions.test.ts`
+- `core/features/users/service.test.ts`
+
+Files updated:
+
+- `core/dal/errors.ts`
+- `core/dal/helpers.ts`
+
+Commands run:
+
+- `npm.cmd ci`
+- `npm.cmd test -- core/features/users/actions.test.ts core/features/users/service.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/users/actions.test.ts core/features/users/service.test.ts core/dal/errors.ts core/dal/helpers.ts core/features/users/service.ts core/features/jobInfos/actions.ts core/features/jobInfos/actions.test.ts core/features/jobInfos/dal.ts core/features/jobInfos/service.ts core/features/jobInfos/service.test.ts core/features/interviews/actions.ts core/features/interviews/actions.test.ts core/features/interviews/dal.ts core/features/interviews/service.ts core/features/interviews/service.test.ts core/features/auth/session.ts core/features/questions/dal.ts app/api/ai/resumes/analyze/route.ts app/api/ai/questions/generate-question/route.ts app/api/ai/questions/generate-feedback/route.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd ci` installed dependencies from `package-lock.json`.
+- Focused users slice passed: 2 test suites, 5 tests, 0 snapshots.
+- `npm.cmd test -- --runInBand` passed: 42 test suites, 271 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 42 test suites, 271
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for touched code files.
+- Updated coverage summary: 78.98% statements, 74.69% branches, 74.64%
+  functions, and 81.22% lines.
+- `core/features/users/actions.ts` and `core/features/users/service.ts` now
+  report 100% statements, branches, functions, and lines.
+
+Notes:
+
+- Action tests cover service delegation and missing-user `null` propagation.
+- Service tests cover successful lookup, missing user `null`, cache tagging,
+  and database failures mapping to `DatabaseError`.
+- Error classes now live in `core/dal/errors.ts`, allowing isolated service
+  tests to import `DatabaseError` without widening the users service mock
+  boundary.
+- User fixtures use safe synthetic `@test.local` emails and no real customer
+  emails.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Move next into API route coverage, starting with the checkout, billing portal,
+and cancel subscription routes. Keep external services mocked at module
+boundaries, especially Stripe, auth, and database modules.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.

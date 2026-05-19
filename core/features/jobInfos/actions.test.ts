@@ -17,7 +17,7 @@ import {
   NotFoundError,
   PermissionError,
   UnauthorizedError,
-} from "@/core/dal/helpers";
+} from "@/core/dal/errors";
 import {
   createJobInfoAction,
   getJobInfoAction,
