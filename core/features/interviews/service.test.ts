@@ -3,8 +3,8 @@ jest.mock("next/cache", () => ({
 }));
 
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
-  getCurrentUserWithProfile: jest.fn(),
+  getCurrentUserAction: jest.fn(),
+  getCurrentUserWithProfileAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/interviews/dal", () => ({
@@ -22,8 +22,8 @@ import { refresh } from "next/cache";
 
 import { PermissionError } from "@/core/dal/helpers";
 import {
-  getCurrentUser,
-  getCurrentUserWithProfile,
+  getCurrentUserAction,
+  getCurrentUserWithProfileAction,
 } from "@/core/features/auth/actions";
 import {
   getInterviewByIdDal,
@@ -49,8 +49,8 @@ import { makeInterview, makeJobInfo, makeUser } from "@/core/test-utils/factorie
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 const mockRefresh = jest.mocked(refresh);
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
-const mockGetCurrentUserWithProfile = jest.mocked(getCurrentUserWithProfile);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUserWithProfile = jest.mocked(getCurrentUserWithProfileAction);
 const mockGetInterviewByIdDal = jest.mocked(getInterviewByIdDal);
 const mockGetInterviewsDal = jest.mocked(getInterviewsDal);
 const mockInsertInterviewDal = jest.mocked(insertInterviewDal);

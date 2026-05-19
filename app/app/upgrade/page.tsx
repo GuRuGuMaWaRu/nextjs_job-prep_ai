@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { BackLink } from "@/core/components/BackLink";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { routes } from "@/core/data/routes";
-import { canCreateInterview } from "@/core/features/interviews/actions";
+import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 
 import { RevalidateOnStripeReturn } from "./_RevalidateOnStripeReturn";
 import { FAQSection } from "./_FAQSection";
@@ -101,7 +101,7 @@ export default async function UpgradePage(props: UpgradePageProps) {
 }
 
 async function SuspendedAlert() {
-  const hasPermissionForInterviews = await canCreateInterview();
+  const hasPermissionForInterviews = await canCreateInterviewAction();
   if (hasPermissionForInterviews) return null;
 
   return <PlanLimitAlert />;

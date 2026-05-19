@@ -234,6 +234,56 @@ Add a shared Arcjet mock helper if the allow/deny protection scenarios create
 duplication, then cover `core/features/questions/actions.ts` and
 `core/features/users/actions.ts` before moving into API routes.
 
+### Interview Server Actions Slice - 2026-05-19
+
+Files/tests added:
+
+- `core/features/interviews/actionMessages.ts`
+- `core/features/interviews/actions.test.ts`
+
+Files updated:
+
+- `core/features/interviews/actions.ts`
+
+Commands run:
+
+- `npm.cmd ci`
+- `npm.cmd test -- core/features/interviews/actions.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd ci` installed dependencies from `package-lock.json`.
+- Focused action slice passed: 1 test suite, 21 tests, 0 snapshots.
+- `npm.cmd test -- --runInBand` passed: 38 test suites, 249 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 38 test suites, 249
+  tests, 0 snapshots.
+- Updated coverage summary: 78.2% statements, 75.15% branches, 73.89%
+  functions, and 80.59% lines.
+- `core/features/interviews/actions.ts` now reports 100% statements, branches,
+  functions, and lines.
+
+Notes:
+
+- Action tests cover unauthenticated, plan-limit, Arcjet rate-limit,
+  inaccessible job info, successful create, mapped create/update/feedback
+  errors, and thin service/permission delegates.
+- Interview action messages were extracted to a feature-local constants file to
+  avoid duplicating production strings in tests.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Continue the server action slice with `core/features/questions/actions.ts`,
+then cover `core/features/users/actions.ts`. Keep API route coverage as the
+following mock-heavy slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.

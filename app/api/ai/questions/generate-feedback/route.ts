@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
-import { getQuestionById } from "@/core/features/questions/actions";
+import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import { UnauthorizedError, DatabaseError } from "@/core/dal/helpers";
 
 const schema = z.object({
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const { questionId, prompt: answer } = result.data;
 
   try {
-    const question = await getQuestionById(questionId);
+    const question = await getQuestionByIdAction(questionId);
 
     if (question == null) {
       return new Response("Question not found", { status: 404 });

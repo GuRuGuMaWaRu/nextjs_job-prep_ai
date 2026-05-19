@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PERMISSIONS, hasPermission } from "@/core/features/auth/permissions";
 
 /**
@@ -7,12 +7,17 @@ import { PERMISSIONS, hasPermission } from "@/core/features/auth/permissions";
  * - Free users: unlimited
  */
 export async function checkResumeAnalysisPermission(): Promise<boolean> {
-  const { userId } = await getCurrentUser();
+  try {
+    const { userId } = await getCurrentUserAction();
 
-  if (!userId) {
+    if (!userId) {
+      return false;
+    }
+
+    // Currently all users can analyze resumes
+    return await hasPermission(PERMISSIONS.UNLIMITED.RESUME_ANALYSES);
+  } catch (error) {
+    console.error("Error checking resume analysis permission:", error);
     return false;
   }
-
-  // Currently all users can analyze resumes
-  return hasPermission(PERMISSIONS.UNLIMITED.RESUME_ANALYSES);
 }

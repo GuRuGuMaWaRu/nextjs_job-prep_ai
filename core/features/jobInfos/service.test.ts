@@ -1,5 +1,5 @@
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentUserAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/jobInfos/dal", () => ({
@@ -12,7 +12,7 @@ jest.mock("@/core/features/jobInfos/dal", () => ({
 }));
 
 import { NotFoundError, PermissionError } from "@/core/dal/helpers";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
   createJobInfoDal,
   getJobInfoByIdDal,
@@ -37,7 +37,7 @@ import {
 import { makeJobInfo } from "@/core/test-utils/factories";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockCreateJobInfoDal = jest.mocked(createJobInfoDal);
 const mockGetJobInfoDal = jest.mocked(getJobInfoDal);
 const mockGetJobInfoByIdDal = jest.mocked(getJobInfoByIdDal);

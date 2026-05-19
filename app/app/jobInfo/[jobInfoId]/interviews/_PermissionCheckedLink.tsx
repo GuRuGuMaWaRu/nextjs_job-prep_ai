@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { errorToast, PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
-import { canCreateInterview } from "@/core/features/interviews/actions";
+import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 
 interface PermissionCheckedLinkProps {
   href: string;
@@ -30,7 +30,7 @@ export function PermissionCheckedLink({
     setIsChecking(true);
 
     try {
-      const hasPermissionForInterviews = await canCreateInterview();
+      const hasPermissionForInterviews = await canCreateInterviewAction();
       if (!hasPermissionForInterviews) {
         errorToast(PLAN_LIMIT_MESSAGE);
         return;

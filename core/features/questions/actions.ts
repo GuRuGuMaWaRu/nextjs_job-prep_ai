@@ -17,26 +17,45 @@ import {
  * Get all questions for a job info
  * Used in pages - errors bubble up to error boundary
  */
-export async function getQuestions(jobInfoId: string) {
-  return await getQuestionsService(jobInfoId);
+export async function getQuestionsAction(jobInfoId: string) {
+  try {
+    return await getQuestionsService(jobInfoId);
+  } catch (error) {
+    throw new Error(`Failed to get questions for job info "${jobInfoId}".`, {
+      cause: error,
+    });
+  }
 }
 
 /**
  * Insert a new question
  * Used from AI generation - errors bubble up to caller
  */
-export async function insertQuestion(
+export async function insertQuestionAction(
   question: string,
   jobInfoId: string,
-  difficulty: QuestionDifficulty
+  difficulty: QuestionDifficulty,
 ) {
-  return await insertQuestionService(question, jobInfoId, difficulty);
+  try {
+    return await insertQuestionService(question, jobInfoId, difficulty);
+  } catch (error) {
+    throw new Error(
+      `Failed to insert question for job info "${jobInfoId}" with difficulty "${difficulty}".`,
+      { cause: error },
+    );
+  }
 }
 
 /**
  * Get a single question by ID
  * Used in pages - errors bubble up to error boundary
  */
-export async function getQuestionById(questionId: string) {
-  return await getQuestionByIdService(questionId);
+export async function getQuestionByIdAction(questionId: string) {
+  try {
+    return await getQuestionByIdService(questionId);
+  } catch (error) {
+    throw new Error(`Failed to get question "${questionId}".`, {
+      cause: error,
+    });
+  }
 }

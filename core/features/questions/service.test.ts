@@ -1,5 +1,5 @@
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentUserAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/questions/dal", () => ({
@@ -8,7 +8,7 @@ jest.mock("@/core/features/questions/dal", () => ({
   insertQuestionDal: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
   getQuestionByIdDal,
   getQuestionsDal,
@@ -23,7 +23,7 @@ import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeQuestion } from "@/core/test-utils/factories";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockGetQuestionsDal = jest.mocked(getQuestionsDal);
 const mockGetQuestionByIdDal = jest.mocked(getQuestionByIdDal);
 const mockInsertQuestionDal = jest.mocked(insertQuestionDal);

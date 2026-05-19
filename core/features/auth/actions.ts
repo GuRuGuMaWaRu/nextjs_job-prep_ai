@@ -28,7 +28,7 @@ import {
   setOAuthErrorReturnForNextOAuth,
   type OAuthErrorReturn,
 } from "@/core/features/auth/oauth/oauthErrorReturn";
-import { getUser } from "@/core/features/users/actions";
+import { getUserAction } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
 import type { CurrentUser } from "@/core/features/auth/types";
 import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
@@ -226,7 +226,7 @@ const getCurrentUserCached = cache(
 
       return {
         userId,
-        user: allData ? ((await getUser(userId)) ?? undefined) : undefined,
+        user: allData ? ((await getUserAction(userId)) ?? undefined) : undefined,
         redirectToSignIn: () => redirect(routes.signIn),
       };
     } catch (error) {
@@ -248,16 +248,16 @@ const getCurrentUserCached = cache(
  *
  * @returns Object with userId, optional user data, and redirectToSignIn helper
  */
-export async function getCurrentUser(): Promise<CurrentUser> {
+export async function getCurrentUserAction(): Promise<CurrentUser> {
   return getCurrentUserCached(false);
 }
 
 /**
- * Same as {@link getCurrentUser} but loads the full user row from the database.
+ * Same as {@link getCurrentUserAction} but loads the full user row from the database.
  *
  * @returns Object with userId, user, and redirectToSignIn helper
  */
-export async function getCurrentUserWithProfile(): Promise<CurrentUser> {
+export async function getCurrentUserWithProfileAction(): Promise<CurrentUser> {
   return getCurrentUserCached(true);
 }
 

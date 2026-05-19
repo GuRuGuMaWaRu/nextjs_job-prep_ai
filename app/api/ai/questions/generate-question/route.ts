@@ -4,12 +4,12 @@ import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { questionDifficulties } from "@/core/drizzle/schema";
 import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { generateAiQuestion } from "@/core/services/ai/questions";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import {
-  getQuestions,
-  insertQuestion,
+  getQuestionsAction,
+  insertQuestionAction,
 } from "@/core/features/questions/actions";
 import {
   NotFoundError,
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   }
 
   const { prompt: difficulty, jobInfoId } = result.data;
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (userId == null) {
     return new Response("You are not logged in", { status: 401 });
@@ -43,15 +43,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    // getJobInfo now handles auth internally and throws on error
-    const jobInfo = await getJobInfo(jobInfoId);
+    // getJobInfoAction handles auth internally and throws on error
+    const jobInfo = await getJobInfoAction(jobInfoId);
     if (jobInfo == null) {
       return new Response("You do not have permission to do this", {
         status: 403,
       });
     }
 
-    const previousQuestions = await getQuestions(jobInfoId);
+    const previousQuestions = await getQuestionsAction(jobInfoId);
 
     return createUIMessageStreamResponse({
       status: 200,
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
             jobInfo,
             difficulty,
             onFinish: async (question) => {
-              const { id } = await insertQuestion(
+              const { id } = await insertQuestionAction(
                 question,
                 jobInfoId,
                 difficulty,

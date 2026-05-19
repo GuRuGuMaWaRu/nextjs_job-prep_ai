@@ -3,10 +3,11 @@
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/server";
+import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
 import {
   UnauthorizedError,
   PermissionError,
@@ -49,42 +50,42 @@ export async function createInterviewAction({
 }: {
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
   if (userId == null) {
     return {
       success: false,
-      message: "You must be logged in to create an interview.",
-    };
-  }
-
-  // Check permissions
-  const permitted = await checkInterviewPermission();
-  if (!permitted) {
-    return {
-      success: false,
-      message: PLAN_LIMIT_MESSAGE,
-    };
-  }
-
-  // Check rate limit
-  const decision = await aj.protect(await request(), {
-    userId,
-    requested: 1,
-  });
-  if (decision.isDenied()) {
-    return {
-      success: false,
-      message: RATE_LIMIT_MESSAGE,
+      message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
     };
   }
 
   try {
+    // Check permissions
+    const permitted = await checkInterviewPermission();
+    if (!permitted) {
+      return {
+        success: false,
+        message: PLAN_LIMIT_MESSAGE,
+      };
+    }
+
+    // Check rate limit
+    const decision = await aj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+    if (decision.isDenied()) {
+      return {
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
+      };
+    }
+
     // Verify job info exists and user has access
-    const jobInfo = await getJobInfo(jobInfoId);
+    const jobInfo = await getJobInfoAction(jobInfoId);
     if (jobInfo == null) {
       return {
         success: false,
-        message: "Job posting not found or you don't have access to it.",
+        message: INTERVIEW_ACTION_MESSAGES.createJobInfoNotFound,
       };
     }
 
@@ -101,20 +102,20 @@ export async function createInterviewAction({
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: "You must be logged in to create an interview.",
+        message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
       };
     }
 
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: "Failed to create interview. Please try again.",
+        message: INTERVIEW_ACTION_MESSAGES.createDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: "An unexpected error occurred. Please try again.",
+      message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
     };
   }
 }
@@ -125,7 +126,7 @@ export async function createInterviewAction({
  */
 export async function updateInterviewAction(
   id: string,
-  data: { humeChatId?: string; duration?: string }
+  data: { humeChatId?: string; duration?: string },
 ): Promise<ActionResult<void>> {
   try {
     await updateInterviewService(id, data);
@@ -137,7 +138,7 @@ export async function updateInterviewAction(
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: "You must be logged in to update this interview.",
+        message: INTERVIEW_ACTION_MESSAGES.updateUnauthorized,
       };
     }
 
@@ -151,13 +152,13 @@ export async function updateInterviewAction(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: "Failed to update interview. Please try again.",
+        message: INTERVIEW_ACTION_MESSAGES.updateDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: "An unexpected error occurred. Please try again.",
+      message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
     };
   }
 }
@@ -166,7 +167,7 @@ export async function updateInterviewAction(
  * Get interview by ID
  * Used in pages - errors bubble up to error boundary
  */
-export async function getInterviewById(id: string, userId: string) {
+export async function getInterviewByIdAction(id: string, userId: string) {
   return await getInterviewByIdService(id, userId);
 }
 
@@ -174,15 +175,20 @@ export async function getInterviewById(id: string, userId: string) {
  * Check if user can create an interview
  * Used for UI permission checks
  */
-export async function canCreateInterview(): Promise<boolean> {
-  return await checkInterviewPermission();
+export async function canCreateInterviewAction(): Promise<boolean> {
+  try {
+    return await checkInterviewPermission();
+  } catch (error) {
+    console.error("Error checking interview creation permission:", error);
+    return false;
+  }
 }
 
 /**
  * Get all interviews for a job info
  * Used in pages - errors bubble up to error boundary
  */
-export async function getInterviews(jobInfoId: string, userId: string) {
+export async function getInterviewsAction(jobInfoId: string, userId: string) {
   return await getInterviewsService(jobInfoId, userId);
 }
 
@@ -191,7 +197,7 @@ export async function getInterviews(jobInfoId: string, userId: string) {
  * Server action called from client - returns ActionResult
  */
 export async function generateInterviewFeedbackAction(
-  interviewId: string
+  interviewId: string,
 ): Promise<ActionResult<void>> {
   try {
     await generateInterviewFeedbackService(interviewId);
@@ -203,7 +209,7 @@ export async function generateInterviewFeedbackAction(
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: "You must be logged in to generate feedback.",
+        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
       };
     }
 
@@ -217,13 +223,13 @@ export async function generateInterviewFeedbackAction(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: "Failed to save feedback. Please try again.",
+        message: INTERVIEW_ACTION_MESSAGES.feedbackDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: "Failed to generate feedback. Please try again.",
+      message: INTERVIEW_ACTION_MESSAGES.feedbackUnexpectedError,
     };
   }
 }

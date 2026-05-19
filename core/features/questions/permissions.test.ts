@@ -1,5 +1,5 @@
 jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentUserAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/auth/permissions", () => ({
@@ -26,7 +26,7 @@ jest.mock("@/core/features/questions/db", () => ({
   getQuestionCountDb: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
   FREE_PLAN_LIMITS,
   hasPermission,
@@ -38,19 +38,26 @@ import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 import { checkQuestionsPermission } from "./permissions";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
+const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetQuestionCountDb = jest.mocked(getQuestionCountDb);
 
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkQuestionsPermission", () => {
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
     mockGetCurrentUser.mockResolvedValue(
       makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
     );
     mockHasPermission.mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it("denies anonymous users without checking plan permissions", async () => {
@@ -87,6 +94,7 @@ describe("checkQuestionsPermission", () => {
 
     await expect(checkQuestionsPermission()).resolves.toBe(true);
 
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     expect(mockGetQuestionCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
   });
 
@@ -95,5 +103,44 @@ describe("checkQuestionsPermission", () => {
     mockGetQuestionCountDb.mockResolvedValue(FREE_PLAN_LIMITS.questions);
 
     await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns false when the current user lookup throws", async () => {
+    mockGetCurrentUser.mockRejectedValue(new Error("session failed"));
+
+    await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(mockHasPermission).not.toHaveBeenCalled();
+    expect(mockGetQuestionCountDb).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking question permission:",
+      expect.any(Error),
+    );
+  });
+
+  it("returns false when the plan permission check throws", async () => {
+    mockHasPermission.mockRejectedValue(new Error("permission failed"));
+
+    await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(mockGetQuestionCountDb).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking question permission:",
+      expect.any(Error),
+    );
+  });
+
+  it("returns false when the question count lookup throws", async () => {
+    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockGetQuestionCountDb.mockRejectedValue(new Error("count failed"));
+
+    await expect(checkQuestionsPermission()).resolves.toBe(false);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking question permission:",
+      expect.any(Error),
+    );
   });
 });

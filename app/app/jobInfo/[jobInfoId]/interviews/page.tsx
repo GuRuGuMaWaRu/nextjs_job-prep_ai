@@ -12,11 +12,11 @@ import {
 import { Badge } from "@/core/components/ui/badge";
 import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import {
-  canCreateInterview,
-  getInterviews,
+  canCreateInterviewAction,
+  getInterviewsAction,
 } from "@/core/features/interviews/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
 
@@ -42,11 +42,11 @@ export default async function InterviewsPage({
 }
 
 async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
-  const { userId, redirectToSignIn } = await getCurrentUser();
+  const { userId, redirectToSignIn } = await getCurrentUserAction();
   if (userId == null) return redirectToSignIn();
 
-  const interviews = await getInterviews(jobInfoId, userId);
-  const hasPermissionForInterviews = await canCreateInterview();
+  const interviews = await getInterviewsAction(jobInfoId, userId);
+  const hasPermissionForInterviews = await canCreateInterviewAction();
 
   return (
     <div className="space-y-6 w-full">

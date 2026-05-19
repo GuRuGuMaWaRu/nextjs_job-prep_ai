@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getStripe } from "@/core/features/billing/stripe";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -19,7 +19,7 @@ export async function checkSubscriptionSuccess(searchParams: SearchParams) {
 
   if (sessionId && stripe) {
     try {
-      const { userId } = await getCurrentUser();
+      const { userId } = await getCurrentUserAction();
       const session = await stripe.checkout.sessions.retrieve(sessionId);
 
       return (

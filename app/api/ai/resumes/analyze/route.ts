@@ -1,6 +1,6 @@
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
-import { getJobInfo } from "@/core/features/jobInfos/actions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import {
@@ -9,7 +9,7 @@ import {
 import { NotFoundError, PermissionError } from "@/core/dal/helpers";
 
 export async function POST(req: Request) {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (userId == null) {
     return new Response("You are not logged in", { status: 401 });
@@ -29,8 +29,8 @@ export async function POST(req: Request) {
   try {
     const { resumeFile, jobInfoId } = validation.data;
 
-    // getJobInfo now handles auth internally and throws on error
-    const jobInfo = await getJobInfo(jobInfoId);
+    // getJobInfoAction handles auth internally and throws on error
+    const jobInfo = await getJobInfoAction(jobInfoId);
 
     if (jobInfo == null) {
       return new Response("You do not have permission to do this", {

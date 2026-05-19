@@ -11,7 +11,7 @@ import {
 import { Button } from "@core/components/ui/button";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { JobInfoCard } from "@/core/features/jobInfos/components/JobInfoCard";
-import { getJobInfos } from "@/core/features/jobInfos/actions";
+import { getJobInfosAction } from "@/core/features/jobInfos/actions";
 import {
   FREE_PLAN_LIMITS,
   getUserPlan,
@@ -19,7 +19,7 @@ import {
 import { routes } from "@/core/data/routes";
 
 export async function JobInfos() {
-  const jobInfos = await getJobInfos();
+  const jobInfos = await getJobInfosAction();
   const currentPlan = await getUserPlan();
 
   if (jobInfos.length === 0) {

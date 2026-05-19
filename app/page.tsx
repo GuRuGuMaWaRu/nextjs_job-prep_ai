@@ -22,7 +22,7 @@ import {
 } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
-import { getCurrentUser } from "@/core/features/auth/actions";
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { routes } from "@/core/data/routes";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
@@ -64,7 +64,7 @@ function Navbar() {
 }
 
 async function SignInButton() {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
   const isUserLoggedIn = userId != null;
 
   if (isUserLoggedIn) return redirect(routes.app);

@@ -1,6 +1,6 @@
 import {
-  getCurrentUser,
-  getCurrentUserWithProfile,
+  getCurrentUserAction,
+  getCurrentUserWithProfileAction,
 } from "@/core/features/auth/actions";
 
 /**
@@ -54,7 +54,7 @@ export class DatabaseError extends Error {
  * Use this in Service layer when auth is required
  */
 export async function requireUser(): Promise<string> {
-  const { userId } = await getCurrentUser();
+  const { userId } = await getCurrentUserAction();
 
   if (!userId) {
     throw new UnauthorizedError();
@@ -68,7 +68,7 @@ export async function requireUser(): Promise<string> {
  * Throws UnauthorizedError if not authenticated
  */
 export async function requireUserWithData() {
-  const { userId, user } = await getCurrentUserWithProfile();
+  const { userId, user } = await getCurrentUserWithProfileAction();
 
   if (!userId || !user) {
     throw new UnauthorizedError();
