@@ -407,6 +407,66 @@ move into the AI and cron routes. If Stripe route branch coverage becomes a
 priority, add a small follow-up for configuration and fallback redirect
 branches.
 
+### Auth Validate Session API Route Slice - 2026-05-20
+
+Files/tests added:
+
+- `app/api/auth/validate-session/route.test.ts`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- app/api/auth/validate-session/route.test.ts --runInBand`
+- `npm.cmd ci`
+- `npm.cmd test -- app/api/auth/validate-session/route.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/auth/validate-session/route.test.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd ci` installed dependencies from `package-lock.json`.
+- Focused validate-session route slice passed: 1 test suite, 4 tests, 0
+  snapshots.
+- `npm.cmd test -- --runInBand` passed: 46 test suites, 287 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 46 test suites, 287
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 79.65% statements, 71.32% branches, 75.46%
+  functions, and 81.57% lines.
+- New route coverage:
+  - `app/api/auth/validate-session/route.ts`: 100% statements, 100% branches,
+    100% functions, and 100% lines.
+
+Notes:
+
+- Route tests cover missing tokens, invalid tokens, valid sessions, redirect
+  status/location shape, and invalid-session handling through the validation
+  action boundary.
+- Auth action and cookie helpers are mocked at module boundaries; the route
+  handler is exercised directly with real `NextResponse.redirect` behavior.
+- Test session fixtures use `TEST_USER_ID` and synthetic factory data.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Continue API route coverage with the AI routes:
+`app/api/ai/resumes/analyze/route.ts`,
+`app/api/ai/questions/generate-question/route.ts`, and
+`app/api/ai/questions/generate-feedback/route.ts`. Keep AI SDK, Arcjet, auth,
+and database/service dependencies mocked at module boundaries.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
