@@ -1,0 +1,39 @@
+name: PR title
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Conventional Commit title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          node <<'NODE'
+          const title = process.env.PR_TITLE ?? "";
+          const pattern = /^(feat|fix|test|refactor|perf|docs|chore)\([a-z][a-z0-9-]*\): .+$/;
+
+          if (pattern.test(title)) {
+            process.exit(0);
+          }
+
+          console.error("PR title must follow: type(scope): concise summary");
+          console.error("Allowed types: feat, fix, test, refactor, perf, docs, chore");
+          console.error("Scope must be lowercase letters, numbers, or hyphens.");
+          console.error("Example: test(auth): validate session route coverage");
+          console.error(`Received: ${title}`);
+          process.exit(1);
+          NODE
