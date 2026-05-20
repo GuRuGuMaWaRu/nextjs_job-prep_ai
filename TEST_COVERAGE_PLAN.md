@@ -342,6 +342,71 @@ Move next into API route coverage, starting with the checkout, billing portal,
 and cancel subscription routes. Keep external services mocked at module
 boundaries, especially Stripe, auth, and database modules.
 
+### Billing Stripe API Routes Slice - 2026-05-19
+
+Files/tests added:
+
+- `app/api/stripe/create-checkout-session/route.test.ts`
+- `app/api/stripe/create-portal-session/route.test.ts`
+- `app/api/stripe/cancel-subscription/route.test.ts`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts --runInBand`
+- `npm.cmd ci`
+- `npm.cmd test -- app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd ci` installed dependencies from `package-lock.json`.
+- Focused billing route slice passed: 3 test suites, 12 tests, 0 snapshots.
+- `npm.cmd test -- --runInBand` passed: 45 test suites, 283 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 45 test suites, 283
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the three touched TypeScript test files.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 79.37% statements, 71.03% branches, 75.34%
+  functions, and 81.37% lines.
+- New route coverage:
+  - `app/api/stripe/create-checkout-session/route.ts`: 73.91% statements,
+    47.36% branches, 100% functions, 73.91% lines.
+  - `app/api/stripe/create-portal-session/route.ts`: 89.28% statements,
+    61.11% branches, 100% functions, 89.28% lines.
+  - `app/api/stripe/cancel-subscription/route.ts`: 92.3% statements, 62.5%
+    branches, 100% functions, 92.3% lines.
+
+Notes:
+
+- Route tests cover unauthenticated behavior, missing required user Stripe data,
+  successful Stripe calls with idempotency options, and Stripe failure
+  redirects.
+- Stripe, auth, env, and billing helper modules are mocked at module
+  boundaries; route handlers are exercised directly.
+- Test user fixtures use safe synthetic `@test.local` emails and no real
+  customer emails.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Continue API route coverage with `app/api/auth/validate-session/route.ts`, then
+move into the AI and cron routes. If Stripe route branch coverage becomes a
+priority, add a small follow-up for configuration and fallback redirect
+branches.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
