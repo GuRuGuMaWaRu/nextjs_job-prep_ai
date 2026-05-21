@@ -197,7 +197,6 @@ describe("POST /api/ai/questions/generate-question", () => {
       streamKind: "ui-message-stream",
       writes: [],
     });
-    await Promise.resolve();
 
     expect(mockGenerateAiQuestion).toHaveBeenCalledWith({
       previousQuestions: expect.arrayContaining([
