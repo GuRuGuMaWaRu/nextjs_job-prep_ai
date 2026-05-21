@@ -5,10 +5,11 @@ import type { UserPlan } from "@/core/drizzle/schema/user";
 import {
   getUserByIdDb,
   getUserByStripeCustomerIdDb,
-  updateUserPlanAndStripeIdsDb,
+  updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
 } from "./db";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
+const CUSTOMER_SUBSCRIPTION_LIST_LIMIT = 100;
 
 const TERMINAL_SUBSCRIPTION_STATUSES = [
   "canceled",
@@ -46,6 +47,23 @@ function getSubscriptionState(subscription: Stripe.Subscription): {
   };
 }
 
+async function findActiveCustomerSubscription(
+  stripe: Stripe,
+  customerId: string,
+): Promise<Stripe.Subscription | null> {
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: CUSTOMER_SUBSCRIPTION_LIST_LIMIT,
+  });
+
+  return (
+    subscriptions.data.find((subscription) =>
+      isActiveSubscriptionStatus(subscription.status),
+    ) ?? null
+  );
+}
+
 /**
  * Updates plan and subscription ids in DB based on Stripe’s subscription data for the given customer.
  *
@@ -66,11 +84,38 @@ export async function syncSubscriptionFromStripe(
     );
   }
 
+  if (
+    user.stripeSubscriptionId !== null &&
+    user.stripeSubscriptionId !== subscriptionId
+  ) {
+    console.warn("[stripeSync] Skipped stale subscription webhook", {
+      userId: user.id,
+      currentStripeSubscriptionId: user.stripeSubscriptionId,
+      eventStripeSubscriptionId: subscriptionId,
+    });
+    return;
+  }
+
   const stripeSubscription =
     await stripe.subscriptions.retrieve(subscriptionId);
   const subscriptionState = getSubscriptionState(stripeSubscription);
 
-  await updateUserPlanAndStripeIdsDb(user.id, subscriptionState);
+  const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+    user.id,
+    user.stripeSubscriptionId,
+    subscriptionState,
+  );
+
+  if (!updated) {
+    console.warn(
+      "[stripeSync] Skipped subscription sync: row changed concurrently",
+      {
+        userId: user.id,
+        priorStripeSubscriptionId: user.stripeSubscriptionId,
+        eventStripeSubscriptionId: subscriptionId,
+      },
+    );
+  }
 }
 
 function isStripeSubscriptionMissingError(err: unknown): boolean {
@@ -127,17 +172,37 @@ export async function reconcileUserStripeSubscription(
       user.plan !== subscriptionState.plan ||
       user.stripeSubscriptionId !== subscriptionState.stripeSubscriptionId;
 
-    if (isUpdated) {
-      await updateUserPlanAndStripeIdsDb(user.id, subscriptionState);
+    if (!isUpdated) {
+      return { kind: "ok", updated: false };
     }
 
-    return { kind: "ok", updated: isUpdated };
+    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+      user.id,
+      user.stripeSubscriptionId,
+      subscriptionState,
+    );
+
+    if (!updated) {
+      console.warn(
+        "[stripeSync] Skipped reconciliation update: row changed concurrently",
+        {
+          userId: user.id,
+          priorStripeSubscriptionId: user.stripeSubscriptionId,
+          stripeSubscriptionId: stripeSubscription.id,
+        },
+      );
+    }
+
+    return { kind: "ok", updated };
   } catch (err) {
     if (isStripeSubscriptionMissingError(err)) {
-      console.error("[stripeSync] Stripe subscription not found (resource_missing)", {
-        userId,
-        stripeSubscriptionId: user.stripeSubscriptionId,
-      });
+      console.error(
+        "[stripeSync] Stripe subscription not found (resource_missing)",
+        {
+          userId,
+          stripeSubscriptionId: user.stripeSubscriptionId,
+        },
+      );
 
       const freshUser = await getUserByIdDb(userId);
       if (freshUser?.stripeSubscriptionId !== user.stripeSubscriptionId) {
@@ -146,10 +211,41 @@ export async function reconcileUserStripeSubscription(
           {
             userId,
             priorStripeSubscriptionId: user.stripeSubscriptionId,
-            currentStripeSubscriptionId: freshUser?.stripeSubscriptionId ?? null,
+            currentStripeSubscriptionId:
+              freshUser?.stripeSubscriptionId ?? null,
           },
         );
         return { kind: "ok", updated: false };
+      }
+
+      if (freshUser?.stripeCustomerId) {
+        const activeSubscription = await findActiveCustomerSubscription(
+          stripe,
+          freshUser.stripeCustomerId,
+        );
+
+        if (activeSubscription) {
+          const subscriptionState = getSubscriptionState(activeSubscription);
+          const updated =
+            await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+              userId,
+              user.stripeSubscriptionId,
+              subscriptionState,
+            );
+
+          if (!updated) {
+            console.warn(
+              "[stripeSync] Skipped active subscription repair: row changed concurrently",
+              {
+                userId,
+                priorStripeSubscriptionId: user.stripeSubscriptionId,
+                activeStripeSubscriptionId: activeSubscription.id,
+              },
+            );
+          }
+
+          return { kind: "ok", updated };
+        }
       }
 
       console.error(
@@ -160,12 +256,26 @@ export async function reconcileUserStripeSubscription(
         },
       );
 
-      await updateUserPlanAndStripeIdsDb(userId, {
-        plan: "free",
-        stripeSubscriptionId: null,
-      });
+      const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+        userId,
+        user.stripeSubscriptionId,
+        {
+          plan: "free",
+          stripeSubscriptionId: null,
+        },
+      );
 
-      return { kind: "ok", updated: true };
+      if (!updated) {
+        console.warn(
+          "[stripeSync] Skipped downgrade after missing subscription: row changed concurrently",
+          {
+            userId,
+            priorStripeSubscriptionId: user.stripeSubscriptionId,
+          },
+        );
+      }
+
+      return { kind: "ok", updated };
     }
 
     console.error("[stripeSync] reconcileUserStripeSubscription failed", {
