@@ -657,6 +657,70 @@ Continue API route coverage with the remaining cron and OAuth routes, starting
 with the smallest cron handlers before moving into the more mock-heavy OAuth
 provider route.
 
+### Cron Stripe Sync Route Slice - 2026-05-21
+
+Files/tests added:
+
+- `app/api/cron/sync-stripe-subscriptions/route.test.ts`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- app/api/cron/sync-stripe-subscriptions/route.test.ts --runInBand`
+- `npm test`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/cron/sync-stripe-subscriptions/route.test.ts TEST_COVERAGE_PLAN.md`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd install` installed dependencies from
+  `package-lock.json`.
+- Focused cron route slice passed: 1 test suite, 8 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 50 test suites, 317 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 50 test suites, 317
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 81.78% statements, 74.14% branches, 76.54%
+  functions, and 83.55% lines.
+- New route coverage:
+  - `app/api/cron/sync-stripe-subscriptions/route.ts`: 100% statements, 95.45%
+    branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Route tests cover missing and invalid cron authorization, Stripe
+  configuration failures, missing Stripe client, successful reconciliation
+  counters, handled service error results, rejected per-user reconciliation
+  failures, error sample limiting, and unexpected candidate lookup failures.
+- Stripe/client helpers, user DB lookup, and Stripe sync service boundaries are
+  mocked at module boundaries.
+- Test fixtures use `TEST_USER_ID`, `TEST_OTHER_USER_ID`, and synthetic user ids
+  only.
+- `app/api/cron/hello/route.ts` was recommended as a target but is not present
+  in this worktree; only `app/api/cron/sync-stripe-subscriptions/route.ts`
+  exists under `app/api/cron`.
+- Jest no longer emitted the earlier `baseline-browser-mapping` warning during
+  this slice.
+- `npm.cmd install` reported existing dependency audit findings. They were not
+  part of this coverage slice.
+
+Recommendation:
+
+Continue API route coverage with `app/api/oauth/[provider]/route.ts`, or deepen
+remaining Stripe branch coverage in the checkout, portal, and cancel routes if
+keeping the slice billing-focused.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
