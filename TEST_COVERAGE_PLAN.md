@@ -467,6 +467,68 @@ Continue API route coverage with the AI routes:
 `app/api/ai/questions/generate-feedback/route.ts`. Keep AI SDK, Arcjet, auth,
 and database/service dependencies mocked at module boundaries.
 
+### AI Generate Question API Route Slice - 2026-05-20
+
+Files/tests added:
+
+- `app/api/ai/questions/generate-question/route.test.ts`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- app/api/ai/questions/generate-question/route.test.ts --runInBand`
+- `npm.cmd ci`
+- `npm.cmd test -- app/api/ai/questions/generate-question/route.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/ai/questions/generate-question/route.test.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd ci` installed dependencies from `package-lock.json`.
+- Focused generate-question route slice passed: 1 test suite, 7 tests, 0
+  snapshots.
+- `npm.cmd test -- --runInBand` passed: 47 test suites, 294 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 47 test suites, 294
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 80.19% statements, 71.93% branches, 75.79%
+  functions, and 82% lines.
+- New route coverage:
+  - `app/api/ai/questions/generate-question/route.ts`: 95% statements, 87.5%
+    branches, 100% functions, and 95% lines.
+
+Notes:
+
+- Route tests cover malformed request bodies, unauthenticated users, plan-limit
+  denial, streamed success response setup, question insertion through the
+  `onFinish` callback, unauthorized service errors, inaccessible job info, and
+  database failures.
+- Auth, permission, job info, question action, AI service, and AI SDK streaming
+  modules are mocked at module boundaries; the route handler is exercised
+  directly.
+- Test fixtures use `TEST_USER_ID`, local factories, and synthetic question/job
+  data only.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd ci` reported existing dependency audit findings. They were not part
+  of this coverage slice.
+
+Recommendation:
+
+Continue the AI API route slice with
+`app/api/ai/questions/generate-feedback/route.ts`, then cover
+`app/api/ai/resumes/analyze/route.ts`. Keep AI SDK stream responses, auth/action
+boundaries, and feature permissions mocked at module boundaries.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
