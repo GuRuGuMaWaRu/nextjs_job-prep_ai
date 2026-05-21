@@ -592,6 +592,71 @@ Continue AI API route coverage with `app/api/ai/resumes/analyze/route.ts`. Keep
 AI/model behavior mocked through the service boundary where possible, and mock
 auth, permission, and database/action dependencies at module boundaries.
 
+### AI Resume Analyze API Route Slice - 2026-05-21
+
+Files/tests added:
+
+- `app/api/ai/resumes/analyze/route.test.ts`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- app/api/ai/resumes/analyze/route.test.ts --runInBand`
+- `npm.cmd install`
+- `npm.cmd test -- app/api/ai/resumes/analyze/route.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/ai/resumes/analyze/route.test.ts TEST_COVERAGE_PLAN.md`
+- `npm.cmd run test:coverage -- --runInBand`
+
+Result:
+
+- Initial focused test run could not find `jest` because this worktree had no
+  `node_modules`; `npm.cmd install` installed dependencies from
+  `package-lock.json`.
+- Focused resume-analyze route slice passed: 1 test suite, 9 tests, 0
+  snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 49 test suites, 309 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 49 test suites, 309
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 81.08% statements, 73.09% branches, 76.23%
+  functions, and 82.9% lines.
+- New route coverage:
+  - `app/api/ai/resumes/analyze/route.ts`: 100% statements, 92.85%
+    branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Route tests cover invalid multipart form data, unauthenticated users,
+  inaccessible job info, plan-limit denial, streamed success responses,
+  not-found and permission action failures, database action failures, and
+  unexpected AI service failures.
+- Auth, job info action, resume-analysis permission, and resume AI service
+  modules are mocked at module boundaries; DAL error classes are imported as
+  real classes to exercise the route's `instanceof` handling.
+- Test fixtures use `TEST_USER_ID`, local factories, and synthetic resume/job
+  data only.
+- Jest continues to emit the existing `baseline-browser-mapping` warning that
+  the local data is over two months old.
+- `npm.cmd install` reported existing dependency audit findings. They were not
+  part of this coverage slice.
+
+Recommendation:
+
+Continue API route coverage with the remaining cron and OAuth routes, starting
+with the smallest cron handlers before moving into the more mock-heavy OAuth
+provider route.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
