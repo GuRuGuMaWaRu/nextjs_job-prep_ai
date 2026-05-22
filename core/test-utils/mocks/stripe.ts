@@ -30,6 +30,10 @@ export type MockStripeClient = {
   };
   subscriptions: {
     retrieve: jest.Mock<Promise<Stripe.Subscription>, [string]>;
+    list: jest.Mock<
+      Promise<Stripe.ApiList<Stripe.Subscription>>,
+      [Stripe.SubscriptionListParams]
+    >;
   };
 };
 
@@ -47,6 +51,7 @@ export function createMockStripe(): MockStripeClient {
     },
     subscriptions: {
       retrieve: jest.fn(),
+      list: jest.fn(),
     },
   };
 }

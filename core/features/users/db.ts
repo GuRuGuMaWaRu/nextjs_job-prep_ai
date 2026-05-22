@@ -1,9 +1,29 @@
-import { eq, isNotNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 
 import { UserTable } from "@/core/drizzle/schema";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { db } from "@/core/drizzle/db";
 import { revalidateUserCache } from "@/core/features/users/dbCache";
+
+type UpdateUserPlanAndStripeIdsPayload = {
+  plan: UserPlan;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+};
+
+function toUserPlanAndStripeIdsUpdate(
+  payload: UpdateUserPlanAndStripeIdsPayload,
+) {
+  return {
+    plan: payload.plan,
+    ...(payload.stripeCustomerId !== undefined && {
+      stripeCustomerId: payload.stripeCustomerId,
+    }),
+    ...(payload.stripeSubscriptionId !== undefined && {
+      stripeSubscriptionId: payload.stripeSubscriptionId,
+    }),
+  };
+}
 
 export async function upsertUserDb(user: typeof UserTable.$inferInsert) {
   await db
@@ -60,24 +80,43 @@ export async function getUserByStripeCustomerIdDb(stripeCustomerId: string) {
 
 export async function updateUserPlanAndStripeIdsDb(
   userId: string,
-  payload: {
-    plan: UserPlan;
-    stripeCustomerId?: string | null;
-    stripeSubscriptionId?: string | null;
-  },
+  payload: UpdateUserPlanAndStripeIdsPayload,
 ) {
   await db
     .update(UserTable)
-    .set({
-      plan: payload.plan,
-      ...(payload.stripeCustomerId !== undefined && {
-        stripeCustomerId: payload.stripeCustomerId,
-      }),
-      ...(payload.stripeSubscriptionId !== undefined && {
-        stripeSubscriptionId: payload.stripeSubscriptionId,
-      }),
-    })
+    .set(toUserPlanAndStripeIdsUpdate(payload))
     .where(eq(UserTable.id, userId));
 
   revalidateUserCache(userId);
+}
+
+/**
+ * Applies a Stripe-derived plan update only while the row still references the
+ * subscription that was read before the Stripe call.
+ */
+export async function updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+  userId: string,
+  expectedStripeSubscriptionId: string | null,
+  payload: UpdateUserPlanAndStripeIdsPayload,
+) {
+  const rows = await db
+    .update(UserTable)
+    .set(toUserPlanAndStripeIdsUpdate(payload))
+    .where(
+      and(
+        eq(UserTable.id, userId),
+        expectedStripeSubscriptionId === null
+          ? isNull(UserTable.stripeSubscriptionId)
+          : eq(UserTable.stripeSubscriptionId, expectedStripeSubscriptionId),
+      ),
+    )
+    .returning({ id: UserTable.id });
+
+  const updated = rows.length > 0;
+
+  if (updated) {
+    revalidateUserCache(userId);
+  }
+
+  return updated;
 }
