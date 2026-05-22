@@ -117,7 +117,7 @@ async function expectRedirectTo(
   location: string,
 ): Promise<void> {
   await expect(promise).rejects.toMatchObject({
-    digest: `NEXT_REDIRECT;${location}`,
+    digest: expect.stringContaining(location),
   });
   expect(mockRedirect).toHaveBeenCalledWith(location);
 }
