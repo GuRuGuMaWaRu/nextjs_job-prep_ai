@@ -721,6 +721,65 @@ Continue API route coverage with `app/api/oauth/[provider]/route.ts`, or deepen
 remaining Stripe branch coverage in the checkout, portal, and cancel routes if
 keeping the slice billing-focused.
 
+### OAuth Provider Callback Route Slice - 2026-05-22
+
+Files/tests added:
+
+- `app/api/oauth/[provider]/route.test.ts`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- --runTestsByPath app/api/oauth/[provider]/route.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/oauth/[provider]/route.test.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused OAuth route slice passed: 1 test suite, 10 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 51 test suites, 327 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 51 test suites, 327
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 82.57% statements, 74.89% branches, 77.19%
+  functions, and 84.34% lines.
+- New route coverage:
+  - `app/api/oauth/[provider]/route.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+
+Notes:
+
+- Route tests cover unsupported providers, missing callback `code` / `state`,
+  unconfigured providers, successful OAuth account connection, session and
+  cookie side effects, known OAuth email error redirects, unexpected callback
+  failures, and stored error-return paths.
+- OAuth client/config, account connection, session, cookie, and Next redirect
+  boundaries are mocked at module boundaries; the route handler is exercised
+  directly.
+- Test fixtures use `TEST_USER_ID` and synthetic `@test.local` OAuth email data
+  only.
+- Jest did not emit the earlier `baseline-browser-mapping` warning during this
+  slice.
+
+Recommendation:
+
+Deepen the remaining Stripe API branch coverage in
+`app/api/stripe/create-checkout-session/route.ts`,
+`app/api/stripe/create-portal-session/route.ts`, and
+`app/api/stripe/cancel-subscription/route.ts`; after that, move into focused
+component tests for auth and billing flows.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
