@@ -1,25 +1,17 @@
 jest.mock("next/navigation", () => {
-  return {
-    redirect: jest.fn((url: string) => {
-      const error = new Error(`NEXT_REDIRECT ${url}`);
-      Object.assign(error, { digest: `NEXT_REDIRECT;${url}` });
-      throw error;
-    }),
-  };
+  const { createNextNavigationMock } = jest.requireActual<
+    typeof import("@core/test-utils/mocks/next")
+  >("@core/test-utils/mocks/next");
+
+  return createNextNavigationMock();
 });
 
 jest.mock("next/headers", () => {
-  const cookieStore = {
-    get: jest.fn(),
-    getAll: jest.fn(() => []),
-    has: jest.fn(() => false),
-    set: jest.fn(),
-    delete: jest.fn(),
-  };
+  const { createNextHeadersMock } = jest.requireActual<
+    typeof import("@core/test-utils/mocks/next")
+  >("@core/test-utils/mocks/next");
 
-  return {
-    cookies: jest.fn(async () => cookieStore),
-  };
+  return createNextHeadersMock();
 });
 
 jest.mock("@/core/features/auth/oauth/base", () => ({
@@ -92,8 +84,8 @@ const mockSetSessionCookie = jest.mocked(setSessionCookie);
 const mockCreateSession = jest.mocked(createSession);
 
 const mockFetchUser = jest.fn();
-const provider = "google" as const;
-const oAuthUser = {
+const PROVIDER = "google" as const;
+const OAUTH_USER = {
   id: "oauth-user-1",
   email: "oauth-user-1@test.local",
   emailVerified: true,
@@ -101,14 +93,20 @@ const oAuthUser = {
   image: null,
 };
 
-function buildRequest(searchParams = "code=test_code&state=test_state") {
+function buildRequest({
+  rawProvider = PROVIDER,
+  searchParams = "code=test_code&state=test_state",
+}: {
+  rawProvider?: string;
+  searchParams?: string;
+} = {}) {
   return new NextRequest(
-    `http://localhost:3000/api/oauth/${provider}?${searchParams}`,
+    `http://localhost:3000/api/oauth/${rawProvider}?${searchParams}`,
     { method: "GET" },
   );
 }
 
-function buildContext(rawProvider: string = provider) {
+function buildContext(rawProvider: string = PROVIDER) {
   return {
     params: Promise.resolve({ provider: rawProvider }),
   };
@@ -138,7 +136,7 @@ describe("GET /api/oauth/[provider]", () => {
       createAuthUrl: jest.fn(),
       fetchUser: mockFetchUser,
     } as unknown as ReturnType<typeof getOAuthClient>);
-    mockFetchUser.mockResolvedValue(oAuthUser);
+    mockFetchUser.mockResolvedValue(OAUTH_USER);
     mockConnectUserToAccount.mockResolvedValue({ id: TEST_USER_ID });
     mockCreateSession.mockResolvedValue(makeSession({ userId: TEST_USER_ID }));
     mockGetOAuthErrorReturnPathAndClear.mockResolvedValue(routes.signIn);
@@ -154,7 +152,7 @@ describe("GET /api/oauth/[provider]", () => {
 
   it("redirects with oauth_invalid_provider when the provider is unsupported", async () => {
     await expectRedirectTo(
-      GET(buildRequest(), buildContext("facebook")),
+      GET(buildRequest({ rawProvider: "facebook" }), buildContext("facebook")),
       `${routes.signIn}?oauthError=oauth_invalid_provider`,
     );
 
@@ -165,7 +163,7 @@ describe("GET /api/oauth/[provider]", () => {
 
   it("redirects with oauth_failed when the callback code is missing", async () => {
     await expectRedirectTo(
-      GET(buildRequest("state=test_state"), buildContext()),
+      GET(buildRequest({ searchParams: "state=test_state" }), buildContext()),
       `${routes.signIn}?oauthError=oauth_failed`,
     );
 
@@ -175,7 +173,7 @@ describe("GET /api/oauth/[provider]", () => {
 
   it("redirects with oauth_failed when the callback state is missing", async () => {
     await expectRedirectTo(
-      GET(buildRequest("code=test_code"), buildContext()),
+      GET(buildRequest({ searchParams: "code=test_code" }), buildContext()),
       `${routes.signIn}?oauthError=oauth_failed`,
     );
 
@@ -191,7 +189,7 @@ describe("GET /api/oauth/[provider]", () => {
       `${routes.signIn}?oauthError=oauth_not_configured`,
     );
 
-    expect(mockGetOAuthConfig).toHaveBeenCalledWith(provider);
+    expect(mockGetOAuthConfig).toHaveBeenCalledWith(PROVIDER);
     expect(mockGetOAuthClient).not.toHaveBeenCalled();
   });
 
@@ -201,19 +199,19 @@ describe("GET /api/oauth/[provider]", () => {
 
     await expectRedirectTo(GET(buildRequest(), buildContext()), routes.app);
 
-    expect(mockGetOAuthClient).toHaveBeenCalledWith(provider);
+    expect(mockGetOAuthClient).toHaveBeenCalledWith(PROVIDER);
     expect(mockFetchUser).toHaveBeenCalledWith(
       "test_code",
       "test_state",
       await mockCookies.mock.results[0].value,
     );
-    expect(mockConnectUserToAccount).toHaveBeenCalledWith(oAuthUser, provider);
+    expect(mockConnectUserToAccount).toHaveBeenCalledWith(OAUTH_USER, PROVIDER);
     expect(mockCreateSession).toHaveBeenCalledWith(TEST_USER_ID);
     expect(mockSetSessionCookie).toHaveBeenCalledWith(
       session.token,
       session.expiresAt,
     );
-    expect(mockSetLastUsedOAuthProviderCookie).toHaveBeenCalledWith(provider);
+    expect(mockSetLastUsedOAuthProviderCookie).toHaveBeenCalledWith(PROVIDER);
     expect(mockClearOAuthErrorReturnCookie).toHaveBeenCalledTimes(1);
     expect(mockGetOAuthErrorReturnPathAndClear).not.toHaveBeenCalled();
   });
@@ -221,15 +219,15 @@ describe("GET /api/oauth/[provider]", () => {
   it.each([
     [
       "oauth_missing_email",
-      new OAuthMissingEmailError(provider),
+      new OAuthMissingEmailError(PROVIDER),
     ],
     [
       "oauth_unverified_email",
-      new OAuthUnverifiedEmailError(provider),
+      new OAuthUnverifiedEmailError(PROVIDER),
     ],
     [
       "oauth_no_verified_email",
-      new OAuthNoVerifiedEmailError(provider),
+      new OAuthNoVerifiedEmailError(PROVIDER),
     ],
   ])("redirects with %s for known OAuth email errors", async (key, error) => {
     mockFetchUser.mockRejectedValueOnce(error);
@@ -260,7 +258,7 @@ describe("GET /api/oauth/[provider]", () => {
   it("uses the stored OAuth error return path for callback failures", async () => {
     mockGetOAuthErrorReturnPathAndClear.mockResolvedValueOnce(routes.signUp);
     mockConnectUserToAccount.mockRejectedValueOnce(
-      new OAuthUnverifiedEmailError(provider),
+      new OAuthUnverifiedEmailError(PROVIDER),
     );
 
     await expectRedirectTo(
