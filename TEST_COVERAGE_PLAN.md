@@ -838,6 +838,67 @@ Move next into focused component tests for auth and billing flows, or into
 OAuth service internals if improving the lowest remaining coverage areas is the
 priority.
 
+### Auth OAuth Components Slice - 2026-05-22
+
+Files/tests added:
+
+- `core/features/auth/components/OAuthQueryErrorBanner.test.tsx`
+- `core/features/auth/components/OAuthSignInSection.test.tsx`
+
+Files updated:
+
+- `AGENTS.md`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/components/OAuthQueryErrorBanner.test.tsx core/features/auth/components/OAuthSignInSection.test.tsx --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/components/OAuthQueryErrorBanner.test.tsx core/features/auth/components/OAuthSignInSection.test.tsx AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused auth component slice passed: 2 test suites, 6 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 54 test suites, 354 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 54 test suites, 354
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the two touched TypeScript test files.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 83.22% statements, 79.31% branches, 78.45%
+  functions, and 84.97% lines.
+- New component coverage:
+  - `core/features/auth/components/OAuthQueryErrorBanner.tsx`: 100%
+    statements, 100% branches, 100% functions, and 100% lines.
+  - `core/features/auth/components/OAuthSignInSection.tsx`: 88.23%
+    statements, 90% branches, 87.5% functions, and 88.23% lines.
+
+Notes:
+
+- Component tests cover empty OAuth states, mapped OAuth query errors, form
+  error precedence, configured provider rendering, last-used provider labeling,
+  and OAuth action invocation with the sign-up error-return target.
+- Next navigation and auth action dependencies are mocked at module boundaries.
+- `AGENTS.md` now documents the local convention to place module-level
+  `jest.mock(...)` calls before imports when mocking imported modules.
+- No user email fixtures were needed for this slice.
+- This worktree is currently based on merged `main`; the recorded coverage
+  summary reflects the local post-merge state at verification time.
+
+Recommendation:
+
+Continue focused auth component coverage with `SignInForm` and `SignUpForm`,
+mocking only `useActionState`/action boundaries as needed. If lowest remaining
+coverage is the priority, move into `core/features/auth/oauth/base.ts` and the
+cookie helpers in `oauthErrorReturn.ts` / `oauthLastUsed.ts`.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
