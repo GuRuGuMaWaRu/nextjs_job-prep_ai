@@ -57,6 +57,12 @@ function buildJsonRequest(): Request {
   });
 }
 
+function buildFormRequest(): Request {
+  return new Request("http://localhost:3000/api/stripe/cancel-subscription", {
+    method: "POST",
+  });
+}
+
 async function expectJsonRedirect(
   response: Response,
   redirectUrl: string,
@@ -143,6 +149,31 @@ describe("POST /api/stripe/cancel-subscription", () => {
     expect(mockStripe.subscriptions.update).not.toHaveBeenCalled();
   });
 
+  it("redirects when Stripe billing is not configured", async () => {
+    mockIsStripeConfigured.mockReturnValueOnce(false);
+
+    const response = await POST(buildJsonRequest());
+
+    await expectJsonRedirect(
+      response,
+      "https://app.test/app/upgrade?error=stripe_not_configured",
+    );
+    expect(mockGetStripe).not.toHaveBeenCalled();
+    expect(mockStripe.subscriptions.update).not.toHaveBeenCalled();
+  });
+
+  it("redirects when the Stripe client is unavailable", async () => {
+    mockGetStripe.mockReturnValueOnce(null);
+
+    const response = await POST(buildJsonRequest());
+
+    await expectJsonRedirect(
+      response,
+      "https://app.test/app/upgrade?error=stripe_not_configured",
+    );
+    expect(mockStripe.subscriptions.update).not.toHaveBeenCalled();
+  });
+
   it("sets the current subscription to cancel at period end", async () => {
     mockStripe.subscriptions.update.mockResolvedValueOnce({});
 
@@ -156,6 +187,24 @@ describe("POST /api/stripe/cancel-subscription", () => {
       "sub_test_cancel",
       { cancel_at_period_end: true },
       { idempotencyKey: "idem_test_cancel" },
+    );
+  });
+
+  it("redirects with 302 when JSON is not requested", async () => {
+    mockGetStripeBaseUrl.mockReturnValueOnce(null);
+    mockGetIdempotencyKeyFromRequest.mockResolvedValueOnce(undefined);
+    mockStripe.subscriptions.update.mockResolvedValueOnce({});
+
+    const response = await POST(buildFormRequest());
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/app/upgrade?canceled_subscription=true",
+    );
+    expect(mockStripe.subscriptions.update).toHaveBeenCalledWith(
+      "sub_test_cancel",
+      { cancel_at_period_end: true },
+      undefined,
     );
   });
 

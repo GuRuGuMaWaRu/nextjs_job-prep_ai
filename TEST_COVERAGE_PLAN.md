@@ -780,6 +780,64 @@ Deepen the remaining Stripe API branch coverage in
 `app/api/stripe/cancel-subscription/route.ts`; after that, move into focused
 component tests for auth and billing flows.
 
+### Stripe API Branch Coverage Slice - 2026-05-22
+
+Files/tests updated:
+
+- `app/api/stripe/create-checkout-session/route.test.ts`
+- `app/api/stripe/create-portal-session/route.test.ts`
+- `app/api/stripe/cancel-subscription/route.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused Stripe route slice passed: 3 test suites, 29 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 51 test suites, 344 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 51 test suites, 344
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the three touched TypeScript test files.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 83.71% statements, 81.74% branches, 77.19%
+  functions, and 85.55% lines.
+- Updated route coverage:
+  - `app/api/stripe/create-checkout-session/route.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+  - `app/api/stripe/create-portal-session/route.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+  - `app/api/stripe/cancel-subscription/route.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Added focused branch coverage for Stripe configuration failures, missing
+  Stripe clients, checkout price fallback/config failures, already-Pro and
+  existing-subscription redirects, customer email fallback, missing Stripe
+  session URLs, non-JSON 302 redirects, request-origin base URL fallback, and
+  omitted idempotency options.
+- Stripe, auth, env, and billing helper modules remain mocked at module
+  boundaries; route handlers are exercised directly.
+- Test user fixtures use `TEST_USER_ID` and synthetic `@test.local` billing
+  emails only.
+
+Recommendation:
+
+Move next into focused component tests for auth and billing flows, or into
+OAuth service internals if improving the lowest remaining coverage areas is the
+priority.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.

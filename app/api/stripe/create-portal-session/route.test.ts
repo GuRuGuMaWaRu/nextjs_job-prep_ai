@@ -59,6 +59,12 @@ function buildJsonRequest(): Request {
   });
 }
 
+function buildFormRequest(): Request {
+  return new Request("http://localhost:3000/api/stripe/create-portal-session", {
+    method: "POST",
+  });
+}
+
 async function expectJsonRedirect(
   response: Response,
   redirectUrl: string,
@@ -145,6 +151,31 @@ describe("POST /api/stripe/create-portal-session", () => {
     expect(mockStripe.billingPortal.sessions.create).not.toHaveBeenCalled();
   });
 
+  it("redirects when Stripe billing is not configured", async () => {
+    mockIsStripeConfigured.mockReturnValueOnce(false);
+
+    const response = await POST(buildJsonRequest());
+
+    await expectJsonRedirect(
+      response,
+      "https://app.test/app/upgrade?error=stripe_not_configured",
+    );
+    expect(mockGetStripe).not.toHaveBeenCalled();
+    expect(mockStripe.billingPortal.sessions.create).not.toHaveBeenCalled();
+  });
+
+  it("redirects when the Stripe client is unavailable", async () => {
+    mockGetStripe.mockReturnValueOnce(null);
+
+    const response = await POST(buildJsonRequest());
+
+    await expectJsonRedirect(
+      response,
+      "https://app.test/app/upgrade?error=stripe_not_configured",
+    );
+    expect(mockStripe.billingPortal.sessions.create).not.toHaveBeenCalled();
+  });
+
   it("creates a billing portal session for a user with a Stripe customer", async () => {
     mockStripe.billingPortal.sessions.create.mockResolvedValueOnce({
       url: "https://stripe.test/billing/portal",
@@ -162,6 +193,28 @@ describe("POST /api/stripe/create-portal-session", () => {
     );
   });
 
+  it("redirects with 302 when JSON is not requested", async () => {
+    mockGetStripeBaseUrl.mockReturnValueOnce(null);
+    mockGetIdempotencyKeyFromRequest.mockResolvedValueOnce(undefined);
+    mockStripe.billingPortal.sessions.create.mockResolvedValueOnce({
+      url: "https://stripe.test/billing/redirect",
+    });
+
+    const response = await POST(buildFormRequest());
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe(
+      "https://stripe.test/billing/redirect",
+    );
+    expect(mockStripe.billingPortal.sessions.create).toHaveBeenCalledWith(
+      {
+        customer: "cus_test_portal",
+        return_url: "http://localhost:3000/app/upgrade",
+      },
+      undefined,
+    );
+  });
+
   it("redirects when Stripe rejects billing portal session creation", async () => {
     mockStripe.billingPortal.sessions.create.mockRejectedValueOnce(
       new Error("stripe unavailable"),
@@ -176,6 +229,17 @@ describe("POST /api/stripe/create-portal-session", () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Stripe portal session creation failed:",
       expect.any(Error),
+    );
+  });
+
+  it("redirects when Stripe creates a billing portal session without a URL", async () => {
+    mockStripe.billingPortal.sessions.create.mockResolvedValueOnce({});
+
+    const response = await POST(buildJsonRequest());
+
+    await expectJsonRedirect(
+      response,
+      "https://app.test/app/upgrade?error=portal_failed",
     );
   });
 });
