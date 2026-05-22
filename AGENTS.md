@@ -4,6 +4,7 @@
 - Avoid inline styling.
 - Follow best practices, reference implementation and apply epistemic reasoning.
 - All code should be formatted for readability with logical parts separated by empty lines.
+- In tests, place module-level `jest.mock(...)` calls before imports when mocking imported modules.
 
 ## General Rules
 
