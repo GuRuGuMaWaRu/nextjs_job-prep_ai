@@ -16,6 +16,25 @@ const TERMINAL_SUBSCRIPTION_STATUSES = [
   "incomplete_expired",
 ] as const;
 
+function getLatestSubscription(
+  subscriptions: Stripe.Subscription[],
+): Stripe.Subscription | null {
+  return subscriptions.reduce<Stripe.Subscription | null>(
+    (latest, subscription) => {
+      if (!isActiveSubscriptionStatus(subscription.status)) {
+        return latest;
+      }
+
+      if (!latest || subscription.created > latest.created) {
+        return subscription;
+      }
+
+      return latest;
+    },
+    null,
+  );
+}
+
 function isActiveSubscriptionStatus(
   status: string,
 ): status is (typeof ACTIVE_SUBSCRIPTION_STATUSES)[number] {
@@ -57,11 +76,49 @@ async function findActiveCustomerSubscription(
     limit: CUSTOMER_SUBSCRIPTION_LIST_LIMIT,
   });
 
-  return (
-    subscriptions.data.find((subscription) =>
-      isActiveSubscriptionStatus(subscription.status),
-    ) ?? null
+  return getLatestSubscription(subscriptions.data);
+}
+
+async function getSubscriptionForSync(
+  stripe: Stripe,
+  subscription: Stripe.Subscription,
+  customerId: string,
+  currentStripeSubscriptionId: string | null,
+): Promise<Stripe.Subscription | null> {
+  if (
+    currentStripeSubscriptionId !== null &&
+    currentStripeSubscriptionId !== subscription.id
+  ) {
+    const activeSubscription = await findActiveCustomerSubscription(
+      stripe,
+      customerId,
+    );
+
+    if (activeSubscription?.id === subscription.id) {
+      return activeSubscription;
+    }
+
+    console.warn("[stripeSync] Skipped stale subscription webhook", {
+      currentStripeSubscriptionId,
+      eventStripeSubscriptionId: subscription.id,
+      activeStripeSubscriptionId: activeSubscription?.id ?? null,
+    });
+
+    return null;
+  }
+
+  if (isActiveSubscriptionStatus(subscription.status)) {
+    return subscription;
+  }
+
+  const activeSubscription = await findActiveCustomerSubscription(
+    stripe,
+    customerId,
   );
+
+  return activeSubscription && activeSubscription.id !== subscription.id
+    ? activeSubscription
+    : subscription;
 }
 
 /**
@@ -84,21 +141,20 @@ export async function syncSubscriptionFromStripe(
     );
   }
 
-  if (
-    user.stripeSubscriptionId !== null &&
-    user.stripeSubscriptionId !== subscriptionId
-  ) {
-    console.warn("[stripeSync] Skipped stale subscription webhook", {
-      userId: user.id,
-      currentStripeSubscriptionId: user.stripeSubscriptionId,
-      eventStripeSubscriptionId: subscriptionId,
-    });
+  const stripeSubscription =
+    await stripe.subscriptions.retrieve(subscriptionId);
+  const subscriptionForSync = await getSubscriptionForSync(
+    stripe,
+    stripeSubscription,
+    customerId,
+    user.stripeSubscriptionId,
+  );
+
+  if (!subscriptionForSync) {
     return;
   }
 
-  const stripeSubscription =
-    await stripe.subscriptions.retrieve(subscriptionId);
-  const subscriptionState = getSubscriptionState(stripeSubscription);
+  const subscriptionState = getSubscriptionState(subscriptionForSync);
 
   const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
     user.id,
@@ -112,7 +168,7 @@ export async function syncSubscriptionFromStripe(
       {
         userId: user.id,
         priorStripeSubscriptionId: user.stripeSubscriptionId,
-        eventStripeSubscriptionId: subscriptionId,
+        eventStripeSubscriptionId: subscriptionForSync.id,
       },
     );
   }
@@ -167,7 +223,13 @@ export async function reconcileUserStripeSubscription(
       return { kind: "skipped", reason: "customer_mismatch" };
     }
 
-    const subscriptionState = getSubscriptionState(stripeSubscription);
+    const subscriptionForSync =
+      !isActiveSubscriptionStatus(stripeSubscription.status) && stripeCustomerId
+        ? ((await findActiveCustomerSubscription(stripe, stripeCustomerId)) ??
+          stripeSubscription)
+        : stripeSubscription;
+
+    const subscriptionState = getSubscriptionState(subscriptionForSync);
     const isUpdated =
       user.plan !== subscriptionState.plan ||
       user.stripeSubscriptionId !== subscriptionState.stripeSubscriptionId;

@@ -34,14 +34,14 @@ function nextSubscriptionIndex(): number {
 }
 
 export type MakeStripeSubscriptionOverrides = Partial<
-  Pick<Stripe.Subscription, "id" | "customer" | "status">
+  Pick<Stripe.Subscription, "id" | "customer" | "status" | "created">
 > & {
   cancelAtPeriodEnd?: boolean;
 };
 
 /**
  * Builds a minimal `Stripe.Subscription` fixture. Only the fields the app's
- * sync logic reads (`id`, `customer`, `status`) are meaningful.
+ * sync logic reads (`id`, `customer`, `status`, `created`) are meaningful.
  */
 export function makeStripeSubscription(
   overrides: MakeStripeSubscriptionOverrides = {},
@@ -53,6 +53,7 @@ export function makeStripeSubscription(
     object: "subscription" as const,
     customer: overrides.customer ?? `cus_test_${index}`,
     status: overrides.status ?? "active",
+    created: overrides.created ?? index,
     cancel_at_period_end: overrides.cancelAtPeriodEnd ?? false,
   };
 
