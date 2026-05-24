@@ -133,18 +133,20 @@ export async function unclaimEvent(eventId: string): Promise<void> {
  * Applies Pro plan and Stripe customer/subscription IDs from a completed Checkout session.
  *
  * @param session — Stripe Checkout session (must include `metadata.userId` and resolved customer/subscription).
- * @returns Resolves when the user row is updated, or returns early if the session is unpaid or missing data.
+ * @returns True when the user row was updated, or false if the session is unpaid or missing required data.
  * @sideEffects Writes to the application database via `updateUserPlanAndStripeIdsDb`; may log non-sensitive warnings.
  */
-export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
+export async function fulfillCheckoutSession(
+  session: Stripe.Checkout.Session,
+): Promise<boolean> {
   if (session.payment_status === "unpaid") {
-    return;
+    return false;
   }
 
   const userId = session.metadata?.userId as string | undefined;
   if (!userId) {
     console.warn("fulfillCheckoutSession: missing metadata.userId", session.id);
-    return;
+    return false;
   }
 
   const subscriptionId =
@@ -163,7 +165,7 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         `customerId=${customerId}, subscriptionId=${subscriptionId}`,
       session.id,
     );
-    return;
+    return false;
   }
 
   await updateUserPlanAndStripeIdsDb(userId, {
@@ -171,4 +173,6 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscriptionId,
   });
+
+  return true;
 }
