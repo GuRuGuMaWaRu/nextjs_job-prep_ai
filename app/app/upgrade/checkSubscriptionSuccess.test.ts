@@ -96,6 +96,24 @@ describe("checkSubscriptionSuccess", () => {
     expect(mockFulfillCheckoutSession).not.toHaveBeenCalled();
   });
 
+  it("does not fulfill an unpaid Checkout session owned by the current user", async () => {
+    const session = makeStripeCheckoutSession({
+      id: "cs_test_unpaid",
+      userId: TEST_USER_ID,
+      paymentStatus: "unpaid",
+    });
+    retrieveCheckoutSession.mockResolvedValueOnce(session);
+
+    await expect(
+      checkSubscriptionSuccess({
+        success: "true",
+        session_id: "cs_test_unpaid",
+      }),
+    ).resolves.toBe(false);
+
+    expect(mockFulfillCheckoutSession).not.toHaveBeenCalled();
+  });
+
   it("returns false when the fallback fulfillment does not update the user", async () => {
     const session = makeStripeCheckoutSession({
       id: "cs_test_missing_subscription",
