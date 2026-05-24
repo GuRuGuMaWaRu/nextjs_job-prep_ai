@@ -33,12 +33,18 @@ const mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb = jest.mocked(
 
 function makeStripeList(
   subscriptions: Stripe.Subscription[],
+  autoPagingSubscriptions = subscriptions,
 ): Stripe.ApiList<Stripe.Subscription> {
   return {
     object: "list",
     data: subscriptions,
     has_more: false,
     url: "/v1/subscriptions",
+    async *[Symbol.asyncIterator]() {
+      for (const subscription of autoPagingSubscriptions) {
+        yield subscription;
+      }
+    },
   };
 }
 
@@ -56,14 +62,16 @@ function makeMissingSubscriptionError(): Stripe.errors.StripeInvalidRequestError
 describe("syncSubscriptionFromStripe", () => {
   let stripe: Stripe;
   let mockRetrieve: jest.Mock;
+  let mockList: jest.Mock;
   let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockRetrieve = jest.fn();
+    mockList = jest.fn().mockReturnValue(makeStripeList([]));
     stripe = {
       subscriptions: {
         retrieve: mockRetrieve,
-        list: jest.fn(),
+        list: mockList,
       },
     } as unknown as Stripe;
 
@@ -78,18 +86,26 @@ describe("syncSubscriptionFromStripe", () => {
     consoleWarnSpy.mockRestore();
   });
 
-  it("skips stale subscription events when the user already references a newer subscription", async () => {
+  it("skips stale non-active subscription events when the user already references another subscription", async () => {
     const user = makeProUser({
       stripeCustomerId: "cus_test_current",
       stripeSubscriptionId: "sub_test_current",
+    });
+    const currentSubscription = makeStripeSubscription({
+      id: "sub_test_current",
+      customer: "cus_test_current",
+      status: "active",
+      created: 200,
     });
     const staleSubscription = makeStripeSubscription({
       id: "sub_test_stale",
       customer: "cus_test_current",
       status: "canceled",
+      created: 100,
     });
     mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
     mockRetrieve.mockResolvedValue(staleSubscription);
+    mockList.mockReturnValue(makeStripeList([currentSubscription]));
 
     await syncSubscriptionFromStripe(
       stripe,
@@ -98,30 +114,38 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(mockRetrieve).toHaveBeenCalledWith("sub_test_stale");
+    expect(mockList).toHaveBeenCalledWith({
+      customer: "cus_test_current",
+      status: "all",
+      limit: 100,
+    });
     expect(
       mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
     ).not.toHaveBeenCalled();
   });
 
-  it("attaches a newer active subscription when the stored subscription is stale", async () => {
+  it("updates to a newer active subscription when the row still references an older subscription", async () => {
     const user = makeProUser({
       stripeCustomerId: "cus_test_current",
       stripeSubscriptionId: "sub_test_old",
+    });
+    const oldSubscription = makeStripeSubscription({
+      id: "sub_test_old",
+      customer: "cus_test_current",
+      status: "active",
+      created: 100,
     });
     const newSubscription = makeStripeSubscription({
       id: "sub_test_new",
       customer: "cus_test_current",
       status: "active",
-    });
-    const oldSubscription = makeStripeSubscription({
-      id: "sub_test_old",
-      customer: "cus_test_current",
-      status: "canceled",
+      created: 200,
     });
     mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
-    mockRetrieve
-      .mockResolvedValueOnce(newSubscription)
-      .mockResolvedValueOnce(oldSubscription);
+    mockRetrieve.mockResolvedValue(newSubscription);
+    mockList.mockReturnValue(
+      makeStripeList([oldSubscription, newSubscription]),
+    );
 
     await syncSubscriptionFromStripe(
       stripe,
@@ -129,8 +153,6 @@ describe("syncSubscriptionFromStripe", () => {
       "cus_test_current",
     );
 
-    expect(mockRetrieve).toHaveBeenNthCalledWith(1, "sub_test_new");
-    expect(mockRetrieve).toHaveBeenNthCalledWith(2, "sub_test_old");
     expect(
       mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
     ).toHaveBeenCalledWith(user.id, "sub_test_old", {
@@ -139,35 +161,108 @@ describe("syncSubscriptionFromStripe", () => {
     });
   });
 
-  it("skips a mismatched active event when the stored subscription is still active", async () => {
+  it("uses auto-pagination when searching for an active replacement subscription", async () => {
     const user = makeProUser({
-      stripeCustomerId: "cus_test_current",
-      stripeSubscriptionId: "sub_test_current",
+      stripeCustomerId: "cus_test_paginated",
+      stripeSubscriptionId: "sub_test_old",
     });
-    const eventSubscription = makeStripeSubscription({
-      id: "sub_test_other",
-      customer: "cus_test_current",
-      status: "active",
+    const canceledSubscription = makeStripeSubscription({
+      id: "sub_test_old",
+      customer: "cus_test_paginated",
+      status: "canceled",
+      created: 100,
     });
-    const currentSubscription = makeStripeSubscription({
-      id: "sub_test_current",
-      customer: "cus_test_current",
+    const activeSubscription = makeStripeSubscription({
+      id: "sub_test_active_after_first_page",
+      customer: "cus_test_paginated",
       status: "active",
+      created: 200,
     });
     mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
-    mockRetrieve
-      .mockResolvedValueOnce(eventSubscription)
-      .mockResolvedValueOnce(currentSubscription);
+    mockRetrieve.mockResolvedValue(canceledSubscription);
+    mockList.mockReturnValue(makeStripeList([], [activeSubscription]));
 
     await syncSubscriptionFromStripe(
       stripe,
-      "sub_test_other",
+      "sub_test_old",
+      "cus_test_paginated",
+    );
+
+    expect(
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+    ).toHaveBeenCalledWith(user.id, "sub_test_old", {
+      plan: "pro",
+      stripeSubscriptionId: "sub_test_active_after_first_page",
+    });
+  });
+
+  it("does not let an older active subscription replace a newer stored subscription", async () => {
+    const user = makeProUser({
+      stripeCustomerId: "cus_test_current",
+      stripeSubscriptionId: "sub_test_new",
+    });
+    const oldSubscription = makeStripeSubscription({
+      id: "sub_test_old",
+      customer: "cus_test_current",
+      status: "active",
+      created: 100,
+    });
+    const newSubscription = makeStripeSubscription({
+      id: "sub_test_new",
+      customer: "cus_test_current",
+      status: "active",
+      created: 200,
+    });
+    mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
+    mockRetrieve.mockResolvedValue(oldSubscription);
+    mockList.mockReturnValue(
+      makeStripeList([oldSubscription, newSubscription]),
+    );
+
+    await syncSubscriptionFromStripe(
+      stripe,
+      "sub_test_old",
       "cus_test_current",
     );
 
     expect(
       mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
     ).not.toHaveBeenCalled();
+  });
+
+  it("switches to a newer active subscription instead of downgrading a terminal stored subscription", async () => {
+    const user = makeProUser({
+      stripeCustomerId: "cus_test_current",
+      stripeSubscriptionId: "sub_test_old",
+    });
+    const canceledSubscription = makeStripeSubscription({
+      id: "sub_test_old",
+      customer: "cus_test_current",
+      status: "canceled",
+      created: 100,
+    });
+    const newSubscription = makeStripeSubscription({
+      id: "sub_test_new",
+      customer: "cus_test_current",
+      status: "active",
+      created: 200,
+    });
+    mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
+    mockRetrieve.mockResolvedValue(canceledSubscription);
+    mockList.mockReturnValue(makeStripeList([newSubscription]));
+
+    await syncSubscriptionFromStripe(
+      stripe,
+      "sub_test_old",
+      "cus_test_current",
+    );
+
+    expect(
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+    ).toHaveBeenCalledWith(user.id, "sub_test_old", {
+      plan: "pro",
+      stripeSubscriptionId: "sub_test_new",
+    });
   });
 
   it("uses a conditional update so concurrent checkout fulfillment cannot be overwritten", async () => {
@@ -244,7 +339,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
     mockGetUserByIdDb.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
     mockRetrieve.mockRejectedValue(makeMissingSubscriptionError());
-    mockList.mockResolvedValue(makeStripeList([activeSubscription]));
+    mockList.mockReturnValue(makeStripeList([activeSubscription]));
 
     await expect(
       reconcileUserStripeSubscription(stripe, user.id),
@@ -284,7 +379,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
     mockGetUserByIdDb.mockResolvedValue(user);
     mockRetrieve.mockResolvedValue(inactiveSubscription);
-    mockList.mockResolvedValue(makeStripeList([activeSubscription]));
+    mockList.mockReturnValue(makeStripeList([activeSubscription]));
 
     await expect(
       reconcileUserStripeSubscription(stripe, user.id),
@@ -306,6 +401,51 @@ describe("reconcileUserStripeSubscription", () => {
     });
   });
 
+  it("repairs a terminal stored subscription by attaching the newest active customer subscription", async () => {
+    const user = makeProUser({
+      id: "user_test_terminal_repair",
+      stripeCustomerId: "cus_test_terminal_repair",
+      stripeSubscriptionId: "sub_test_old",
+    });
+    const canceledSubscription = makeStripeSubscription({
+      id: "sub_test_old",
+      customer: "cus_test_terminal_repair",
+      status: "canceled",
+      created: 100,
+    });
+    const olderActiveSubscription = makeStripeSubscription({
+      id: "sub_test_older_active",
+      customer: "cus_test_terminal_repair",
+      status: "active",
+      created: 150,
+    });
+    const newestActiveSubscription = makeStripeSubscription({
+      id: "sub_test_newest_active",
+      customer: "cus_test_terminal_repair",
+      status: "active",
+      created: 200,
+    });
+    mockGetUserByIdDb.mockResolvedValue(user);
+    mockRetrieve.mockResolvedValue(canceledSubscription);
+    mockList.mockReturnValue(
+      makeStripeList([olderActiveSubscription, newestActiveSubscription]),
+    );
+
+    await expect(
+      reconcileUserStripeSubscription(stripe, user.id),
+    ).resolves.toEqual({
+      kind: "ok",
+      updated: true,
+    });
+
+    expect(
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+    ).toHaveBeenCalledWith(user.id, "sub_test_old", {
+      plan: "pro",
+      stripeSubscriptionId: "sub_test_newest_active",
+    });
+  });
+
   it("downgrades a missing stored subscription only while the row still references it", async () => {
     const user = makeProUser({
       id: "user_test_downgrade",
@@ -314,7 +454,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
     mockGetUserByIdDb.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
     mockRetrieve.mockRejectedValue(makeMissingSubscriptionError());
-    mockList.mockResolvedValue(makeStripeList([]));
+    mockList.mockReturnValue(makeStripeList([]));
 
     await expect(
       reconcileUserStripeSubscription(stripe, user.id),
