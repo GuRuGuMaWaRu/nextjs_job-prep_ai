@@ -899,6 +899,70 @@ mocking only `useActionState`/action boundaries as needed. If lowest remaining
 coverage is the priority, move into `core/features/auth/oauth/base.ts` and the
 cookie helpers in `oauthErrorReturn.ts` / `oauthLastUsed.ts`.
 
+### Auth Form Components Slice - 2026-05-22
+
+Files/tests added:
+
+- `core/features/auth/components/SignInForm.test.tsx`
+- `core/features/auth/components/SignUpForm.test.tsx`
+
+Files updated:
+
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/components/SignInForm.test.tsx --runInBand`
+- `npm.cmd test -- core/features/auth/components/SignUpForm.test.tsx --runInBand`
+- `npm.cmd test -- core/features/auth/components/SignInForm.test.tsx core/features/auth/components/SignUpForm.test.tsx --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/components/SignInForm.test.tsx core/features/auth/components/SignUpForm.test.tsx AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused auth form slice passed: 2 test suites, 6 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 56 test suites, 360 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 56 test suites, 360
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the two touched TypeScript test files.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 83.5% statements, 79.29% branches, 78.07%
+  functions, and 85.26% lines.
+- New component coverage:
+  - `core/features/auth/components/SignInForm.tsx`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+  - `core/features/auth/components/SignUpForm.tsx`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Component tests cover default field rendering, action-state wiring, OAuth
+  child component props, preserved invalid field values, field error rendering,
+  form error banner handoff, pending button copy, and disabled pending controls.
+- React `useActionState`, auth action modules, and OAuth child components are
+  mocked at module boundaries with module-level `jest.mock(...)` calls before
+  imports.
+- Test email fixtures use synthetic `@test.local` addresses only.
+- The first SignInForm focused run failed because `CardTitle` is a styled `div`,
+  not a semantic heading; the assertion was updated to verify stable visible
+  copy instead.
+
+Recommendation:
+
+Move next into the lowest remaining auth coverage areas:
+`core/features/auth/oauth/base.ts` and the cookie helpers in
+`oauthErrorReturn.ts` / `oauthLastUsed.ts`. Keep provider/client behavior mocked
+at module boundaries and cover cookie read/write/delete branches in a small
+focused slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
