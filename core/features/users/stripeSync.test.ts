@@ -83,7 +83,13 @@ describe("syncSubscriptionFromStripe", () => {
       stripeCustomerId: "cus_test_current",
       stripeSubscriptionId: "sub_test_current",
     });
+    const staleSubscription = makeStripeSubscription({
+      id: "sub_test_stale",
+      customer: "cus_test_current",
+      status: "canceled",
+    });
     mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
+    mockRetrieve.mockResolvedValue(staleSubscription);
 
     await syncSubscriptionFromStripe(
       stripe,
@@ -91,7 +97,74 @@ describe("syncSubscriptionFromStripe", () => {
       "cus_test_current",
     );
 
-    expect(mockRetrieve).not.toHaveBeenCalled();
+    expect(mockRetrieve).toHaveBeenCalledWith("sub_test_stale");
+    expect(
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("attaches a newer active subscription when the stored subscription is stale", async () => {
+    const user = makeProUser({
+      stripeCustomerId: "cus_test_current",
+      stripeSubscriptionId: "sub_test_old",
+    });
+    const newSubscription = makeStripeSubscription({
+      id: "sub_test_new",
+      customer: "cus_test_current",
+      status: "active",
+    });
+    const oldSubscription = makeStripeSubscription({
+      id: "sub_test_old",
+      customer: "cus_test_current",
+      status: "canceled",
+    });
+    mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
+    mockRetrieve
+      .mockResolvedValueOnce(newSubscription)
+      .mockResolvedValueOnce(oldSubscription);
+
+    await syncSubscriptionFromStripe(
+      stripe,
+      "sub_test_new",
+      "cus_test_current",
+    );
+
+    expect(mockRetrieve).toHaveBeenNthCalledWith(1, "sub_test_new");
+    expect(mockRetrieve).toHaveBeenNthCalledWith(2, "sub_test_old");
+    expect(
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+    ).toHaveBeenCalledWith(user.id, "sub_test_old", {
+      plan: "pro",
+      stripeSubscriptionId: "sub_test_new",
+    });
+  });
+
+  it("skips a mismatched active event when the stored subscription is still active", async () => {
+    const user = makeProUser({
+      stripeCustomerId: "cus_test_current",
+      stripeSubscriptionId: "sub_test_current",
+    });
+    const eventSubscription = makeStripeSubscription({
+      id: "sub_test_other",
+      customer: "cus_test_current",
+      status: "active",
+    });
+    const currentSubscription = makeStripeSubscription({
+      id: "sub_test_current",
+      customer: "cus_test_current",
+      status: "active",
+    });
+    mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
+    mockRetrieve
+      .mockResolvedValueOnce(eventSubscription)
+      .mockResolvedValueOnce(currentSubscription);
+
+    await syncSubscriptionFromStripe(
+      stripe,
+      "sub_test_other",
+      "cus_test_current",
+    );
+
     expect(
       mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
     ).not.toHaveBeenCalled();
@@ -188,6 +261,46 @@ describe("reconcileUserStripeSubscription", () => {
     expect(
       mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
     ).toHaveBeenCalledWith(user.id, "sub_test_missing", {
+      plan: "pro",
+      stripeSubscriptionId: "sub_test_active",
+    });
+  });
+
+  it("repairs a retrievable inactive stored subscription by attaching another active customer subscription", async () => {
+    const user = makeProUser({
+      id: "user_test_repair_inactive",
+      stripeCustomerId: "cus_test_repair",
+      stripeSubscriptionId: "sub_test_inactive",
+    });
+    const inactiveSubscription = makeStripeSubscription({
+      id: "sub_test_inactive",
+      customer: "cus_test_repair",
+      status: "canceled",
+    });
+    const activeSubscription = makeStripeSubscription({
+      id: "sub_test_active",
+      customer: "cus_test_repair",
+      status: "active",
+    });
+    mockGetUserByIdDb.mockResolvedValue(user);
+    mockRetrieve.mockResolvedValue(inactiveSubscription);
+    mockList.mockResolvedValue(makeStripeList([activeSubscription]));
+
+    await expect(
+      reconcileUserStripeSubscription(stripe, user.id),
+    ).resolves.toEqual({
+      kind: "ok",
+      updated: true,
+    });
+
+    expect(mockList).toHaveBeenCalledWith({
+      customer: "cus_test_repair",
+      status: "all",
+      limit: 100,
+    });
+    expect(
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+    ).toHaveBeenCalledWith(user.id, "sub_test_inactive", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_active",
     });
