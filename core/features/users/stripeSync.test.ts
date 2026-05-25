@@ -31,10 +31,13 @@ const mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb = jest.mocked(
   updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
 );
 
+type StripeSubscriptionList = Stripe.ApiList<Stripe.Subscription> &
+  AsyncIterable<Stripe.Subscription>;
+
 function makeStripeList(
   subscriptions: Stripe.Subscription[],
   autoPagingSubscriptions = subscriptions,
-): Stripe.ApiList<Stripe.Subscription> {
+): StripeSubscriptionList {
   return {
     object: "list",
     data: subscriptions,
