@@ -311,19 +311,21 @@ describe("OAuthClient.createAuthUrl", () => {
         crypto.hash("sha256", codeVerifier, "base64url"),
       );
       expect(url.searchParams.get("code_challenge_method")).toBe("S256");
-      expect(cookies.set).toHaveBeenCalledWith("oauth_state", state, {
+      expect(cookies.set).toHaveBeenCalledWith("__Host-oauth_state", state, {
         secure: true,
         httpOnly: true,
         sameSite: "lax",
+        path: "/",
         expires: Date.now() + 600_000,
       });
       expect(cookies.set).toHaveBeenCalledWith(
-        "oauth_code_verifier",
+        "__Host-oauth_code_verifier",
         codeVerifier,
         {
           secure: true,
           httpOnly: true,
           sameSite: "lax",
+          path: "/",
           expires: Date.now() + 600_000,
         },
       );
@@ -337,8 +339,8 @@ describe("OAuthClient.createAuthUrl", () => {
 describe("OAuthClient.fetchUser", () => {
   it("rejects callbacks with an invalid state before fetching tokens", async () => {
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -346,11 +348,13 @@ describe("OAuthClient.fetchUser", () => {
     ).rejects.toBeInstanceOf(InvalidStateError);
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 
   it("rejects callbacks with no stored code verifier before fetching tokens", async () => {
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
+      "__Host-oauth_state": "stored-state",
     });
 
     await expect(
@@ -358,13 +362,15 @@ describe("OAuthClient.fetchUser", () => {
     ).rejects.toBeInstanceOf(InvalidCodeVerifierError);
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 
   it("exchanges the code and parses the resolved OAuth user", async () => {
     const fetchMock = mockSuccessfulFetches();
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -378,14 +384,16 @@ describe("OAuthClient.fetchUser", () => {
       },
     });
     expect(parser).toHaveBeenCalledWith(userPayload);
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 
   it("passes parsed user data and token details to resolver-based clients", async () => {
     const fetchMock = mockSuccessfulFetches();
     const resolveUser = jest.fn(async () => resolvedUser);
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -411,8 +419,8 @@ describe("OAuthClient.fetchUser", () => {
         new Response("invalid grant", { status: 400, statusText: "Bad" }),
       );
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -428,8 +436,8 @@ describe("OAuthClient.fetchUser", () => {
   it("throws InvalidTokenError when the token payload is malformed", async () => {
     jest.mocked(fetch).mockResolvedValueOnce(Response.json({ token: "bad" }));
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -442,8 +450,8 @@ describe("OAuthClient.fetchUser", () => {
 
     jest.mocked(fetch).mockRejectedValueOnce(cause);
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -467,8 +475,8 @@ describe("OAuthClient.fetchUser", () => {
         }),
       );
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -489,8 +497,8 @@ describe("OAuthClient.fetchUser", () => {
       )
       .mockResolvedValueOnce(Response.json({ id: "missing-email" }));
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(
@@ -511,8 +519,8 @@ describe("OAuthClient.fetchUser", () => {
         json: jest.fn().mockRejectedValue(cause),
       } as unknown as Response);
     const cookies = createCookieStore({
-      oauth_state: "stored-state",
-      oauth_code_verifier: "code-verifier",
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
     });
 
     await expect(

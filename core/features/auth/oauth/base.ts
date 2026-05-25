@@ -18,9 +18,15 @@ import {
   InvalidCodeVerifierError,
 } from "./errors";
 
-const CODE_VERIFIER_COOKIE_KEY = "oauth_code_verifier";
-const STATE_COOKIE_KEY = "oauth_state";
+const CODE_VERIFIER_COOKIE_KEY = "__Host-oauth_code_verifier";
+const STATE_COOKIE_KEY = "__Host-oauth_state";
 const COOKIE_EXPIRATION_SECONDS = 60 * 10; // 10 minutes
+const CALLBACK_COOKIE_OPTIONS = {
+  secure: true,
+  httpOnly: true,
+  sameSite: "lax" as const,
+  path: "/",
+};
 
 export type ResolvedOAuthUser = {
   id: string;
@@ -110,58 +116,67 @@ export class OAuthClient<T> {
     return url.toString();
   }
 
-  async fetchUser(code: string, state: string, cookies: Pick<Cookies, "get">) {
-    const isValidState = validateState(state, cookies);
-
-    if (!isValidState) {
-      throw new InvalidStateError();
-    }
-
-    const { accessToken, tokenType } = await this.fetchToken(
-      code,
-      getCodeVerifier(cookies),
-    );
-
+  async fetchUser(
+    code: string,
+    state: string,
+    cookies: Pick<Cookies, "get" | "delete">,
+  ) {
     try {
-      const response = await fetch(this.urls.user, {
-        headers: {
-          Authorization: `${tokenType} ${accessToken}`,
-        },
-      });
+      const isValidState = validateState(state, cookies);
 
-      if (!response.ok) {
-        const bodyPreview = await readResponseBodyPreview(response);
-        throw new OAuthUserInfoHttpError(
-          response.status,
-          response.statusText,
-          bodyPreview,
-        );
+      if (!isValidState) {
+        throw new InvalidStateError();
       }
 
-      const rawData = await response.json();
+      const { accessToken, tokenType } = await this.fetchToken(
+        code,
+        getCodeVerifier(cookies),
+      );
 
-      const { data, success, error } = this.userInfo.schema.safeParse(rawData);
-      if (!success) {
-        throw new InvalidUserError(error);
-      }
-
-      if ("resolveUser" in this.userInfo) {
-        return await this.userInfo.resolveUser({
-          data,
-          accessToken,
-          tokenType,
+      try {
+        const response = await fetch(this.urls.user, {
+          headers: {
+            Authorization: `${tokenType} ${accessToken}`,
+          },
         });
-      }
 
-      return this.userInfo.parser(data);
-    } catch (error) {
-      if (error instanceof InvalidUserError) {
-        throw error;
+        if (!response.ok) {
+          const bodyPreview = await readResponseBodyPreview(response);
+          throw new OAuthUserInfoHttpError(
+            response.status,
+            response.statusText,
+            bodyPreview,
+          );
+        }
+
+        const rawData = await response.json();
+
+        const { data, success, error } =
+          this.userInfo.schema.safeParse(rawData);
+        if (!success) {
+          throw new InvalidUserError(error);
+        }
+
+        if ("resolveUser" in this.userInfo) {
+          return await this.userInfo.resolveUser({
+            data,
+            accessToken,
+            tokenType,
+          });
+        }
+
+        return this.userInfo.parser(data);
+      } catch (error) {
+        if (error instanceof InvalidUserError) {
+          throw error;
+        }
+        if (error instanceof OAuthUserInfoHttpError) {
+          throw error;
+        }
+        throw new Error("Failed to fetch user", { cause: error });
       }
-      if (error instanceof OAuthUserInfoHttpError) {
-        throw error;
-      }
-      throw new Error("Failed to fetch user", { cause: error });
+    } finally {
+      clearCallbackCookies(cookies);
     }
   }
 
@@ -236,9 +251,7 @@ function createState(cookies: Pick<Cookies, "set">): string {
   const state = crypto.randomBytes(64).toString("hex");
 
   cookies.set(STATE_COOKIE_KEY, state, {
-    secure: true,
-    httpOnly: true,
-    sameSite: "lax",
+    ...CALLBACK_COOKIE_OPTIONS,
     expires: Date.now() + COOKIE_EXPIRATION_SECONDS * 1000,
   });
   return state;
@@ -248,9 +261,7 @@ function createCodeVerifier(cookies: Pick<Cookies, "set">): string {
   const codeVerifier = crypto.randomBytes(64).toString("hex");
 
   cookies.set(CODE_VERIFIER_COOKIE_KEY, codeVerifier, {
-    secure: true,
-    httpOnly: true,
-    sameSite: "lax",
+    ...CALLBACK_COOKIE_OPTIONS,
     expires: Date.now() + COOKIE_EXPIRATION_SECONDS * 1000,
   });
   return codeVerifier;
@@ -267,6 +278,11 @@ function getCodeVerifier(cookies: Pick<Cookies, "get">): string {
     throw new InvalidCodeVerifierError();
   }
   return codeVerifier;
+}
+
+function clearCallbackCookies(cookies: Pick<Cookies, "delete">): void {
+  cookies.delete(STATE_COOKIE_KEY);
+  cookies.delete(CODE_VERIFIER_COOKIE_KEY);
 }
 
 const MAX_HTTP_ERROR_BODY_PREVIEW = 512;
