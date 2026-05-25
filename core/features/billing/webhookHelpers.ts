@@ -6,10 +6,12 @@ import type Stripe from "stripe";
 
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
+import { getStripe } from "@/core/features/billing/stripe";
 import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 
 const REMEDIATION_DETAIL_MAX_LEN = 512;
 const POSTGRES_UNDEFINED_COLUMN = "42703";
+const FULFILLABLE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 
 /** After `onConflictDoNothing`, a row might disappear before SELECT (e.g. concurrent `unclaimEvent`). */
 const CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS = 5;
@@ -21,6 +23,12 @@ function isMissingStripeEventSchemaError(error: unknown): boolean {
 
   const withCode = error as Error & { code?: string };
   return withCode.code === POSTGRES_UNDEFINED_COLUMN;
+}
+
+function isFulfillableSubscriptionStatus(status: string): boolean {
+  return FULFILLABLE_SUBSCRIPTION_STATUSES.includes(
+    status as (typeof FULFILLABLE_SUBSCRIPTION_STATUSES)[number],
+  );
 }
 
 /**
@@ -163,6 +171,30 @@ export async function fulfillCheckoutSession(
     console.warn(
       "fulfillCheckoutSession: incomplete session payload — " +
         `customerId=${customerId}, subscriptionId=${subscriptionId}`,
+      session.id,
+    );
+    return false;
+  }
+
+  const stripe = getStripe();
+  if (!stripe) {
+    return false;
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscriptionCustomerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : (subscription.customer?.id ?? null);
+
+  if (
+    subscriptionCustomerId !== customerId ||
+    !isFulfillableSubscriptionStatus(subscription.status)
+  ) {
+    console.warn(
+      "fulfillCheckoutSession: subscription is not fulfillable — " +
+        `customerId=${customerId}, subscriptionId=${subscriptionId}, ` +
+        `subscriptionStatus=${subscription.status}`,
       session.id,
     );
     return false;
