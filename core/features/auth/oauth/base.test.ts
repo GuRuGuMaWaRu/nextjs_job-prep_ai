@@ -288,46 +288,49 @@ describe("OAuthClient.createAuthUrl", () => {
     jest
       .useFakeTimers()
       .setSystemTime(new Date("2026-05-25T12:00:00.000Z").getTime());
-    const cookies = createCookieStore();
 
-    const redirect = createClient().createAuthUrl(cookies);
+    try {
+      const cookies = createCookieStore();
 
-    const url = new URL(redirect);
-    const [stateCookie, verifierCookie] = cookies.set.mock.calls;
-    const [, state, stateOptions] = stateCookie;
-    const [, codeVerifier, verifierOptions] = verifierCookie;
+      const redirect = createClient().createAuthUrl(cookies);
 
-    expect(url.origin + url.pathname).toBe(authUrl);
-    expect(url.searchParams.get("client_id")).toBe("client-id");
-    expect(url.searchParams.get("redirect_uri")).toBe(
-      "http://localhost:3000/api/oauth/github",
-    );
-    expect(url.searchParams.get("response_type")).toBe("code");
-    expect(url.searchParams.get("scope")).toBe("read:user user:email");
-    expect(url.searchParams.get("state")).toBe(state);
-    expect(url.searchParams.get("code_challenge")).toBe(
-      crypto.hash("sha256", codeVerifier, "base64url"),
-    );
-    expect(url.searchParams.get("code_challenge_method")).toBe("S256");
-    expect(cookies.set).toHaveBeenCalledWith("oauth_state", state, {
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      expires: Date.now() + 600_000,
-    });
-    expect(cookies.set).toHaveBeenCalledWith(
-      "oauth_code_verifier",
-      codeVerifier,
-      {
+      const url = new URL(redirect);
+      const [stateCookie, verifierCookie] = cookies.set.mock.calls;
+      const [, state, stateOptions] = stateCookie;
+      const [, codeVerifier, verifierOptions] = verifierCookie;
+
+      expect(url.origin + url.pathname).toBe(authUrl);
+      expect(url.searchParams.get("client_id")).toBe("client-id");
+      expect(url.searchParams.get("redirect_uri")).toBe(
+        "http://localhost:3000/api/oauth/github",
+      );
+      expect(url.searchParams.get("response_type")).toBe("code");
+      expect(url.searchParams.get("scope")).toBe("read:user user:email");
+      expect(url.searchParams.get("state")).toBe(state);
+      expect(url.searchParams.get("code_challenge")).toBe(
+        crypto.hash("sha256", codeVerifier, "base64url"),
+      );
+      expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+      expect(cookies.set).toHaveBeenCalledWith("oauth_state", state, {
         secure: true,
         httpOnly: true,
         sameSite: "lax",
         expires: Date.now() + 600_000,
-      },
-    );
-    expect(stateOptions).toEqual(verifierOptions);
-
-    jest.useRealTimers();
+      });
+      expect(cookies.set).toHaveBeenCalledWith(
+        "oauth_code_verifier",
+        codeVerifier,
+        {
+          secure: true,
+          httpOnly: true,
+          sameSite: "lax",
+          expires: Date.now() + 600_000,
+        },
+      );
+      expect(stateOptions).toEqual(verifierOptions);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 
