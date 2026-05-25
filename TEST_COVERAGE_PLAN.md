@@ -963,6 +963,71 @@ Move next into the lowest remaining auth coverage areas:
 at module boundaries and cover cookie read/write/delete branches in a small
 focused slice.
 
+## Slice: Auth OAuth Cookie Helpers
+
+Branch suggestion: `test/auth-oauth-cookie-helpers`
+
+PR title suggestion: `test(auth): cover OAuth cookie helpers`
+
+Files added/updated:
+
+- `core/features/auth/oauth/oauthErrorReturn.test.ts`
+- `core/features/auth/oauth/oauthLastUsed.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/oauth/oauthErrorReturn.test.ts core/features/auth/oauth/oauthLastUsed.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/oauth/oauthErrorReturn.test.ts core/features/auth/oauth/oauthLastUsed.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused OAuth helper slice passed after tightening the expected shared cookie
+  options: 2 test suites, 15 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 58 test suites, 382 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed after rerunning with
+  permission to write Jest's Windows temp cache: 58 test suites, 382 tests, 0
+  snapshots.
+- `npx.cmd tsc --noEmit` fails on an existing unrelated type issue in
+  `core/features/users/stripeSync.test.ts`: `[Symbol.asyncIterator]` is not a
+  known property on `ApiList<Subscription>`.
+- Focused `biome lint` passed for the two touched TypeScript test files.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 83.92% statements, 78.19% branches, 78.81%
+  functions, and 85.52% lines.
+- Updated auth OAuth cookie helper coverage:
+  - `core/features/auth/oauth/oauthErrorReturn.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+  - `core/features/auth/oauth/oauthLastUsed.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Tests now cover setting, reading, defaulting, and deleting the OAuth
+  error-return cookie through the async `next/headers` cookie store.
+- Tests now cover setting and reading the last-used OAuth provider cookie,
+  including missing and invalid values.
+- `next/headers` is mocked at the module boundary with module-level
+  `jest.mock(...)` calls before imports.
+- The first focused run failed because `oauthLastUsed.ts` intentionally spreads
+  the shared auth `COOKIE_OPTIONS`, which include `secure: false` in the test
+  environment and `path: "/"`; the test now asserts that shared contract.
+
+Recommendation:
+
+Move next into `core/features/auth/oauth/base.ts`, focusing on `OAuthClient`
+state/code-verifier cookie behavior and token/user error branches. Keep
+provider-specific clients mocked or use a small local `OAuthClient` fixture with
+mocked `fetch`.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
