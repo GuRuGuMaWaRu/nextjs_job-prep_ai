@@ -6,10 +6,12 @@ import type Stripe from "stripe";
 
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
+import { getStripe } from "@/core/features/billing/stripe";
 import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 
 const REMEDIATION_DETAIL_MAX_LEN = 512;
 const POSTGRES_UNDEFINED_COLUMN = "42703";
+const FULFILLABLE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 
 /** After `onConflictDoNothing`, a row might disappear before SELECT (e.g. concurrent `unclaimEvent`). */
 const CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS = 5;
@@ -21,6 +23,12 @@ function isMissingStripeEventSchemaError(error: unknown): boolean {
 
   const withCode = error as Error & { code?: string };
   return withCode.code === POSTGRES_UNDEFINED_COLUMN;
+}
+
+function isFulfillableSubscriptionStatus(status: string): boolean {
+  return FULFILLABLE_SUBSCRIPTION_STATUSES.includes(
+    status as (typeof FULFILLABLE_SUBSCRIPTION_STATUSES)[number],
+  );
 }
 
 /**
@@ -133,18 +141,20 @@ export async function unclaimEvent(eventId: string): Promise<void> {
  * Applies Pro plan and Stripe customer/subscription IDs from a completed Checkout session.
  *
  * @param session — Stripe Checkout session (must include `metadata.userId` and resolved customer/subscription).
- * @returns Resolves when the user row is updated, or returns early if the session is unpaid or missing data.
+ * @returns True when the user row was updated, or false if the session is unpaid or missing required data.
  * @sideEffects Writes to the application database via `updateUserPlanAndStripeIdsDb`; may log non-sensitive warnings.
  */
-export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
+export async function fulfillCheckoutSession(
+  session: Stripe.Checkout.Session,
+): Promise<boolean> {
   if (session.payment_status === "unpaid") {
-    return;
+    return false;
   }
 
   const userId = session.metadata?.userId as string | undefined;
   if (!userId) {
     console.warn("fulfillCheckoutSession: missing metadata.userId", session.id);
-    return;
+    return false;
   }
 
   const subscriptionId =
@@ -163,7 +173,31 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
         `customerId=${customerId}, subscriptionId=${subscriptionId}`,
       session.id,
     );
-    return;
+    return false;
+  }
+
+  const stripe = getStripe();
+  if (!stripe) {
+    return false;
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const subscriptionCustomerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : (subscription.customer?.id ?? null);
+
+  if (
+    subscriptionCustomerId !== customerId ||
+    !isFulfillableSubscriptionStatus(subscription.status)
+  ) {
+    console.warn(
+      "fulfillCheckoutSession: subscription is not fulfillable — " +
+        `customerId=${customerId}, subscriptionId=${subscriptionId}, ` +
+        `subscriptionStatus=${subscription.status}`,
+      session.id,
+    );
+    return false;
   }
 
   await updateUserPlanAndStripeIdsDb(userId, {
@@ -171,4 +205,6 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscriptionId,
   });
+
+  return true;
 }

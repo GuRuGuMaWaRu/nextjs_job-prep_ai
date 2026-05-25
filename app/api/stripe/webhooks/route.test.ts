@@ -107,7 +107,7 @@ beforeEach(() => {
 
   mockClaimEvent.mockReset();
   mockUnclaimEvent.mockReset().mockResolvedValue(undefined);
-  mockFulfill.mockReset().mockResolvedValue(undefined);
+  mockFulfill.mockReset().mockResolvedValue(true);
   mockMarkProcessed.mockReset().mockResolvedValue(undefined);
   mockMarkRemediation.mockReset().mockResolvedValue(undefined);
   mockSyncSubscription.mockReset().mockResolvedValue(undefined);

@@ -1,5 +1,6 @@
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getStripe } from "@/core/features/billing/stripe";
+import { fulfillCheckoutSession } from "@/core/features/billing/webhookHelpers";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -21,12 +22,16 @@ export async function checkSubscriptionSuccess(searchParams: SearchParams) {
     try {
       const { userId } = await getCurrentUserAction();
       const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-      return (
+      const isPaidCheckoutForCurrentUser =
         session.payment_status === "paid" &&
         !!userId &&
-        session.metadata?.userId === userId
-      );
+        session.metadata?.userId === userId;
+
+      if (!isPaidCheckoutForCurrentUser) {
+        return false;
+      }
+
+      return await fulfillCheckoutSession(session);
     } catch {
       return false;
     }
