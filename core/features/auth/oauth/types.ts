@@ -7,6 +7,7 @@ export type Cookies = {
       httpOnly?: boolean;
       sameSite?: "strict" | "lax";
       expires?: number;
+      path?: string;
     },
   ) => void;
   get: (key: string) => { name: string; value: string } | undefined;
