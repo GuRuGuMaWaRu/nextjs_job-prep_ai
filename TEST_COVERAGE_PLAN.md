@@ -1028,6 +1028,65 @@ state/code-verifier cookie behavior and token/user error branches. Keep
 provider-specific clients mocked or use a small local `OAuthClient` fixture with
 mocked `fetch`.
 
+## Slice: Auth OAuth Base Client
+
+Branch suggestion: `test/auth-oauth-base-client`
+
+PR title suggestion: `test(auth): cover OAuth base client`
+
+Files added/updated:
+
+- `core/features/auth/oauth/base.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/oauth/base.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/oauth/base.test.ts TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused OAuth base client slice passed: 1 test suite, 13 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 59 test suites, 395 tests, 0
+  snapshots.
+- Initial `npm.cmd run test:coverage -- --runInBand` failed with `EPERM`
+  writing Jest's Windows temp haste-map cache; rerunning with permission to
+  write that cache passed: 59 test suites, 395 tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `TEST_COVERAGE_PLAN.md` was passed to the command but not checked by Biome.
+- Updated coverage summary: 90.12% statements, 83.17% branches, 85.13%
+  functions, and 92.06% lines.
+- Updated auth OAuth base coverage:
+  - `core/features/auth/oauth/base.ts`: 97.8% statements, 92.85% branches,
+    100% functions, and 97.8% lines.
+
+Notes:
+
+- Tests now cover `OAuthClient.createAuthUrl` state and code-verifier cookie
+  writes, redirect URL construction, scope joining, and PKCE challenge params.
+- Tests now cover `fetchUser` invalid-state and missing-code-verifier branches,
+  token exchange request body/header shape, parser-based user mapping,
+  resolver-based user mapping, token HTTP/schema failures, user HTTP/schema
+  failures, and unexpected token/user failure wrapping.
+- Tests also cover the `getOAuthClient` dispatcher for unconfigured providers
+  and the configured Discord, GitHub, and Google factory boundaries.
+- OAuth provider factories, OAuth config, server env, fetch, and cookies are
+  mocked at module boundaries. Test user data uses only synthetic
+  `@test.local` email values.
+
+Recommendation:
+
+Continue the OAuth internals slice with provider-specific client gaps in
+`core/features/auth/oauth/github.ts`, `google.ts`, and `discord.ts`, keeping
+network behavior mocked through `OAuthClient` or direct resolver helpers.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
