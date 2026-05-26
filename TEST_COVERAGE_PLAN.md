@@ -1330,6 +1330,61 @@ Move to `core/lib/errorToast.tsx` for the next small, high-gap utility slice.
 Focus on error message selection and toast invocation behavior while mocking
 only the toast boundary.
 
+### Error Toast Utility Slice - 2026-05-26
+
+Files/tests added or updated:
+
+- `core/lib/errorToast.test.tsx`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/lib/errorToast.test.tsx --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/lib/errorToast.test.tsx AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused error toast slice passed: 1 test suite, 6 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 60 test suites, 430 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 60 test suites, 430
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed after narrowing the toast action to a React
+  element before rendering it in the test.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 94.73% statements, 90.31% branches, 90%
+  functions, and 96.73% lines.
+- Updated error toast coverage:
+  - `core/lib/errorToast.tsx`: 100% statements, 100% branches, 100% functions,
+    and 100% lines.
+- Updated `core/lib` aggregate coverage: 100% statements, 100% branches, 100%
+  functions, and 100% lines.
+
+Notes:
+
+- Added focused coverage for plan-limit upgrade action rendering and toast
+  dismissal, rate-limit messaging, Hume-unavailable messaging, file-size and
+  file-type upload errors, and fallback raw-message toasts.
+- Mocked only the `sonner` toast boundary; the plan-limit action renders the
+  real `Button`/`Link` composition and verifies the upgrade route.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, and lint paths passed.
+- No customer email fixtures were used in this slice.
+
+Recommendation:
+
+Move next to `app/app/upgrade/syncSubscriptionOnLoad.ts` or another compact
+upgrade/billing utility with uncovered branches. Keep the slice focused on
+observable return behavior and mocked module boundaries.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
