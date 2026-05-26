@@ -1087,6 +1087,71 @@ Continue the OAuth internals slice with provider-specific client gaps in
 `core/features/auth/oauth/github.ts`, `google.ts`, and `discord.ts`, keeping
 network behavior mocked through `OAuthClient` or direct resolver helpers.
 
+## Slice: Auth OAuth GitHub Provider
+
+Branch suggestion: `test/auth-oauth-github-provider`
+
+PR title suggestion: `test(auth): cover GitHub OAuth resolver`
+
+Files added/updated:
+
+- `core/features/auth/oauth/github.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/oauth/github.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/oauth/github.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused GitHub OAuth provider slice passed: 1 test suite, 8 tests, 0
+  snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 59 test suites, 399 tests, 0
+  snapshots.
+- Initial `npm.cmd run test:coverage -- --runInBand` failed with `EPERM`
+  writing Jest's Windows temp haste-map cache; rerunning with permission to
+  write that cache passed: 59 test suites, 399 tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 91.01% statements, 84.42% branches, 85.92%
+  functions, and 92.99% lines.
+- Updated auth OAuth provider coverage:
+  - `core/features/auth/oauth/github.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+  - `core/features/auth/oauth/base.ts`: 97.91% statements, 92.85% branches,
+    100% functions, and 97.91% lines.
+  - `core/features/auth/oauth/google.ts`: 62.5% statements, 100% branches, 50%
+    functions, and 71.42% lines.
+  - `core/features/auth/oauth/discord.ts`: 78.57% statements, 100% branches,
+    50% functions, and 76.92% lines.
+
+Notes:
+
+- Added resolver-path tests for GitHub's secondary `/user/emails` request,
+  covering verified email success, invalid email payload wrapping, no verified
+  email handling, and email endpoint fetch failures.
+- Tests exercise the real `createGithubOAuthClient` through
+  `OAuthClient.fetchUser` while mocking only `fetch` and using a local cookie
+  store fixture.
+- Test email fixtures use synthetic `@test.local` addresses only.
+
+Recommendation:
+
+Continue the provider internals slice with small factory/client coverage for
+`core/features/auth/oauth/google.ts` and `core/features/auth/oauth/discord.ts`.
+Target client creation behavior through `OAuthClient.fetchUser` or
+`createAuthUrl`, keeping base client branches out of scope unless a provider
+specific gap requires them.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
