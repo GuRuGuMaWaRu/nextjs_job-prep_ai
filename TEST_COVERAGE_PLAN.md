@@ -1152,6 +1152,65 @@ Target client creation behavior through `OAuthClient.fetchUser` or
 `createAuthUrl`, keeping base client branches out of scope unless a provider
 specific gap requires them.
 
+### OAuth Google and Discord Factory Slice - 2026-05-26
+
+Files/tests updated:
+
+- `core/features/auth/oauth/google.test.ts`
+- `core/features/auth/oauth/discord.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/oauth/google.test.ts core/features/auth/oauth/discord.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/oauth/google.test.ts core/features/auth/oauth/discord.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused Google/Discord OAuth provider slice passed: 2 test suites, 18 tests,
+  0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 59 test suites, 403 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 59 test suites, 403
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test files.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 91.29% statements, 84.42% branches, 87.03%
+  functions, and 93.29% lines.
+- Updated auth OAuth provider coverage:
+  - `core/features/auth/oauth/google.ts`: 87.5% statements, 100% branches,
+    100% functions, and 100% lines.
+  - `core/features/auth/oauth/discord.ts`: 100% statements, 100% branches,
+    100% functions, and 100% lines.
+  - `core/features/auth/oauth/github.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+  - `core/features/auth/oauth/base.ts`: 97.91% statements, 92.85% branches,
+    100% functions, and 97.91% lines.
+
+Notes:
+
+- Added provider-factory coverage through the real Google and Discord OAuth
+  clients using `createAuthUrl` and `OAuthClient.fetchUser`.
+- Tests mock only `fetch` and assert provider-specific auth URLs, scopes, user
+  endpoints, user mapping, and callback cookie cleanup.
+- Updated Discord test email fixtures to synthetic `@test.local` addresses.
+- The known Windows temp-cache permission retry was not needed in this
+  coverage run.
+
+Recommendation:
+
+Continue with a small OAuth config/client edge slice if useful, especially
+`core/features/auth/oauth/config.ts`, or move back to the broader plan with
+`core/features/billing/webhookHelpers.ts` and `core/lib/errorToast.tsx`.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
