@@ -104,7 +104,7 @@ class OAuthMissingEmailError extends Error {
 }
 
 /**
- * Thrown when the IdP returned an email that is not verified, but an account with that email already exists.
+ * Thrown when the IdP returned an email that is not verified.
  */
 class OAuthUnverifiedEmailError extends Error {
   readonly provider: OAuthProvider;

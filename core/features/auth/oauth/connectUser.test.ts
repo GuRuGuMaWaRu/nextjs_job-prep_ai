@@ -159,6 +159,30 @@ describe("connectUserToAccount", () => {
     ).resolves.toEqual({ id: "generated-user-id" });
   });
 
+  it("rejects unverified OAuth email before creating a user", async () => {
+    const tx = createMockDrizzleDb({
+      query: {
+        UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+        UserTable: createMockDrizzleTableQuery({ findFirst: null }),
+      },
+    });
+    mockTransaction.mockImplementation(async (fn) => fn(tx as never));
+
+    await expect(
+      connectUserToAccount(
+        {
+          id: "oauth-sub",
+          email: "new@b.com",
+          name: "N",
+          emailVerified: false,
+        },
+        "discord",
+      ),
+    ).rejects.toBeInstanceOf(OAuthUnverifiedEmailError);
+
+    expect(tx.insert).not.toHaveBeenCalled();
+  });
+
   it("re-queries by email after insert conflict and completes sign-in", async () => {
     mockTransaction.mockImplementation(async (fn) => {
       const tx = createMockTxForInsertConflictRace();
@@ -176,24 +200,5 @@ describe("connectUserToAccount", () => {
         "google",
       ),
     ).resolves.toEqual({ id: "winner-id" });
-  });
-
-  it("applies OAuth email-link policy after insert conflict", async () => {
-    const tx = createMockTxForInsertConflictRace();
-    mockTransaction.mockImplementation(async (fn) => fn(tx as never));
-
-    await expect(
-      connectUserToAccount(
-        {
-          id: "oauth-sub",
-          email: "race@b.com",
-          name: "R",
-          emailVerified: false,
-        },
-        "google",
-      ),
-    ).rejects.toBeInstanceOf(OAuthUnverifiedEmailError);
-
-    expect(tx.update).not.toHaveBeenCalled();
   });
 });

@@ -58,7 +58,7 @@ export function connectUserToAccount(
         columns: { id: true, emailVerified: true },
       })) ?? null;
 
-    assertOAuthEmailLinkAllowed(oAuthUser, existingByEmail, provider);
+    assertOAuthEmailLinkAllowed(oAuthUser, provider);
 
     let user: { id: string };
 
@@ -92,7 +92,7 @@ export function connectUserToAccount(
           throw new Error("Expected user row after insert conflict on email");
         }
 
-        assertOAuthEmailLinkAllowed(oAuthUser, afterConflict, provider);
+        assertOAuthEmailLinkAllowed(oAuthUser, provider);
 
         user = { id: afterConflict.id };
 
