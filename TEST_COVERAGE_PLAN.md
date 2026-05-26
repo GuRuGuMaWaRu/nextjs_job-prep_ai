@@ -1211,6 +1211,66 @@ Continue with a small OAuth config/client edge slice if useful, especially
 `core/features/auth/oauth/config.ts`, or move back to the broader plan with
 `core/features/billing/webhookHelpers.ts` and `core/lib/errorToast.tsx`.
 
+### OAuth Config Edge Slice - 2026-05-26
+
+Files/tests updated:
+
+- `core/features/auth/oauth/config.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/oauth/config.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/oauth/config.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused OAuth config slice passed: 1 test suite, 10 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 59 test suites, 406 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 59 test suites, 406
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 91.47% statements, 84.68% branches, 87.4%
+  functions, and 93.47% lines.
+- Updated auth OAuth config coverage:
+  - `core/features/auth/oauth/config.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+- Related auth OAuth coverage:
+  - `core/features/auth/oauth/base.ts`: 97.91% statements, 92.85% branches,
+    100% functions, and 97.91% lines.
+  - `core/features/auth/oauth/google.ts`: 87.5% statements, 100% branches,
+    100% functions, and 100% lines.
+  - `core/features/auth/oauth/discord.ts`: 100% statements, 100% branches,
+    100% functions, and 100% lines.
+  - `core/features/auth/oauth/github.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+
+Notes:
+
+- Added focused coverage for Discord and GitHub credential resolution, blank
+  secret handling, provider filtering with incomplete credentials, and the
+  runtime unsupported-provider guard.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, and lint paths passed.
+- No user email fixtures were needed for this slice.
+
+Recommendation:
+
+Move next to the broader uncovered areas:
+`core/features/billing/webhookHelpers.ts` and `core/lib/errorToast.tsx`. Start
+with `webhookHelpers.ts` if branch coverage is the priority, or
+`errorToast.tsx` for a small UI utility slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
