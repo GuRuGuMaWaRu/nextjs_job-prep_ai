@@ -143,6 +143,133 @@ describe("fulfillCheckoutSession", () => {
     expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_canceled");
     expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
+
+  it("skips unpaid checkout sessions without retrieving the subscription", async () => {
+    const session = makeStripeCheckoutSession({
+      paymentStatus: "unpaid",
+    });
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+
+    expect(retrieveSubscription).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+
+  it("skips paid checkout sessions that are missing metadata.userId", async () => {
+    const session = makeStripeCheckoutSession({
+      id: "cs_test_missing_user",
+      userId: null,
+    });
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "fulfillCheckoutSession: missing metadata.userId",
+      "cs_test_missing_user",
+    );
+    expect(retrieveSubscription).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["customer", { customerId: null, subscriptionId: "sub_test_incomplete" }],
+    ["subscription", { customerId: "cus_test_incomplete", subscriptionId: null }],
+  ] as const)(
+    "skips paid checkout sessions that are missing the %s id",
+    async (_missingField, overrides) => {
+      const session = makeStripeCheckoutSession({
+        id: "cs_test_incomplete",
+        userId: "user-test",
+        ...overrides,
+      });
+
+      await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "fulfillCheckoutSession: incomplete session payload",
+        ),
+        "cs_test_incomplete",
+      );
+      expect(retrieveSubscription).not.toHaveBeenCalled();
+      expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+    },
+  );
+
+  it("skips paid checkout sessions when the Stripe client is unavailable", async () => {
+    mockGetStripe.mockReturnValueOnce(null);
+    const session = makeStripeCheckoutSession({
+      userId: "user-test",
+      customerId: "cus_test_no_client",
+      subscriptionId: "sub_test_no_client",
+    });
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+
+    expect(mockGetStripe).toHaveBeenCalledTimes(1);
+    expect(retrieveSubscription).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+  });
+
+  it("uses expanded checkout customer and subscription object ids", async () => {
+    const session = makeStripeCheckoutSession({
+      userId: "user-test",
+      customerId: "cus_test_expanded",
+      subscriptionId: "sub_test_expanded",
+    });
+    session.customer = {
+      id: "cus_test_expanded",
+    } as Stripe.Customer;
+    session.subscription = {
+      id: "sub_test_expanded",
+    } as Stripe.Subscription;
+    retrieveSubscription.mockResolvedValueOnce(
+      makeStripeSubscription({
+        id: "sub_test_expanded",
+        customer: {
+          id: "cus_test_expanded",
+        } as Stripe.Customer,
+        status: "trialing",
+      }),
+    );
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(true);
+
+    expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_expanded");
+    expect(mockUpdateUserPlanAndStripeIdsDb).toHaveBeenCalledWith("user-test", {
+      plan: "pro",
+      stripeCustomerId: "cus_test_expanded",
+      stripeSubscriptionId: "sub_test_expanded",
+    });
+  });
+
+  it("skips sessions whose retrieved subscription belongs to a different customer", async () => {
+    const session = makeStripeCheckoutSession({
+      id: "cs_test_customer_mismatch",
+      userId: "user-test",
+      customerId: "cus_test_checkout",
+      subscriptionId: "sub_test_mismatch",
+    });
+    retrieveSubscription.mockResolvedValueOnce(
+      makeStripeSubscription({
+        id: "sub_test_mismatch",
+        customer: "cus_test_other",
+        status: "active",
+      }),
+    );
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "fulfillCheckoutSession: subscription is not fulfillable",
+      ),
+      "cs_test_customer_mismatch",
+    );
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+  });
 });
 
 describe("markStripeEventProcessed", () => {
@@ -202,6 +329,19 @@ describe("markStripeEventRemediationRequired", () => {
     await expect(
       markStripeEventRemediationRequired("evt_test_db_error", "unclaim boom"),
     ).rejects.toBe(error);
+  });
+
+  it("rethrows coded non-Error values instead of treating them as rollout compatibility", async () => {
+    const updateChain = createDrizzleMutationChainMock();
+    const thrownValue = { code: "42703" };
+    updateChain.where.mockImplementationOnce(() => {
+      throw thrownValue;
+    });
+    mockDb.update.mockReturnValueOnce(updateChain);
+
+    await expect(
+      markStripeEventRemediationRequired("evt_test_non_error", "unclaim boom"),
+    ).rejects.toBe(thrownValue);
   });
 });
 
