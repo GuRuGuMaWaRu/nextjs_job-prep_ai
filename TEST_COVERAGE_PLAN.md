@@ -1271,6 +1271,65 @@ Move next to the broader uncovered areas:
 with `webhookHelpers.ts` if branch coverage is the priority, or
 `errorToast.tsx` for a small UI utility slice.
 
+## Slice: Billing Webhook Helpers
+
+Files added/updated:
+
+- `core/features/billing/webhookHelpers.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/billing/webhookHelpers.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/billing/webhookHelpers.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused billing helper slice passed: 1 test suite, 12 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 59 test suites, 416 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 59 test suites, 416
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 93.24% statements, 86.71% branches, 89.25%
+  functions, and 95.22% lines.
+- Updated billing helper coverage:
+  - `core/features/billing/webhookHelpers.ts`: 88.88% statements, 65%
+    branches, 100% functions, and 88.7% lines.
+- Related billing coverage:
+  - `core/features/billing/stripeEventTypes.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Added focused coverage for processed-event marking, remediation marking with
+  512-character detail truncation, missing remediation-column rollout fallback,
+  unexpected remediation write failures, first-writer event claiming, duplicate
+  processed/remediation/processing states, repeatedly missing claim rows, and
+  unclaim deletion.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, and lint paths passed.
+- No customer email fixtures were used in this slice.
+
+Recommendation:
+
+Continue with the remaining uncovered `webhookHelpers.ts` checkout fulfillment
+branches if maximizing billing helper coverage is still the goal: missing
+`metadata.userId`, incomplete session customer/subscription payloads, missing
+Stripe client, expanded customer/subscription object IDs, trialing subscription
+status, mismatched subscription customer, and the non-`Error` remediation
+fallback guard. Otherwise, move to `core/lib/errorToast.tsx` for the next small,
+high-gap utility slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
