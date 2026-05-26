@@ -52,11 +52,44 @@ describe("getOAuthConfig", () => {
     });
   });
 
+  it("returns Discord credentials from Discord env values", () => {
+    mockEnv.DISCORD_CLIENT_ID = "discord-client-id";
+    mockEnv.DISCORD_CLIENT_SECRET = "discord-client-secret";
+
+    expect(getOAuthConfig("discord")).toEqual({
+      clientId: "discord-client-id",
+      clientSecret: "discord-client-secret",
+    });
+  });
+
+  it("returns GitHub credentials from GitHub env values", () => {
+    mockEnv.GITHUB_CLIENT_ID = "github-client-id";
+    mockEnv.GITHUB_CLIENT_SECRET = "github-client-secret";
+
+    expect(getOAuthConfig("github")).toEqual({
+      clientId: "github-client-id",
+      clientSecret: "github-client-secret",
+    });
+  });
+
   it("returns null for empty string credentials", () => {
     mockEnv.GOOGLE_CLIENT_ID = "";
     mockEnv.GOOGLE_CLIENT_SECRET = "x";
 
     expect(getOAuthConfig("google")).toBeNull();
+  });
+
+  it("returns null for empty string secrets", () => {
+    mockEnv.DISCORD_CLIENT_ID = "discord-client-id";
+    mockEnv.DISCORD_CLIENT_SECRET = "";
+
+    expect(getOAuthConfig("discord")).toBeNull();
+  });
+
+  it("throws when given an unsupported provider at runtime", () => {
+    expect(() => getOAuthConfig("slack" as OAuthProvider)).toThrow(
+      "Unexpected: slack",
+    );
   });
 });
 
@@ -71,6 +104,7 @@ describe("getConfiguredOAuthProviders", () => {
   });
 
   it("returns only providers with complete credentials", () => {
+    mockEnv.DISCORD_CLIENT_ID = "discord-id";
     mockEnv.GITHUB_CLIENT_ID = "gh-id";
     mockEnv.GITHUB_CLIENT_SECRET = "gh-secret";
     mockEnv.GOOGLE_CLIENT_ID = "g-id";
