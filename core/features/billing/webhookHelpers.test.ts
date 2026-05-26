@@ -84,7 +84,7 @@ function makeCodedError(code: string): Error & { code: string } {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.resetAllMocks();
 });
 
 describe("fulfillCheckoutSession", () => {
