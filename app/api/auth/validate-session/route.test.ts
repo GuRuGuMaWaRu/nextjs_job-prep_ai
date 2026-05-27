@@ -17,8 +17,9 @@ import { makeSession } from "@core/test-utils/factories";
 
 import { GET } from "./route";
 
-const mockValidateSessionAction =
-  validateSessionAction as jest.MockedFunction<typeof validateSessionAction>;
+const mockValidateSessionAction = validateSessionAction as jest.MockedFunction<
+  typeof validateSessionAction
+>;
 const mockDeleteSessionCookie = deleteSessionCookie as jest.MockedFunction<
   typeof deleteSessionCookie
 >;

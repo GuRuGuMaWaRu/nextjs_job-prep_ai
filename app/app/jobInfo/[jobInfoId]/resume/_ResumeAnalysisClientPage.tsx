@@ -123,7 +123,8 @@ export function ResumeAnalysisClientPage({ jobInfoId }: { jobInfoId: string }) {
                 e.preventDefault();
                 setIsDraggingOver(false);
                 handleFileUpload(e.dataTransfer.files[0] ?? null);
-              }}>
+              }}
+            >
               <label htmlFor="resume-upload" className="sr-only">
                 Upload your resume
               </label>
@@ -306,7 +307,8 @@ function FeedbackItem({
       className={cn(
         "flex items-baseline gap-3 pl-3 pr-5 py-5 rounded-lg",
         getColors(),
-      )}>
+      )}
+    >
       <div>{getIcon()}</div>
       <div className="flex flex-col gap-1">
         <div className="text-base">{name}</div>

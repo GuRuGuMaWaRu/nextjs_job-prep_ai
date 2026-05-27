@@ -54,7 +54,8 @@ function Navbar() {
               <Button variant="outline" asChild>
                 <Link href={routes.signIn}>Sign In</Link>
               </Button>
-            }>
+            }
+          >
             <SignInButton />
           </Suspense>
         </div>
@@ -126,7 +127,8 @@ function FeaturesSection() {
         {features.map((feature) => (
           <Card
             className="transition-all hover:shadow-lg hover:scale-[1.02]"
-            key={feature.title}>
+            key={feature.title}
+          >
             <CardHeader className="space-y-4">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 {feature.icon}
@@ -183,7 +185,8 @@ function StatsComparisonSection() {
         {stats.map((stat) => (
           <Card
             className="transition-all hover:shadow-lg hover:scale-[1.02]"
-            key={stat.title}>
+            key={stat.title}
+          >
             <CardHeader className="space-y-4">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 {stat.icon}
@@ -292,7 +295,8 @@ function TestimonialsSection() {
         {testimonials.map((testimonial) => (
           <Card
             className="transition-all hover:shadow-lg hover:scale-[1.01]"
-            key={testimonial.user.name}>
+            key={testimonial.user.name}
+          >
             <CardHeader className="space-y-4 flex flex-col h-full">
               <div className="flex items-start justify-between gap-2">
                 <Quote className="w-8 h-8 text-primary/40 shrink-0" />
@@ -390,7 +394,8 @@ function PricingSection() {
               plan.popular
                 ? "border-primary shadow-lg scale-105 md:scale-105"
                 : "hover:scale-[1.02]"
-            }`}>
+            }`}
+          >
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="px-2 py-0.5 text-xs font-semibold">
@@ -448,7 +453,8 @@ function Footer() {
         </Link>
         <Link
           href="mailto:contact@landr.example.com"
-          className="hover:text-foreground transition-colors">
+          className="hover:text-foreground transition-colors"
+        >
           Contact us
         </Link>
       </div>

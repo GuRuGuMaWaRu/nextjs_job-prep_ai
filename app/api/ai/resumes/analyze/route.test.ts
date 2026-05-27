@@ -18,7 +18,11 @@ import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
-import { DatabaseError, NotFoundError, PermissionError } from "@/core/dal/errors";
+import {
+  DatabaseError,
+  NotFoundError,
+  PermissionError,
+} from "@/core/dal/errors";
 import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser, makeJobInfo } from "@/core/test-utils/factories";
@@ -80,7 +84,9 @@ function mockAnalyzeStream(): void {
         Response.json({
           kind: "resume-analysis-stream",
         }) as ReturnType<
-          Awaited<ReturnType<typeof analyzeResumeForJob>>["toTextStreamResponse"]
+          Awaited<
+            ReturnType<typeof analyzeResumeForJob>
+          >["toTextStreamResponse"]
         >,
     ),
   } as unknown as Awaited<ReturnType<typeof analyzeResumeForJob>>);

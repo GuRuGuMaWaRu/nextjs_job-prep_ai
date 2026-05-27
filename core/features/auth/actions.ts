@@ -226,7 +226,9 @@ const getCurrentUserCached = cache(
 
       return {
         userId,
-        user: allData ? ((await getUserAction(userId)) ?? undefined) : undefined,
+        user: allData
+          ? ((await getUserAction(userId)) ?? undefined)
+          : undefined,
         redirectToSignIn: () => redirect(routes.signIn),
       };
     } catch (error) {
@@ -295,8 +297,7 @@ export async function signInWithOAuthAction(
 
   if (getOAuthConfig(provider) == null) {
     await clearOAuthErrorReturnCookie();
-    const path =
-      errorReturn === "sign-up" ? routes.signUp : routes.signIn;
+    const path = errorReturn === "sign-up" ? routes.signUp : routes.signIn;
     redirect(`${path}?oauthError=oauth_not_configured`);
   }
 

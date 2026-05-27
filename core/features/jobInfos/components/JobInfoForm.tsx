@@ -68,7 +68,7 @@ export function JobInfoForm({
       toast.error(res.message);
     } else {
       toast.success(
-        jobInfo ? "Job information updated!" : "Job information created!"
+        jobInfo ? "Job information updated!" : "Job information created!",
       );
 
       form.reset();
@@ -167,7 +167,8 @@ export function JobInfoForm({
         <Button
           disabled={form.formState.isSubmitting}
           type="submit"
-          className="w-full">
+          className="w-full"
+        >
           <LoadingSwap isLoading={form.formState.isSubmitting}>
             Save Job Information
           </LoadingSwap>

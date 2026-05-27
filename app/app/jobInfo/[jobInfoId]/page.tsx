@@ -61,7 +61,7 @@ export default async function JobInfoPage({
       if (jobInfo == null) return notFound();
 
       return jobInfo;
-    }
+    },
   );
 
   return (
@@ -111,7 +111,8 @@ export default async function JobInfoPage({
             <Link
               className="hover:scale-[1.02] transition-[transform_opacity]"
               href={`${routes.jobInfo(jobInfoId)}/${option.href}`}
-              key={option.href}>
+              key={option.href}
+            >
               <Card className="h-full flex flex-row items-start justify-between">
                 <CardHeader className="grow">
                   <CardTitle>{option.label}</CardTitle>

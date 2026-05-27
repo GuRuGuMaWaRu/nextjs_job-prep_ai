@@ -28,7 +28,8 @@ function PasswordInput({ className, disabled, ...props }: PasswordInputProps) {
         onClick={() => setIsPasswordVisible((prev) => !prev)}
         aria-label={isPasswordVisible ? "Hide password" : "Show password"}
         aria-pressed={isPasswordVisible}
-        disabled={disabled}>
+        disabled={disabled}
+      >
         {isPasswordVisible ? (
           <EyeOffIcon className="size-4" />
         ) : (

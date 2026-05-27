@@ -9,7 +9,7 @@ import {
 } from "@/core/features/jobInfos/dbCache";
 
 export async function createJobInfoDb(
-  jobInfo: typeof JobInfoTable.$inferInsert
+  jobInfo: typeof JobInfoTable.$inferInsert,
 ) {
   const [newJobInfo] = await db.insert(JobInfoTable).values(jobInfo).returning({
     id: JobInfoTable.id,
@@ -24,7 +24,7 @@ export async function createJobInfoDb(
 
 export async function updateJobInfoDb(
   id: string,
-  jobInfo: Partial<typeof JobInfoTable.$inferInsert>
+  jobInfo: Partial<typeof JobInfoTable.$inferInsert>,
 ) {
   const [updatedJobInfo] = await db
     .update(JobInfoTable)

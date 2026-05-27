@@ -91,7 +91,8 @@ function PlanCard({
       className={`relative transition-all hover:shadow-lg ${
         plan.popular ? "border-primary shadow-lg" : ""
       } ${isCurrentPlan ? "ring-2 ring-primary/30" : ""}`}
-      aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}>
+      aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}
+    >
       {showBadges && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2">
           {plan.popular && (
@@ -136,7 +137,8 @@ function PlanCard({
             className="w-full"
             size="lg"
             buttonClassName="w-full"
-            pendingLabel="Starting checkout...">
+            pendingLabel="Starting checkout..."
+          >
             {cta}
           </StripeActionButton>
         ) : cancelAction ? (
@@ -147,7 +149,8 @@ function PlanCard({
             variant="outline"
             size="lg"
             buttonClassName="w-full"
-            pendingLabel="Canceling...">
+            pendingLabel="Canceling..."
+          >
             {cta}
           </StripeActionButton>
         ) : (
@@ -155,7 +158,8 @@ function PlanCard({
             size="lg"
             className="w-full"
             disabled={ctaDisabled}
-            variant={ctaDisabled ? "outline" : "default"}>
+            variant={ctaDisabled ? "outline" : "default"}
+          >
             {cta}
           </Button>
         )}
@@ -198,7 +202,8 @@ function EnterpriseBlock() {
           variant="outline"
           size="lg"
           className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise"
-          asChild>
+          asChild
+        >
           <a href="mailto:enterprise@landr.example.com">Contact us</a>
         </Button>
       </CardFooter>
@@ -219,7 +224,8 @@ export async function PlanCardsSection() {
       {hasExistingSubscription && currentPlan !== "pro" && (
         <div
           className="max-w-4xl mx-auto rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200"
-          role="alert">
+          role="alert"
+        >
           Your subscription payment needs attention. Use{" "}
           <strong>Manage subscription</strong> below to update your payment
           method.
@@ -263,7 +269,8 @@ export async function PlanCardsSection() {
             url={STRIPE_PORTAL_URL}
             variant="outline"
             size="sm"
-            pendingLabel="Opening portal...">
+            pendingLabel="Opening portal..."
+          >
             Manage subscription
           </StripeActionButton>
           <StripeActionButton
@@ -272,7 +279,8 @@ export async function PlanCardsSection() {
             variant="ghost"
             size="sm"
             buttonClassName="text-muted-foreground hover:text-destructive"
-            pendingLabel="Canceling...">
+            pendingLabel="Canceling..."
+          >
             Cancel subscription
           </StripeActionButton>
         </div>

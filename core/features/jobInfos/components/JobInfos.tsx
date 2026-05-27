@@ -43,7 +43,8 @@ export async function JobInfos() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Link
           className="transition-opacity hover:[.job-info-card]:opacity-70"
-          href={routes.newJobInfo}>
+          href={routes.newJobInfo}
+        >
           <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
             <div className="text-lg flex items-center gap-2">
               <PlusIcon className="size-6" />

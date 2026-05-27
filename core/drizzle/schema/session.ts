@@ -20,4 +20,3 @@ export const sessionRelations = relations(SessionTable, ({ one }) => ({
     references: [UserTable.id],
   }),
 }));
-

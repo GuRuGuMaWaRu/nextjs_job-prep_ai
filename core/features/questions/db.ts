@@ -22,7 +22,7 @@ export async function getQuestionsDb(jobInfoId: string) {
 }
 
 export async function insertQuestionDb(
-  question: typeof QuestionTable.$inferInsert
+  question: typeof QuestionTable.$inferInsert,
 ) {
   const [newQuestion] = await db
     .insert(QuestionTable)

@@ -12,19 +12,18 @@ jest.mock("ai", () => ({
       writer,
     };
   }),
-  createUIMessageStreamResponse: jest.fn(
-    ({ status, statusText, stream }) =>
-      Response.json(
-        {
-          status,
-          statusText,
-          streamKind: stream.kind,
-          writes: stream.writer.write.mock.calls.map(
-            ([chunk]: [unknown]) => chunk,
-          ),
-        },
-        { status },
-      ),
+  createUIMessageStreamResponse: jest.fn(({ status, statusText, stream }) =>
+    Response.json(
+      {
+        status,
+        statusText,
+        streamKind: stream.kind,
+        writes: stream.writer.write.mock.calls.map(
+          ([chunk]: [unknown]) => chunk,
+        ),
+      },
+      { status },
+    ),
   ),
 }));
 

@@ -18,7 +18,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-async function AuthenticatedAppShell({ children }: { children: React.ReactNode }) {
+async function AuthenticatedAppShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { userId, user } = await getCurrentUserWithProfileAction();
 
   if (userId == null || user == null) return redirect(routes.landing);

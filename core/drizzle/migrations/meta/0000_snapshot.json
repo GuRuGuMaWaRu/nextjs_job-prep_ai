@@ -85,16 +85,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_stripe_customer_id_unique": {
           "name": "users_stripe_customer_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "stripe_customer_id"
-          ]
+          "columns": ["stripe_customer_id"]
         }
       },
       "policies": {},
@@ -144,12 +140,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -159,9 +151,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -211,12 +201,8 @@
           "name": "password_reset_tokens_user_id_users_id_fk",
           "tableFrom": "password_reset_tokens",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -226,9 +212,7 @@
         "password_reset_tokens_token_unique": {
           "name": "password_reset_tokens_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -284,12 +268,8 @@
           "name": "verification_tokens_user_id_users_id_fk",
           "tableFrom": "verification_tokens",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -299,9 +279,7 @@
         "verification_tokens_token_unique": {
           "name": "verification_tokens_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -371,12 +349,8 @@
           "name": "job_info_userId_users_id_fk",
           "tableFrom": "job_info",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -443,12 +417,8 @@
           "name": "interviews_jobInfoId_job_info_id_fk",
           "tableFrom": "interviews",
           "tableTo": "job_info",
-          "columnsFrom": [
-            "jobInfoId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jobInfoId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -510,12 +480,8 @@
           "name": "questions_jobInfoId_job_info_id_fk",
           "tableFrom": "questions",
           "tableTo": "job_info",
-          "columnsFrom": [
-            "jobInfoId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jobInfoId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -563,20 +529,12 @@
     "public.job_info_experience_level": {
       "name": "job_info_experience_level",
       "schema": "public",
-      "values": [
-        "junior",
-        "mid-level",
-        "senior"
-      ]
+      "values": ["junior", "mid-level", "senior"]
     },
     "public.questions_experience_level": {
       "name": "questions_experience_level",
       "schema": "public",
-      "values": [
-        "easy",
-        "medium",
-        "hard"
-      ]
+      "values": ["easy", "medium", "hard"]
     }
   },
   "schemas": {},

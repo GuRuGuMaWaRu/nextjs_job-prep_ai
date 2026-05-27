@@ -11,7 +11,9 @@ describe("jestConfig", () => {
     expect(configSource).toContain('testMatch: ["**/*.test.ts"]');
     expect(configSource).toContain('testMatch: ["**/*.test.tsx"]');
     expect(configSource).not.toContain('testMatch: ["<rootDir>/**/*.test.ts"]');
-    expect(configSource).not.toContain('testMatch: ["<rootDir>/**/*.test.tsx"]');
+    expect(configSource).not.toContain(
+      'testMatch: ["<rootDir>/**/*.test.tsx"]',
+    );
   });
 });
 

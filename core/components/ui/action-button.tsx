@@ -74,10 +74,12 @@ export function ActionButton({
       onClick={(e) => {
         performAction();
         props.onClick?.(e);
-      }}>
+      }}
+    >
       <LoadingSwap
         isLoading={isLoading}
-        className="inline-flex items-center gap-2">
+        className="inline-flex items-center gap-2"
+      >
         {props.children}
       </LoadingSwap>
     </Button>

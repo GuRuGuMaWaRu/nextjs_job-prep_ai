@@ -250,8 +250,6 @@ describe("createDiscordOAuthClient", () => {
       },
     );
     expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
-    expect(cookies.delete).toHaveBeenCalledWith(
-      "__Host-oauth_code_verifier",
-    );
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 });

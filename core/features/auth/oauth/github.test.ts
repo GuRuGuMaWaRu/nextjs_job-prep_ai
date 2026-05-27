@@ -137,9 +137,7 @@ describe("createGithubOAuthClient", () => {
       },
     );
     expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
-    expect(cookies.delete).toHaveBeenCalledWith(
-      "__Host-oauth_code_verifier",
-    );
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 
   it("rejects invalid GitHub email payloads with wrapped resolver context", async () => {
@@ -159,9 +157,7 @@ describe("createGithubOAuthClient", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
-    expect(cookies.delete).toHaveBeenCalledWith(
-      "__Host-oauth_code_verifier",
-    );
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 
   it("throws OAuthNoVerifiedEmailError when GitHub has no verified emails", async () => {
@@ -183,9 +179,7 @@ describe("createGithubOAuthClient", () => {
     });
 
     expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
-    expect(cookies.delete).toHaveBeenCalledWith(
-      "__Host-oauth_code_verifier",
-    );
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 
   it("wraps GitHub email endpoint fetch failures", async () => {
@@ -205,8 +199,6 @@ describe("createGithubOAuthClient", () => {
     });
 
     expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_state");
-    expect(cookies.delete).toHaveBeenCalledWith(
-      "__Host-oauth_code_verifier",
-    );
+    expect(cookies.delete).toHaveBeenCalledWith("__Host-oauth_code_verifier");
   });
 });

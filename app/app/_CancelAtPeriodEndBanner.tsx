@@ -92,7 +92,8 @@ export function CancelAtPeriodEndBanner({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsTemporarilyHidden(true)}>
+                onClick={() => setIsTemporarilyHidden(true)}
+              >
                 Hide
               </Button>
               <Button
@@ -104,7 +105,8 @@ export function CancelAtPeriodEndBanner({
                   window.dispatchEvent(
                     new Event("cancel_at_period_end_banner-change"),
                   );
-                }}>
+                }}
+              >
                 Don&apos;t show again
               </Button>
             </div>

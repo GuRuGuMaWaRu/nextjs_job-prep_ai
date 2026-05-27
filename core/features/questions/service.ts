@@ -36,7 +36,7 @@ export async function getQuestionByIdService(questionId: string) {
 export async function insertQuestionService(
   question: string,
   jobInfoId: string,
-  difficulty: QuestionDifficulty
+  difficulty: QuestionDifficulty,
 ) {
   return await insertQuestionDal({
     text: question,

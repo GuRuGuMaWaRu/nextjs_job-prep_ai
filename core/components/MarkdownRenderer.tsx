@@ -12,8 +12,9 @@ export function MarkdownRenderer({
     <div
       className={cn(
         "prose prose-neutral dark:prose-invert font-sans max-w-none",
-        className
-      )}>
+        className,
+      )}
+    >
       <Markdown {...props} />
     </div>
   );

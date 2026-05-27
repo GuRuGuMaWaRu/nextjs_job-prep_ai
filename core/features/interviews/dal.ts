@@ -64,7 +64,7 @@ export async function getInterviewsDal(jobInfoId: string, userId: string) {
  * Insert a new interview
  */
 export async function insertInterviewDal(
-  interview: typeof InterviewTable.$inferInsert
+  interview: typeof InterviewTable.$inferInsert,
 ) {
   try {
     return await insertInterviewDb(interview);
@@ -79,7 +79,7 @@ export async function insertInterviewDal(
  */
 export async function updateInterviewDal(
   id: string,
-  interview: Partial<typeof InterviewTable.$inferInsert>
+  interview: Partial<typeof InterviewTable.$inferInsert>,
 ) {
   try {
     return await updateInterviewDb(id, interview);

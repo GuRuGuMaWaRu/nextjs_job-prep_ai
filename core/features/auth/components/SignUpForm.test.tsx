@@ -83,9 +83,13 @@ describe("SignUpForm", () => {
     );
     expect(screen.getByLabelText("Password")).toHaveAttribute("minlength", "8");
     expect(
-      screen.getByText("Must be at least 8 characters with a letter and number"),
+      screen.getByText(
+        "Must be at least 8 characters with a letter and number",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Create Account" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Create Account" }),
+    ).toBeEnabled();
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
       "href",
       routes.signIn,
@@ -130,15 +134,23 @@ describe("SignUpForm", () => {
 
     expect(screen.getByLabelText("Name")).toHaveValue("Ada");
     expect(screen.getByLabelText("Email")).toHaveValue("candidate@test.local");
-    expect(screen.getByLabelText("Name")).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Name")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    expect(screen.getByLabelText("Email")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
     expect(screen.getByLabelText("Password")).toHaveAttribute(
       "aria-invalid",
       "true",
     );
     expect(screen.getByText("Name is required")).toBeInTheDocument();
     expect(screen.getByText("Enter a valid email")).toBeInTheDocument();
-    expect(screen.getByText("Password must include a number")).toBeInTheDocument();
+    expect(
+      screen.getByText("Password must include a number"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("oauth-error")).toHaveTextContent(
       "Please correct the highlighted fields.",
     );
@@ -156,7 +168,9 @@ describe("SignUpForm", () => {
     expect(screen.getByLabelText("Name")).toBeDisabled();
     expect(screen.getByLabelText("Email")).toBeDisabled();
     expect(screen.getByLabelText("Password")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Show password" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Show password" }),
+    ).toBeDisabled();
     expect(
       screen.getByRole("button", { name: "Creating account..." }),
     ).toBeDisabled();

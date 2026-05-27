@@ -32,7 +32,8 @@ export default function RootLayout({
           defaultTheme="system"
           enableColorScheme
           disableTransitionOnChange
-          value={{ light: "light", dark: "dark" }}>
+          value={{ light: "light", dark: "dark" }}
+        >
           {children}
           <Toaster position="bottom-right" />
         </ThemeProvider>
