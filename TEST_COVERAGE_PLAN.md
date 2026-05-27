@@ -8,6 +8,9 @@ can be referenced across future implementation chats.
 - Run `npm test` before starting coverage work and record the current pass/fail
   state in the relevant PR or issue.
 - Use the existing `npm run test:coverage` script to generate coverage data.
+- Before finalizing a coverage slice, run `npx.cmd biome format --write` on
+  touched code files or `npm.cmd run check -- <files>` when appropriate, then
+  run `npm.cmd run check:ci` so CI-only formatting failures are caught locally.
 - Treat the first coverage report as a baseline. Add conservative thresholds
   only after the initial gaps are understood.
 

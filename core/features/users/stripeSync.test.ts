@@ -973,9 +973,9 @@ describe("reconcileUserStripeSubscription", () => {
     mockGetUserByIdDb.mockResolvedValue(user);
     mockRetrieve.mockRejectedValue("stripe temporarily unavailable");
 
-    await expect(
-      reconcileUserStripeSubscription(stripe, user.id),
-    ).rejects.toBe("stripe temporarily unavailable");
+    await expect(reconcileUserStripeSubscription(stripe, user.id)).rejects.toBe(
+      "stripe temporarily unavailable",
+    );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "[stripeSync] reconcileUserStripeSubscription failed",
