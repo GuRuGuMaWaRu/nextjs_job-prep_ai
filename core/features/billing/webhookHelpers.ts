@@ -89,7 +89,11 @@ export async function claimEvent(
   eventId: string,
   eventType: string,
 ): Promise<ClaimEventResult> {
-  for (let attempt = 0; attempt < CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS; attempt++) {
+  for (
+    let attempt = 0;
+    attempt < CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS;
+    attempt++
+  ) {
     const rows = await db
       .insert(StripeEventTable)
       .values({

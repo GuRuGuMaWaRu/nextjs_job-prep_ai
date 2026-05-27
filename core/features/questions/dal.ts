@@ -52,7 +52,7 @@ export async function getQuestionByIdDal(questionId: string, userId: string) {
  * Insert a new question
  */
 export async function insertQuestionDal(
-  question: typeof QuestionTable.$inferInsert
+  question: typeof QuestionTable.$inferInsert,
 ) {
   try {
     return await insertQuestionDb(question);

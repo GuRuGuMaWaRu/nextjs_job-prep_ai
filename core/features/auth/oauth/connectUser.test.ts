@@ -9,10 +9,7 @@ jest.mock("@/core/drizzle/db", () => ({
 }));
 
 import { db } from "@/core/drizzle/db";
-import {
-  UserOAuthAccountTable,
-  UserTable,
-} from "@/core/drizzle/schema";
+import { UserOAuthAccountTable, UserTable } from "@/core/drizzle/schema";
 import {
   createDrizzleMutationChainMock,
   createMockDrizzleDb,
@@ -22,17 +19,17 @@ import {
 import { connectUserToAccount } from "@/core/features/auth/oauth/connectUser";
 import { OAuthUnverifiedEmailError } from "@/core/features/auth/oauth/errors";
 
-const mockTransaction = db.transaction as jest.MockedFunction<typeof db.transaction>;
+const mockTransaction = db.transaction as jest.MockedFunction<
+  typeof db.transaction
+>;
 
 /** Shared tx shape: no OAuth link, email first null then row after insert conflict. */
 function createMockTxForInsertConflictRace() {
   const userQuery = createMockDrizzleTableQuery();
-  userQuery.findFirst
-    .mockResolvedValueOnce(null)
-    .mockResolvedValueOnce({
-      id: "winner-id",
-      emailVerified: null,
-    });
+  userQuery.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
+    id: "winner-id",
+    emailVerified: null,
+  });
 
   return createMockDrizzleDb({
     query: {
@@ -92,7 +89,9 @@ describe("connectUserToAccount", () => {
     mockTransaction.mockImplementation(async (fn) => {
       const tx = createMockDrizzleDb({
         query: {
-          UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+          UserOAuthAccountTable: createMockDrizzleTableQuery({
+            findFirst: null,
+          }),
           UserTable: createMockDrizzleTableQuery({
             findFirst: { id: "by-email", emailVerified: null },
           }),
@@ -133,7 +132,9 @@ describe("connectUserToAccount", () => {
     mockTransaction.mockImplementation(async (fn) => {
       const tx = createMockDrizzleDb({
         query: {
-          UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+          UserOAuthAccountTable: createMockDrizzleTableQuery({
+            findFirst: null,
+          }),
           UserTable: createMockDrizzleTableQuery({ findFirst: null }),
         },
         insert: (table) => {

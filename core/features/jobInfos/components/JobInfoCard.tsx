@@ -45,10 +45,12 @@ export function JobInfoCard({
             <Button
               asChild
               variant="ghost"
-              className="w-full h-1/2 link-button">
+              className="w-full h-1/2 link-button"
+            >
               <Link
                 href={routes.jobInfo(jobInfo.id)}
-                className="flex items-center justify-center h-1/2 border-b-2 link-button transition-colors hover:bg-accent! dark:hover:bg-accent/50!">
+                className="flex items-center justify-center h-1/2 border-b-2 link-button transition-colors hover:bg-accent! dark:hover:bg-accent/50!"
+              >
                 <ArrowRightIcon className="size-6 " />
               </Link>
             </Button>
@@ -58,7 +60,8 @@ export function JobInfoCard({
               areYouSureDescription="Deleting this Job Info will also remove all related interviews and questions."
               successMessage={`Job info for "${jobInfo.name}" removed successfully`}
               className="w-full h-1/2 delete-button"
-              variant="ghost">
+              variant="ghost"
+            >
               <TrashIcon className="size-4 text-destructive" />
             </ActionButton>
           </CardContent>

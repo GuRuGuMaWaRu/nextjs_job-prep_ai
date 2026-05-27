@@ -194,13 +194,15 @@ function Controls({
             variant="outline"
             onClick={reset}
             disabled={isLoading}
-            size="sm">
+            size="sm"
+          >
             Skip
           </Button>
           <Button
             onClick={generateFeedback}
             disabled={answerBtnDisabled}
-            size="sm">
+            size="sm"
+          >
             <LoadingSwap isLoading={isLoading}>Answer</LoadingSwap>
           </Button>
         </>
@@ -211,9 +213,11 @@ function Controls({
             disabled={isLoading}
             onClick={() => {
               generateQuestion(questionDifficulty);
-            }}>
+            }}
+          >
             <LoadingSwap
-              isLoading={isLoading && questionDifficulty === difficulty}>
+              isLoading={isLoading && questionDifficulty === difficulty}
+            >
               {formatQuestionDifficulty(questionDifficulty)}
             </LoadingSwap>
           </Button>

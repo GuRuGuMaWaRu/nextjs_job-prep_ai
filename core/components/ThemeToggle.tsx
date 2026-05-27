@@ -65,7 +65,8 @@ export function ThemeToggle() {
             className={cn(
               "cursor-pointer",
               t.value === theme && "bg-accent text-accent-foreground",
-            )}>
+            )}
+          >
             <div className="flex items-center gap-2">
               {t.icon}
               {t.name}

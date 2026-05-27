@@ -18,7 +18,8 @@ export function HeadlineSection({
       {currentPlan != null && (
         <p
           className="text-sm text-muted-foreground mt-3 inline-block"
-          aria-live="polite">
+          aria-live="polite"
+        >
           You&apos;re on the{" "}
           <strong className="text-foreground">
             {currentPlan === "pro" ? "Pro" : "Free"}

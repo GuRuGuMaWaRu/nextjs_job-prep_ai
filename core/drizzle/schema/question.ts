@@ -8,7 +8,7 @@ export const questionDifficulties = ["easy", "medium", "hard"] as const;
 export type QuestionDifficulty = (typeof questionDifficulties)[number];
 export const questionDifficultyEnum = pgEnum(
   "questions_experience_level",
-  questionDifficulties
+  questionDifficulties,
 );
 
 export const QuestionTable = pgTable("questions", {

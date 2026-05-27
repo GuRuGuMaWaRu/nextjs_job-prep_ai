@@ -5,7 +5,7 @@ export function Skeleton({ className }: { className?: string }) {
     <span
       className={cn(
         "animate-pulse bg-muted rounded h-[1.25em] w-full max-w-full inline-block align-bottom",
-        className
+        className,
       )}
     />
   );

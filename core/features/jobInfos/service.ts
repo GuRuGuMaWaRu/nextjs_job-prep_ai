@@ -9,10 +9,7 @@ import {
   updateJobInfoDal,
   removeJobInfoDal,
 } from "@/core/features/jobInfos/dal";
-import {
-  NotFoundError,
-  PermissionError,
-} from "@/core/dal/errors";
+import { NotFoundError, PermissionError } from "@/core/dal/errors";
 import { requireUser } from "@/core/dal/helpers";
 import { JOB_INFO_SERVICE_ERRORS } from "@/core/features/jobInfos/serviceErrors";
 
@@ -28,7 +25,7 @@ import { JOB_INFO_SERVICE_ERRORS } from "@/core/features/jobInfos/serviceErrors"
  * Business rules: None currently, but could add plan limits here
  */
 export async function createJobInfoService(
-  data: z.infer<typeof jobInfoSchema>
+  data: z.infer<typeof jobInfoSchema>,
 ) {
   // Get authenticated user (throws if not logged in)
   const userId = await requireUser();
@@ -51,7 +48,7 @@ export async function createJobInfoService(
  */
 export async function updateJobInfoService(
   id: string,
-  data: z.infer<typeof jobInfoSchema>
+  data: z.infer<typeof jobInfoSchema>,
 ) {
   const userId = await requireUser();
 

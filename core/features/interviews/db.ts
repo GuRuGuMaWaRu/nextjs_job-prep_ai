@@ -24,7 +24,7 @@ export async function getInterviewByIdDb(id: string) {
 }
 
 export async function insertInterviewDb(
-  interview: typeof InterviewTable.$inferInsert
+  interview: typeof InterviewTable.$inferInsert,
 ) {
   const [newInterview] = await db
     .insert(InterviewTable)
@@ -41,7 +41,7 @@ export async function insertInterviewDb(
 
 export async function updateInterviewDb(
   id: string,
-  interview: Partial<typeof InterviewTable.$inferInsert>
+  interview: Partial<typeof InterviewTable.$inferInsert>,
 ) {
   const [updatedInterview] = await db
     .update(InterviewTable)
@@ -63,7 +63,10 @@ export async function getInterviewCountDb(userId: string) {
     .from(InterviewTable)
     .innerJoin(JobInfoTable, eq(InterviewTable.jobInfoId, JobInfoTable.id))
     .where(
-      and(eq(JobInfoTable.userId, userId), isNotNull(InterviewTable.humeChatId))
+      and(
+        eq(JobInfoTable.userId, userId),
+        isNotNull(InterviewTable.humeChatId),
+      ),
     );
 
   return interviewCount;
@@ -73,7 +76,7 @@ export async function getInterviewsDb(jobInfoId: string, userId: string) {
   const data = await db.query.InterviewTable.findMany({
     where: and(
       eq(InterviewTable.jobInfoId, jobInfoId),
-      isNotNull(InterviewTable.humeChatId)
+      isNotNull(InterviewTable.humeChatId),
     ),
     with: { jobInfo: { columns: { userId: true } } },
     orderBy: desc(InterviewTable.updatedAt),

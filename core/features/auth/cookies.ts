@@ -12,7 +12,7 @@ import {
  */
 export async function setSessionCookie(
   token: string,
-  expiresAt: Date
+  expiresAt: Date,
 ): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {

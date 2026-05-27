@@ -33,9 +33,7 @@ describe("OAuthSignInSection", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("button", { name: "Google" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Google" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Github Last used" }),
     ).toBeInTheDocument();

@@ -19,10 +19,12 @@ export function BackLink({
       asChild
       variant="ghost"
       size="sm"
-      className={cn("px-0! hover:bg-transparent!", className)}>
+      className={cn("px-0! hover:bg-transparent!", className)}
+    >
       <Link
         href={href}
-        className="flex items-center gap-2 text-sm text-muted-foreground ">
+        className="flex items-center gap-2 text-sm text-muted-foreground "
+      >
         <MoveLeftIcon />
         {children}
       </Link>

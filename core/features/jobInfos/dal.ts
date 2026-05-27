@@ -33,7 +33,7 @@ export async function createJobInfoDal(data: typeof JobInfoTable.$inferInsert) {
     console.error("Database error creating job info:", error);
     throw new DatabaseError(
       "Failed to save job information to database",
-      error
+      error,
     );
   }
 }
@@ -52,7 +52,7 @@ export async function getJobInfoDal(id: string, userId: string) {
     console.error("Database error getting job info:", error);
     throw new DatabaseError(
       "Failed to fetch job information from database",
-      error
+      error,
     );
   }
 }
@@ -71,7 +71,7 @@ export async function getJobInfoByIdDal(id: string) {
     console.error("Database error getting job info by id:", error);
     throw new DatabaseError(
       "Failed to fetch job information from database",
-      error
+      error,
     );
   }
 }
@@ -89,7 +89,7 @@ export async function getJobInfosDal(userId: string) {
     console.error("Database error getting job infos:", error);
     throw new DatabaseError(
       "Failed to fetch job information from database",
-      error
+      error,
     );
   }
 }
@@ -99,7 +99,7 @@ export async function getJobInfosDal(userId: string) {
  */
 export async function updateJobInfoDal(
   id: string,
-  data: Partial<typeof JobInfoTable.$inferInsert>
+  data: Partial<typeof JobInfoTable.$inferInsert>,
 ) {
   try {
     return await updateJobInfoDb(id, data);
@@ -107,7 +107,7 @@ export async function updateJobInfoDal(
     console.error("Database error updating job info:", error);
     throw new DatabaseError(
       "Failed to update job information in database",
-      error
+      error,
     );
   }
 }
@@ -116,7 +116,7 @@ export async function updateJobInfoDal(
  * Remove a job info by ID
  */
 export async function removeJobInfoDal(
-  id: string
+  id: string,
 ): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
   try {
     const deletedJobInfo = await removeJobInfoDb(id);

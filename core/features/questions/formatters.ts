@@ -10,7 +10,7 @@ export function formatQuestionDifficulty(difficulty: QuestionDifficulty) {
       return "Hard";
     default:
       throw new Error(
-        `Unknown question difficulty: ${difficulty satisfies never}`
+        `Unknown question difficulty: ${difficulty satisfies never}`,
       );
   }
 }

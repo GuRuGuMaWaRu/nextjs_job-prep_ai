@@ -27,7 +27,8 @@ export function CondensedMessages({
             className={cn(
               "flex items-center gap-5 border pl-4 pr-6 py-4 rounded max-w-3/4",
               msg.isUser ? "self-end" : "self-start",
-            )}>
+            )}
+          >
             {msg.isUser ? (
               <UserAvatar user={user} className="size-6 shrink-0" />
             ) : (
