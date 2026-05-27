@@ -1385,6 +1385,63 @@ Move next to `app/app/upgrade/syncSubscriptionOnLoad.ts` or another compact
 upgrade/billing utility with uncovered branches. Keep the slice focused on
 observable return behavior and mocked module boundaries.
 
+### Upgrade Subscription Sync Slice - 2026-05-26
+
+Files/tests added or updated:
+
+- `app/app/upgrade/syncSubscriptionOnLoad.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npx.cmd jest app/app/upgrade/syncSubscriptionOnLoad.test.ts --coverage --collectCoverageFrom=app/app/upgrade/syncSubscriptionOnLoad.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- app/app/upgrade/syncSubscriptionOnLoad.test.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/app/upgrade/syncSubscriptionOnLoad.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused coverage probe passed: 1 test suite, 7 tests, 0 snapshots.
+- Focused upgrade sync Jest passed: 1 test suite, 7 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 60 test suites, 434 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 60 test suites, 434
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 94.96% statements, 90.93% branches, 90%
+  functions, and 96.98% lines.
+- Updated upgrade sync coverage:
+  - `app/app/upgrade/syncSubscriptionOnLoad.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+- Updated `app/app/upgrade` aggregate coverage: 97.29% statements, 90.47%
+  branches, 100% functions, and 97.22% lines.
+
+Notes:
+
+- Added focused early-return coverage for Stripe not configured, configured
+  Stripe client unavailable, no signed-in user, and users without a Stripe
+  subscription id.
+- Kept mocking at module boundaries for auth, Stripe configuration, user DB
+  lookup, and subscription reconciliation.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, and lint paths passed.
+- No customer email fixtures were used in this slice.
+
+Recommendation:
+
+Move next to `app/app/upgrade/checkSubscriptionSuccess.ts` to cover the final
+fallback branch when `success=true` but `session_id` is missing or Stripe is
+unavailable. Keep the slice narrow around observable `false` returns and
+downstream calls not firing.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
