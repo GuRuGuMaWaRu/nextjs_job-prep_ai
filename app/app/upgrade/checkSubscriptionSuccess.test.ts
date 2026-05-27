@@ -59,6 +59,41 @@ describe("checkSubscriptionSuccess", () => {
     expect(mockFulfillCheckoutSession).not.toHaveBeenCalled();
   });
 
+  it("returns false without checking the user when success has no session id", async () => {
+    await expect(
+      checkSubscriptionSuccess({
+        success: "true",
+      }),
+    ).resolves.toBe(false);
+
+    await expect(
+      checkSubscriptionSuccess({
+        success: "true",
+        session_id: ["cs_test_array"],
+      }),
+    ).resolves.toBe(false);
+
+    expect(mockGetStripe).toHaveBeenCalledTimes(2);
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+    expect(mockFulfillCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it("returns false without checking the user when Stripe is unavailable", async () => {
+    mockGetStripe.mockReturnValueOnce(null);
+
+    await expect(
+      checkSubscriptionSuccess({
+        success: "true",
+        session_id: "cs_test_success",
+      }),
+    ).resolves.toBe(false);
+
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+    expect(mockFulfillCheckoutSession).not.toHaveBeenCalled();
+  });
+
   it("fulfills a paid Checkout session owned by the current user", async () => {
     const session = makeStripeCheckoutSession({
       id: "cs_test_success",
