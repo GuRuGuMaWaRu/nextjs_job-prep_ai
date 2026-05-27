@@ -67,6 +67,54 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
+  it("skips reconciliation when Stripe is not configured", async () => {
+    mockIsStripeConfigured.mockReturnValue(false);
+
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+
+    expect(mockGetStripe).not.toHaveBeenCalled();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockGetUserByIdDb).not.toHaveBeenCalled();
+    expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("skips reconciliation when Stripe is configured but unavailable", async () => {
+    mockGetStripe.mockReturnValue(null);
+
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockGetUserByIdDb).not.toHaveBeenCalled();
+    expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("skips reconciliation when no user is signed in", async () => {
+    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
+
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+
+    expect(mockGetUserByIdDb).not.toHaveBeenCalled();
+    expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("skips reconciliation when the user has no Stripe subscription id", async () => {
+    mockGetUserByIdDb.mockResolvedValue(
+      makeUser({
+        id: TEST_USER_ID,
+        stripeSubscriptionId: null,
+      }),
+    );
+
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+
+    expect(mockGetUserByIdDb).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
   it("swallows current user lookup failures so the page can render", async () => {
     const error = new Error("session failed");
     mockGetCurrentUser.mockRejectedValue(error);
