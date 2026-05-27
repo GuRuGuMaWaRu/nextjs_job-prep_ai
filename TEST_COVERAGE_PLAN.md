@@ -1442,6 +1442,64 @@ fallback branch when `success=true` but `session_id` is missing or Stripe is
 unavailable. Keep the slice narrow around observable `false` returns and
 downstream calls not firing.
 
+### Upgrade Checkout Success Fallback Slice - 2026-05-27
+
+Files/tests updated:
+
+- `app/app/upgrade/checkSubscriptionSuccess.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npx.cmd jest app/app/upgrade/checkSubscriptionSuccess.test.ts --coverage --collectCoverageFrom=app/app/upgrade/checkSubscriptionSuccess.ts --runInBand`
+- `npm.cmd test -- app/app/upgrade/checkSubscriptionSuccess.test.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/app/upgrade/checkSubscriptionSuccess.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused checkout success coverage probe passed: 1 test suite, 8 tests, 0
+  snapshots.
+- Focused checkout success Jest passed: 1 test suite, 8 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `C:\nvm4w\nodejs\npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 60 test suites, 436 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 60 test suites, 436
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 95.02% statements, 91.25% branches, 90%
+  functions, and 97.04% lines.
+- Updated upgrade checkout success coverage:
+  - `app/app/upgrade/checkSubscriptionSuccess.ts`: 100% statements, 100%
+    branches, 100% functions, and 100% lines.
+- Updated `app/app/upgrade` aggregate coverage: 100% statements, 100%
+  branches, 100% functions, and 100% lines.
+
+Notes:
+
+- Added focused fallback coverage for `success=true` when `session_id` is
+  missing, when `session_id` is not a string, and when Stripe is unavailable.
+- Assertions verify the helper returns `false` and does not call auth, Checkout
+  session retrieval, or fallback fulfillment when the required Stripe session
+  preconditions are not met.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, and lint paths passed.
+- No customer email fixtures were used in this slice.
+
+Recommendation:
+
+Move next to `core/features/users/stripeSync.ts` for a focused branch-coverage
+slice. The fresh coverage report shows it at 82.14% statements and 68.57%
+branches, with gaps around Stripe subscription/customer fallback handling and
+error paths.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
