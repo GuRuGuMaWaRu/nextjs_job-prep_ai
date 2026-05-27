@@ -1500,6 +1500,67 @@ slice. The fresh coverage report shows it at 82.14% statements and 68.57%
 branches, with gaps around Stripe subscription/customer fallback handling and
 error paths.
 
+### User Stripe Sync Branch Coverage Slice - 2026-05-27
+
+Files/tests updated:
+
+- `core/features/users/stripeSync.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/users/stripeSync.test.ts --runInBand`
+- `npx.cmd jest core/features/users/stripeSync.test.ts --coverage --collectCoverageFrom=core/features/users/stripeSync.ts --runInBand`
+- `npm test`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/users/stripeSync.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused user Stripe sync Jest passed: 1 test suite, 28 tests, 0 snapshots.
+- Focused coverage probe passed: 1 test suite, 28 tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `C:\nvm4w\nodejs\npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd test -- --runInBand` passed: 60 test suites, 454 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 60 test suites, 454
+  tests, 0 snapshots.
+- Initial `npx.cmd tsc --noEmit` surfaced two test mock typings for intentional
+  `null` DB results; after narrowing those fixtures, `npx.cmd tsc --noEmit`
+  passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 95.87% statements, 94.68% branches, 90%
+  functions, and 97.94% lines.
+- Updated users coverage:
+  - `core/features/users/stripeSync.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+  - `core/features/users` aggregate: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+
+Notes:
+
+- Added branch coverage for stale webhook null-active context, active/trialing
+  direct sync, inactive replacement selection, missing-user retry behavior,
+  missing or mismatched Stripe customers, expanded customer objects, unchanged
+  reconciliation, concurrent row-guard warnings, missing-subscription repair
+  and downgrade fallbacks, and unexpected Stripe retrieval failures.
+- Kept mocks at the Stripe and user DB module boundaries; no production code
+  changed.
+- Test fixtures use synthetic ids and no customer email fixtures.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, and lint paths passed.
+
+Recommendation:
+
+Move next to a compact remaining branch gap such as
+`app/api/stripe/webhooks/route.ts` or `core/features/auth/oauth/base.ts`. If
+the goal is smaller and lower-risk, cover `core/dal/helpers.ts` or the remaining
+permission helper branches first.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
