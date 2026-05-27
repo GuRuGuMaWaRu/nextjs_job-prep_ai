@@ -44,10 +44,7 @@ type MockWebhookDb = {
   select: jest.Mock;
 };
 
-const retrieveSubscription = jest.fn<
-  Promise<Stripe.Subscription>,
-  [string]
->();
+const retrieveSubscription = jest.fn<Promise<Stripe.Subscription>, [string]>();
 
 const stripe = {
   subscriptions: {
@@ -174,28 +171,28 @@ describe("fulfillCheckoutSession", () => {
 
   it.each([
     ["customer", { customerId: null, subscriptionId: "sub_test_incomplete" }],
-    ["subscription", { customerId: "cus_test_incomplete", subscriptionId: null }],
-  ] as const)(
-    "skips paid checkout sessions that are missing the %s id",
-    async (_missingField, overrides) => {
-      const session = makeStripeCheckoutSession({
-        id: "cs_test_incomplete",
-        userId: "user-test",
-        ...overrides,
-      });
+    [
+      "subscription",
+      { customerId: "cus_test_incomplete", subscriptionId: null },
+    ],
+  ] as const)("skips paid checkout sessions that are missing the %s id", async (_missingField, overrides) => {
+    const session = makeStripeCheckoutSession({
+      id: "cs_test_incomplete",
+      userId: "user-test",
+      ...overrides,
+    });
 
-      await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "fulfillCheckoutSession: incomplete session payload",
-        ),
-        "cs_test_incomplete",
-      );
-      expect(retrieveSubscription).not.toHaveBeenCalled();
-      expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
-    },
-  );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "fulfillCheckoutSession: incomplete session payload",
+      ),
+      "cs_test_incomplete",
+    );
+    expect(retrieveSubscription).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+  });
 
   it("skips paid checkout sessions when the Stripe client is unavailable", async () => {
     mockGetStripe.mockReturnValueOnce(null);
@@ -366,17 +363,14 @@ describe("claimEvent", () => {
     ["processed", "duplicate_processed"],
     ["remediation_required", "duplicate_remediation"],
     ["processing", "duplicate_in_progress"],
-  ] as const)(
-    "returns %s duplicate state when the event row already exists",
-    async (state, expectedResult) => {
-      primeInsertReturning([]);
-      primeSelectRows([{ state }]);
+  ] as const)("returns %s duplicate state when the event row already exists", async (state, expectedResult) => {
+    primeInsertReturning([]);
+    primeSelectRows([{ state }]);
 
-      await expect(
-        claimEvent("evt_test_duplicate", "customer.subscription.updated"),
-      ).resolves.toBe(expectedResult);
-    },
-  );
+    await expect(
+      claimEvent("evt_test_duplicate", "customer.subscription.updated"),
+    ).resolves.toBe(expectedResult);
+  });
 
   it("treats repeatedly missing rows as an in-progress duplicate", async () => {
     for (let attempt = 0; attempt < 5; attempt++) {

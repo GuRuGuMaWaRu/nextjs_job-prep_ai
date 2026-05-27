@@ -28,4 +28,3 @@ export const COOKIE_OPTIONS = {
   sameSite: "lax" as const,
   path: "/",
 };
-

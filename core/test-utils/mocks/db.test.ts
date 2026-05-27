@@ -90,9 +90,9 @@ describe("createMockDrizzleDb", () => {
       },
     });
 
-    await expect(db.insert(usersTable).values({}).returning()).resolves.toEqual([
-      { id: "user-1" },
-    ]);
+    await expect(db.insert(usersTable).values({}).returning()).resolves.toEqual(
+      [{ id: "user-1" }],
+    );
     await expect(
       db.insert(sessionsTable).values({}).returning(),
     ).resolves.toEqual([{ id: "session-1" }]);

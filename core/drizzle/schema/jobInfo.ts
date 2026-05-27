@@ -10,7 +10,7 @@ export const experienceLevels = ["junior", "mid-level", "senior"] as const;
 export type ExperienceLevel = (typeof experienceLevels)[number];
 export const experienceLevelEnum = pgEnum(
   "job_info_experience_level",
-  experienceLevels
+  experienceLevels,
 );
 
 export const JobInfoTable = pgTable("job_info", {

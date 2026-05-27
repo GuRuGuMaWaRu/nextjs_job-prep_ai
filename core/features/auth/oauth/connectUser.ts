@@ -8,9 +8,7 @@ import { db } from "@/core/drizzle/db";
 import type { ResolvedOAuthUser } from "./base";
 import { assertOAuthEmailLinkAllowed } from "./oauthLinkPolicy";
 
-type DbTransaction = Parameters<
-  Parameters<typeof db.transaction>[0]
->[0];
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type UserRowEmailState = { id: string; emailVerified: Date | null };
 

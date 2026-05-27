@@ -60,7 +60,9 @@ function mockFeedbackStream(): void {
         Response.json({
           kind: "feedback-stream",
         }) as ReturnType<
-          ReturnType<typeof generateAiQuestionFeedback>["toUIMessageStreamResponse"]
+          ReturnType<
+            typeof generateAiQuestionFeedback
+          >["toUIMessageStreamResponse"]
         >,
     ),
   } as unknown as ReturnType<typeof generateAiQuestionFeedback>);

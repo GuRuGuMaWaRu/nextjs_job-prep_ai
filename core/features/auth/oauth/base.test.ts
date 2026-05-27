@@ -116,7 +116,9 @@ function createResolvingClient(
   });
 }
 
-function createGithubFixtureClient(): ReturnType<typeof createGithubOAuthClient> {
+function createGithubFixtureClient(): ReturnType<
+  typeof createGithubOAuthClient
+> {
   return new OAuthClient({
     provider: "github",
     clientId: "client-id",
@@ -139,7 +141,9 @@ function createGithubFixtureClient(): ReturnType<typeof createGithubOAuthClient>
   });
 }
 
-function createGoogleFixtureClient(): ReturnType<typeof createGoogleOAuthClient> {
+function createGoogleFixtureClient(): ReturnType<
+  typeof createGoogleOAuthClient
+> {
   return new OAuthClient({
     provider: "google",
     clientId: "client-id",

@@ -84,7 +84,8 @@ export default async function InterviewPage({
             result={(i) =>
               i.feedback == null ? (
                 <ActionButton
-                  action={generateInterviewFeedbackAction.bind(null, i.id)}>
+                  action={generateInterviewFeedbackAction.bind(null, i.id)}
+                >
                   Generate Feedback
                 </ActionButton>
               ) : (
@@ -102,7 +103,8 @@ export default async function InterviewPage({
           />
         </div>
         <Suspense
-          fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}>
+          fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}
+        >
           <SuspendedMessages interview={interview} />
         </Suspense>
       </div>

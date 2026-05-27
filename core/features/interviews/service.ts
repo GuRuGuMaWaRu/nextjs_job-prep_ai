@@ -61,7 +61,7 @@ export async function createInterviewService(jobInfoId: string) {
  */
 export async function updateInterviewService(
   id: string,
-  data: { humeChatId?: string; duration?: string }
+  data: { humeChatId?: string; duration?: string },
 ) {
   const userId = await requireUser();
 

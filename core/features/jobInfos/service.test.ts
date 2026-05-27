@@ -30,10 +30,7 @@ import {
   updateJobInfoService,
   verifyJobInfoAccessService,
 } from "@/core/features/jobInfos/service";
-import {
-  TEST_OTHER_USER_ID,
-  TEST_USER_ID,
-} from "@/core/test-utils/constants";
+import { TEST_OTHER_USER_ID, TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeJobInfo } from "@/core/test-utils/factories";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 

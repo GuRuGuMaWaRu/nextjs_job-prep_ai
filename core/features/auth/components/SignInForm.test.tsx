@@ -70,7 +70,9 @@ describe("SignInForm", () => {
 
     expect(mockUseActionState).toHaveBeenCalledWith(signInAction, null);
     expect(
-      screen.getByText("Enter your email and password to sign in to your account"),
+      screen.getByText(
+        "Enter your email and password to sign in to your account",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
     expect(screen.getByLabelText("Password")).toHaveAttribute(
@@ -112,7 +114,10 @@ describe("SignInForm", () => {
     render(<SignInForm configuredOAuthProviders={[]} />);
 
     expect(screen.getByLabelText("Email")).toHaveValue("candidate@test.local");
-    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Email")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
     expect(screen.getByLabelText("Password")).toHaveAttribute(
       "aria-invalid",
       "true",
@@ -135,7 +140,11 @@ describe("SignInForm", () => {
 
     expect(screen.getByLabelText("Email")).toBeDisabled();
     expect(screen.getByLabelText("Password")).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Show password" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Signing in..." })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Show password" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Signing in..." }),
+    ).toBeDisabled();
   });
 });

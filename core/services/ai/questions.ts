@@ -29,7 +29,7 @@ export function generateAiQuestion({
       [
         { role: "user", content: q.difficulty },
         { role: "assistant", content: q.text },
-      ] satisfies ModelMessage[]
+      ] satisfies ModelMessage[],
   );
 
   return streamText({

@@ -22,7 +22,8 @@ export default async function JobInfoEditPage({
       <Card>
         <CardContent>
           <Suspense
-            fallback={<Loader2 className="animate-spin size-24 mx-auto" />}>
+            fallback={<Loader2 className="animate-spin size-24 mx-auto" />}
+          >
             <SuspendedForm jobInfoId={jobInfoId} />
           </Suspense>
         </CardContent>
@@ -40,7 +41,7 @@ async function SuspendedForm({ jobInfoId }: { jobInfoId: string }) {
       if (jobInfo == null) return notFound();
 
       return jobInfo;
-    }
+    },
   );
 
   return <JobInfoForm jobInfo={jobInfo} />;

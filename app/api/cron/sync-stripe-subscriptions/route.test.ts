@@ -225,9 +225,7 @@ describe("GET /api/cron/sync-stripe-subscriptions", () => {
       new Error("database offline"),
     );
 
-    await expect(
-      GET(buildCronRequest()),
-    ).rejects.toThrow("database offline");
+    await expect(GET(buildCronRequest())).rejects.toThrow("database offline");
     expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
   });
 });

@@ -59,7 +59,8 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
         <PermissionCheckedLink
           className="transition-opacity"
-          href={routes.newInterview(jobInfoId)}>
+          href={routes.newInterview(jobInfoId)}
+        >
           <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
             <div className="text-lg flex items-center gap-2">
               <PlusIcon className="size-6" />
@@ -70,7 +71,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
 
         {interviews.map((interview) => {
           const match = interview.feedback?.match(
-            /Overall Rating:\s*(\d+)\/10/i
+            /Overall Rating:\s*(\d+)\/10/i,
           );
           const rating = match ? Number(match[1]) : 0;
 
@@ -78,16 +79,16 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
             <Link
               className="hover:scale-[1.02] transition-[transform_opacity]"
               href={routes.interview(jobInfoId, interview.id)}
-              key={interview.id}>
+              key={interview.id}
+            >
               <Card className="h-full">
                 <div className="flex items-center justify-between h-full">
                   <CardHeader className="gap-1 grow">
                     <CardTitle className="text-lg flex gap-4">
                       {formatDateTime(interview.createdAt)}
                       <Badge
-                        variant={
-                          interview.feedback ? "primary" : "destructive"
-                        }>
+                        variant={interview.feedback ? "primary" : "destructive"}
+                      >
                         {interview.feedback
                           ? `With feedback - ${rating}/10`
                           : "No feedback"}

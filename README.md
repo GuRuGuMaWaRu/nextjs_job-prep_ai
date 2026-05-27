@@ -220,6 +220,22 @@ npm run start
 npm run lint
 ```
 
+Use `npm run check` to auto-fix lint and format issues locally. CI uses the read-only equivalent:
+
+```bash
+npm run check:ci
+npm test
+```
+
+### Continuous integration
+
+Every pull request and push to `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+- Biome lint and format checks (`npm run check:ci`)
+- Jest tests (`npm test`)
+
+After the workflow has run at least once on `main`, enable **Require status checks to pass before merging** in GitHub branch protection and select the **Lint and test** check.
+
 ### Database tasks
 
 ```bash

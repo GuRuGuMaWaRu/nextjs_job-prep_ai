@@ -20,7 +20,8 @@ export async function errorToast(message: string) {
           asChild
           onClick={() => {
             toast.dismiss(toastId);
-          }}>
+          }}
+        >
           <Link href={routes.upgrade}>Upgrade</Link>
         </Button>
       ),

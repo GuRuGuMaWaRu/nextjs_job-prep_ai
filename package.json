@@ -12,6 +12,7 @@
     "lint": "biome lint",
     "format": "biome format --write .",
     "check": "biome check --write .",
+    "check:ci": "biome ci .",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "db:push": "drizzle-kit push",

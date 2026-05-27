@@ -45,12 +45,18 @@ import {
   TEST_USER_ID,
   TEST_USER_NAME,
 } from "@/core/test-utils/constants";
-import { makeInterview, makeJobInfo, makeUser } from "@/core/test-utils/factories";
+import {
+  makeInterview,
+  makeJobInfo,
+  makeUser,
+} from "@/core/test-utils/factories";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 const mockRefresh = jest.mocked(refresh);
 const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
-const mockGetCurrentUserWithProfile = jest.mocked(getCurrentUserWithProfileAction);
+const mockGetCurrentUserWithProfile = jest.mocked(
+  getCurrentUserWithProfileAction,
+);
 const mockGetInterviewByIdDal = jest.mocked(getInterviewByIdDal);
 const mockGetInterviewsDal = jest.mocked(getInterviewsDal);
 const mockInsertInterviewDal = jest.mocked(insertInterviewDal);
@@ -221,9 +227,9 @@ describe("interview service", () => {
     mockGetInterviewByIdDal.mockResolvedValue(interview);
     mockGenerateAiInterviewFeedback.mockResolvedValue("");
 
-    await expect(generateInterviewFeedbackService(interview.id)).rejects.toThrow(
-      INTERVIEW_SERVICE_ERRORS.feedbackGenerationFailed,
-    );
+    await expect(
+      generateInterviewFeedbackService(interview.id),
+    ).rejects.toThrow(INTERVIEW_SERVICE_ERRORS.feedbackGenerationFailed);
 
     expect(mockUpdateInterviewDal).not.toHaveBeenCalled();
   });

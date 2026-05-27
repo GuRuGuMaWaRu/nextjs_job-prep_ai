@@ -73,7 +73,9 @@ const mockCookies = jest.mocked(cookies);
 const mockGetOAuthClient = jest.mocked(getOAuthClient);
 const mockConnectUserToAccount = jest.mocked(connectUserToAccount);
 const mockGetOAuthConfig = jest.mocked(getOAuthConfig);
-const mockClearOAuthErrorReturnCookie = jest.mocked(clearOAuthErrorReturnCookie);
+const mockClearOAuthErrorReturnCookie = jest.mocked(
+  clearOAuthErrorReturnCookie,
+);
 const mockGetOAuthErrorReturnPathAndClear = jest.mocked(
   getOAuthErrorReturnPathAndClear,
 );
@@ -141,9 +143,7 @@ describe("GET /api/oauth/[provider]", () => {
     mockCreateSession.mockResolvedValue(makeSession({ userId: TEST_USER_ID }));
     mockGetOAuthErrorReturnPathAndClear.mockResolvedValue(routes.signIn);
 
-    consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -217,18 +217,9 @@ describe("GET /api/oauth/[provider]", () => {
   });
 
   it.each([
-    [
-      "oauth_missing_email",
-      new OAuthMissingEmailError(PROVIDER),
-    ],
-    [
-      "oauth_unverified_email",
-      new OAuthUnverifiedEmailError(PROVIDER),
-    ],
-    [
-      "oauth_no_verified_email",
-      new OAuthNoVerifiedEmailError(PROVIDER),
-    ],
+    ["oauth_missing_email", new OAuthMissingEmailError(PROVIDER)],
+    ["oauth_unverified_email", new OAuthUnverifiedEmailError(PROVIDER)],
+    ["oauth_no_verified_email", new OAuthNoVerifiedEmailError(PROVIDER)],
   ])("redirects with %s for known OAuth email errors", async (key, error) => {
     mockFetchUser.mockRejectedValueOnce(error);
 

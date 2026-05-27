@@ -121,7 +121,8 @@ export function StripeActionButton({
         variant={variant}
         size={size}
         className={buttonClassName}
-        disabled={disabled || isSubmitting}>
+        disabled={disabled || isSubmitting}
+      >
         {isSubmitting ? pendingLabel : children}
       </Button>
       {errorMessage && (

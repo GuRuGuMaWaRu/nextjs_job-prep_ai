@@ -87,9 +87,10 @@ export async function getIdempotencyKeyFromRequest(
 
   try {
     if (contentType.includes("application/json")) {
-      const body = (await request.json()) as
-        | { idempotencyKey?: unknown; idempotency_key?: unknown }
-        | null;
+      const body = (await request.json()) as {
+        idempotencyKey?: unknown;
+        idempotency_key?: unknown;
+      } | null;
 
       return getNormalizedIdempotencyKey(
         body?.idempotencyKey ?? body?.idempotency_key,
