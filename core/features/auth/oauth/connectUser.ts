@@ -70,7 +70,7 @@ export function connectUserToAccount(
           name: oAuthUser.name,
           passwordHash: null,
           image: null,
-          emailVerified: oAuthUser.emailVerified ? new Date() : null,
+          emailVerified: new Date(),
         })
         .onConflictDoNothing({ target: UserTable.email })
         .returning({ id: UserTable.id });

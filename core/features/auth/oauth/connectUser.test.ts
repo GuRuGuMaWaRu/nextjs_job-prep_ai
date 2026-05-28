@@ -128,6 +128,46 @@ describe("connectUserToAccount", () => {
     );
   });
 
+  it("reuses user by email without updating when already verified", async () => {
+    const verifiedAt = new Date(0);
+    const updateMock = jest.fn();
+
+    mockTransaction.mockImplementation(async (fn) => {
+      const tx = createMockDrizzleDb({
+        query: {
+          UserOAuthAccountTable: createMockDrizzleTableQuery({
+            findFirst: null,
+          }),
+          UserTable: createMockDrizzleTableQuery({
+            findFirst: { id: "by-email", emailVerified: verifiedAt },
+          }),
+        },
+        insert: (table) => {
+          if (table === UserOAuthAccountTable) {
+            return undefined;
+          }
+          throw new Error("Unexpected UserTable insert when matching by email");
+        },
+      });
+      tx.update = updateMock;
+      return fn(tx as never);
+    });
+
+    await expect(
+      connectUserToAccount(
+        {
+          id: "oauth-sub",
+          email: "verified@test.local",
+          name: "Verified",
+          emailVerified: true,
+        },
+        "google",
+      ),
+    ).resolves.toEqual({ id: "by-email" });
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
   it("creates a user when insert returns a row", async () => {
     mockTransaction.mockImplementation(async (fn) => {
       const tx = createMockDrizzleDb({
@@ -158,6 +198,57 @@ describe("connectUserToAccount", () => {
         "google",
       ),
     ).resolves.toEqual({ id: "generated-user-id" });
+  });
+
+  it("stores new OAuth-created users as email verified", async () => {
+    const userInsertChain = createDrizzleMutationChainMock([
+      { id: "generated-user-id" },
+    ]);
+
+    mockTransaction.mockImplementation(async (fn) => {
+      const tx = createMockDrizzleDb({
+        query: {
+          UserOAuthAccountTable: createMockDrizzleTableQuery({
+            findFirst: null,
+          }),
+          UserTable: createMockDrizzleTableQuery({ findFirst: null }),
+        },
+        insert: (table) => {
+          if (table === UserTable) {
+            return [{ id: "generated-user-id" }];
+          }
+          return undefined;
+        },
+      });
+
+      tx.insert.mockImplementation((table) => {
+        if (table === UserTable) {
+          return userInsertChain;
+        }
+
+        return createDrizzleMutationChainMock();
+      });
+
+      return fn(tx as never);
+    });
+
+    await expect(
+      connectUserToAccount(
+        {
+          id: "oauth-sub",
+          email: "new@test.local",
+          name: "N",
+          emailVerified: true,
+        },
+        "google",
+      ),
+    ).resolves.toEqual({ id: "generated-user-id" });
+
+    expect(userInsertChain.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailVerified: expect.any(Date),
+      }),
+    );
   });
 
   it("rejects unverified OAuth email before creating a user", async () => {
@@ -201,5 +292,39 @@ describe("connectUserToAccount", () => {
         "google",
       ),
     ).resolves.toEqual({ id: "winner-id" });
+  });
+
+  it("throws when insert conflict re-query still finds no user row", async () => {
+    const userQuery = createMockDrizzleTableQuery();
+    userQuery.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+
+    const tx = createMockDrizzleDb({
+      query: {
+        UserOAuthAccountTable: createMockDrizzleTableQuery({ findFirst: null }),
+        UserTable: userQuery,
+      },
+      insert: (table) => {
+        if (table === UserTable) {
+          return [];
+        }
+
+        return undefined;
+      },
+    });
+    mockTransaction.mockImplementation(async (fn) => fn(tx as never));
+
+    await expect(
+      connectUserToAccount(
+        {
+          id: "oauth-sub",
+          email: "missing-after-conflict@test.local",
+          name: "Race",
+          emailVerified: true,
+        },
+        "google",
+      ),
+    ).rejects.toThrow("Expected user row after insert conflict on email");
+
+    expect(tx.insert).toHaveBeenCalledTimes(1);
   });
 });
