@@ -41,6 +41,7 @@ import type { Cookies } from "@/core/features/auth/oauth/types";
 const authUrl = "https://provider.test/oauth/authorize";
 const tokenUrl = "https://provider.test/oauth/token";
 const userUrl = "https://provider.test/user";
+const maxHttpErrorBodyPreviewLength = 512;
 
 const userSchema = z.object({
   id: z.string(),
@@ -268,6 +269,18 @@ describe("getOAuthClient", () => {
     expect(mockCreateGithubOAuthClient).not.toHaveBeenCalled();
   });
 
+  it("throws for an unsupported provider at the runtime boundary", () => {
+    const unsupportedProvider = "linkedin" as Parameters<
+      typeof getOAuthClient
+    >[0];
+
+    mockGetOAuthConfig.mockReturnValue(credentials);
+
+    expect(() => getOAuthClient(unsupportedProvider)).toThrow(
+      "Unsupported provider: linkedin",
+    );
+  });
+
   it("delegates configured providers to their client factories", () => {
     const githubClient = createGithubFixtureClient();
     const googleClient = createGoogleFixtureClient();
@@ -434,6 +447,30 @@ describe("OAuthClient.fetchUser", () => {
       status: 400,
       statusText: "Bad",
       bodyPreview: "invalid grant",
+    });
+  });
+
+  it("truncates long HTTP error response bodies", async () => {
+    jest.mocked(fetch).mockResolvedValueOnce(
+      new Response("x".repeat(600), {
+        status: 400,
+        statusText: "Bad",
+      }),
+    );
+    const cookies = createCookieStore({
+      "__Host-oauth_state": "stored-state",
+      "__Host-oauth_code_verifier": "code-verifier",
+    });
+
+    await expect(
+      createClient().fetchUser("oauth-code", "stored-state", cookies),
+    ).rejects.toMatchObject({
+      name: "InvalidTokenError",
+      status: 400,
+      statusText: "Bad",
+      bodyPreview: expect.stringMatching(
+        new RegExp(`^x{${maxHttpErrorBodyPreviewLength}}.$`),
+      ),
     });
   });
 
