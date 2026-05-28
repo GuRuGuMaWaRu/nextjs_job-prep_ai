@@ -55,3 +55,12 @@ export function createMockStripe(): MockStripeClient {
     },
   };
 }
+
+/**
+ * Adapts a narrow Stripe SDK mock to the full client type expected by code under
+ * test. Keep this cast at the mock boundary so individual tests can stay typed
+ * to the small Stripe surface they actually exercise.
+ */
+export function asStripeClient(mockStripe: object): Stripe {
+  return mockStripe as unknown as Stripe;
+}

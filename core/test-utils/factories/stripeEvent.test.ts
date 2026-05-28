@@ -7,6 +7,7 @@ import {
   makeCheckoutSessionAsyncPaymentSucceededEvent,
   makeCheckoutSessionCompletedEvent,
   makeStripeCheckoutSession,
+  makeStripeCustomer,
   makeStripeEvent,
   makeStripeSubscription,
   makeSubscriptionDeletedEvent,
@@ -39,6 +40,23 @@ describe("makeStripeSubscription", () => {
 
     expect(subscription.id).toBe("sub_test_custom");
     expect(subscription.status).toBe("past_due");
+  });
+
+  it("allows an explicitly missing customer for remediation branches", () => {
+    const subscription = makeStripeSubscription({ customer: null });
+
+    expect(subscription.customer).toBeNull();
+  });
+});
+
+describe("makeStripeCustomer", () => {
+  it("returns the minimal expanded customer shape", () => {
+    const customer = makeStripeCustomer("cus_test_custom");
+
+    expect(customer).toEqual({
+      id: "cus_test_custom",
+      object: "customer",
+    });
   });
 });
 

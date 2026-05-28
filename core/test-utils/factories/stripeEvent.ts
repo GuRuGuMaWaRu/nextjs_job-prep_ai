@@ -33,10 +33,18 @@ function nextSubscriptionIndex(): number {
   return subscriptionCounter;
 }
 
+type MinimalStripeSubscription = Pick<
+  Stripe.Subscription,
+  "id" | "object" | "customer" | "status" | "created" | "cancel_at_period_end"
+>;
+
+type MinimalStripeCustomer = Pick<Stripe.Customer, "id" | "object">;
+
 export type MakeStripeSubscriptionOverrides = Partial<
-  Pick<Stripe.Subscription, "id" | "customer" | "status" | "created">
+  Pick<Stripe.Subscription, "id" | "status" | "created">
 > & {
   cancelAtPeriodEnd?: boolean;
+  customer?: Stripe.Subscription["customer"] | null;
 };
 
 /**
@@ -51,13 +59,31 @@ export function makeStripeSubscription(
   const subscription = {
     id: overrides.id ?? `sub_test_${index}`,
     object: "subscription" as const,
-    customer: overrides.customer ?? `cus_test_${index}`,
+    customer:
+      overrides.customer === undefined
+        ? `cus_test_${index}`
+        : overrides.customer,
     status: overrides.status ?? "active",
     created: overrides.created ?? index,
     cancel_at_period_end: overrides.cancelAtPeriodEnd ?? false,
+  } satisfies Omit<MinimalStripeSubscription, "customer"> & {
+    customer: Stripe.Subscription["customer"] | null;
   };
 
   return subscription as unknown as Stripe.Subscription;
+}
+
+/**
+ * Builds the minimal expanded customer object needed by subscription tests.
+ * Stripe's full `Customer` type is much larger than the route logic reads.
+ */
+export function makeStripeCustomer(id = "cus_test_expanded"): Stripe.Customer {
+  const customer = {
+    id,
+    object: "customer" as const,
+  } satisfies MinimalStripeCustomer;
+
+  return customer as unknown as Stripe.Customer;
 }
 
 export type MakeStripeCheckoutSessionOverrides = {

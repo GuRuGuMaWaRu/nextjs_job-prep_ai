@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { createTestServerEnv, type TestServerEnv } from "@core/test-utils/env";
 import {
   createMockStripe,
+  asStripeClient,
   type MockStripeClient,
 } from "@core/test-utils/mocks/stripe";
 import {
@@ -13,6 +14,7 @@ import {
   makeSubscriptionUpdatedEvent,
   makeUnhandledStripeWebhookEvent,
   makeStripeCheckoutSession,
+  makeStripeCustomer,
   makeStripeSubscription,
   makeStripeEvent,
 } from "@core/test-utils/factories";
@@ -88,6 +90,16 @@ function buildWebhookRequest(
   });
 }
 
+function buildUnreadableBodyRequest(): Request {
+  const request = {
+    headers: new Headers({ "stripe-signature": VALID_SIGNATURE_HEADER }),
+    text: () => Promise.reject(new Error("read failed")),
+  };
+
+  // Minimal Request shape for the body-read failure branch.
+  return request as unknown as Request;
+}
+
 function primeHappyPath(event: Stripe.Event): void {
   mockStripe.webhooks.constructEvent.mockReturnValueOnce(event);
   mockClaimEvent.mockResolvedValueOnce("claimed");
@@ -103,7 +115,7 @@ beforeEach(() => {
   mockStripe.subscriptions.retrieve.mockReset();
 
   mockGetStripe.mockReset();
-  mockGetStripe.mockReturnValue(mockStripe as unknown as Stripe);
+  mockGetStripe.mockReturnValue(asStripeClient(mockStripe));
 
   mockClaimEvent.mockReset();
   mockUnclaimEvent.mockReset().mockResolvedValue(undefined);
@@ -161,12 +173,7 @@ describe("POST /api/stripe/webhooks — preconditions", () => {
   });
 
   it("returns 400 when reading the request body fails", async () => {
-    const failingRequest = {
-      headers: new Headers({ "stripe-signature": VALID_SIGNATURE_HEADER }),
-      text: () => Promise.reject(new Error("read failed")),
-    } as unknown as Request;
-
-    const response = await POST(failingRequest);
+    const response = await POST(buildUnreadableBodyRequest());
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
@@ -323,12 +330,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
   });
 
   it("resolves the customer id when subscription.customer is an expanded object", async () => {
-    const subscription = {
+    const subscription = makeStripeSubscription({
       id: "sub_test_expanded",
-      object: "subscription",
-      customer: { id: "cus_test_expanded", object: "customer" },
+      customer: makeStripeCustomer("cus_test_expanded"),
       status: "active",
-    } as unknown as Stripe.Subscription;
+    });
     const event = makeStripeEvent({
       type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated,
       object: subscription,
@@ -348,12 +354,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
   });
 
   it("skips syncing when a subscription event has no resolvable customer id", async () => {
-    const subscription = {
+    const subscription = makeStripeSubscription({
       id: "sub_test_no_customer",
-      object: "subscription",
       customer: null,
       status: "active",
-    } as unknown as Stripe.Subscription;
+    });
     const event = makeStripeEvent({
       type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated,
       object: subscription,
@@ -389,12 +394,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
   });
 
   it("resolves an expanded customer object on customer.subscription.deleted", async () => {
-    const subscription = {
+    const subscription = makeStripeSubscription({
       id: "sub_test_deleted_expanded",
-      object: "subscription",
-      customer: { id: "cus_test_deleted_expanded", object: "customer" },
+      customer: makeStripeCustomer("cus_test_deleted_expanded"),
       status: "canceled",
-    } as unknown as Stripe.Subscription;
+    });
     const event = makeStripeEvent({
       type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted,
       object: subscription,
@@ -415,12 +419,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
   });
 
   it("skips syncing when a deleted subscription has no resolvable customer id", async () => {
-    const subscription = {
+    const subscription = makeStripeSubscription({
       id: "sub_test_deleted_no_customer",
-      object: "subscription",
       customer: null,
       status: "canceled",
-    } as unknown as Stripe.Subscription;
+    });
     const event = makeStripeEvent({
       type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted,
       object: subscription,

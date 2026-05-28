@@ -5,6 +5,7 @@ export { makeInterview, type InterviewWithJobInfo } from "./interview";
 export { makeQuestion } from "./question";
 export {
   makeStripeSubscription,
+  makeStripeCustomer,
   makeStripeCheckoutSession,
   makeStripeEvent,
   makeCheckoutSessionCompletedEvent,
