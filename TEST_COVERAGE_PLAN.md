@@ -1760,6 +1760,75 @@ in `core/features/auth/permissions.ts`,
 `core/features/interviews/permissions.ts`, or
 `core/features/questions/permissions.ts`.
 
+### OAuth Base Branch Coverage Slice - 2026-05-28
+
+Files updated:
+
+- `core/features/auth/oauth/base.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/auth/oauth/base.test.ts --runInBand`
+- `npx.cmd jest core/features/auth/oauth/base.test.ts --coverage --collectCoverageFrom=core/features/auth/oauth/base.ts --runInBand`
+- `npx.cmd biome format --write core/features/auth/oauth/base.test.ts`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/features/auth/oauth/base.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Focused OAuth base Jest passed: 1 test suite, 15 tests, 0 snapshots.
+- Focused OAuth base coverage probe passed: 1 test suite, 15 tests, 0
+  snapshots.
+- `core/features/auth/oauth/base.ts` now reports 100% statements, 100%
+  branches, 100% functions, and 100% lines.
+- Initial sandboxed `npx.cmd biome format --write core/features/auth/oauth/base.test.ts`
+  reported an access-denied internal I/O error; rerunning the same command with
+  approval outside the sandbox passed and fixed the touched file.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `C:\nvm4w\nodejs\npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd run check:ci` passed: 271 files checked.
+- `npm.cmd test -- --runInBand` passed: 61 test suites, 468 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 61 test suites, 468
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Updated coverage summary: 96.19% statements, 95.81% branches, 90.1%
+  functions, and 98.2% lines.
+- Updated OAuth coverage:
+  - `core/features/auth/oauth/base.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+  - `core/features/auth/oauth` aggregate: 99.32% statements, 92.45% branches,
+    100% functions, and 99.65% lines.
+
+Notes:
+
+- Added branch coverage for the runtime unsupported-provider guard in
+  `getOAuthClient`.
+- Added coverage for truncating oversized OAuth HTTP error body previews.
+- Kept mocks at existing OAuth module boundaries and made no production code
+  changes.
+- Test data uses synthetic `@test.local` emails only.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, lint, and CI check
+  paths passed.
+
+Recommendation:
+
+Move next to another compact branch gap: `core/features/auth/oauth/errors.ts`
+for constructor branch coverage, or the remaining permission helper branches in
+`core/features/auth/permissions.ts`,
+`core/features/interviews/permissions.ts`, and
+`core/features/questions/permissions.ts`. If OAuth branch coverage remains the
+priority, `core/features/auth/oauth/connectUser.ts` is the next nearby target.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
