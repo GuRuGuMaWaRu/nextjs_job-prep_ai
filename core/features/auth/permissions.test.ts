@@ -73,6 +73,14 @@ describe("auth permission helpers", () => {
     );
   });
 
+  it("treats an empty stored plan as the free plan for permission checks", async () => {
+    mockGetUserAction.mockResolvedValue(makeUser({ plan: "" }));
+
+    await expect(hasPermission(PERMISSIONS.LIMITED.INTERVIEWS)).resolves.toBe(
+      true,
+    );
+  });
+
   it("grants unlimited permissions for pro users", async () => {
     mockGetUserAction.mockResolvedValue(makeProUser());
 
@@ -88,6 +96,13 @@ describe("auth permission helpers", () => {
     await expect(getUserPlan()).resolves.toBe("free");
   });
 
+  it("defaults anonymous users to the free plan without loading a user", async () => {
+    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
+
+    await expect(getUserPlan()).resolves.toBe("free");
+    expect(mockGetUserAction).not.toHaveBeenCalled();
+  });
+
   it("returns subscription info for anonymous users without loading a user", async () => {
     mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
 
@@ -96,6 +111,15 @@ describe("auth permission helpers", () => {
       hasExistingSubscription: false,
     });
     expect(mockGetUserAction).not.toHaveBeenCalled();
+  });
+
+  it("defaults missing plan and subscription fields in subscription info", async () => {
+    mockGetUserAction.mockResolvedValue(makeUser({ plan: "" }));
+
+    await expect(getUserSubscriptionInfo()).resolves.toEqual({
+      plan: "free",
+      hasExistingSubscription: false,
+    });
   });
 
   it("reports the current plan and whether a Stripe subscription exists", async () => {

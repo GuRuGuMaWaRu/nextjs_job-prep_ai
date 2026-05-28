@@ -43,10 +43,6 @@ export async function checkQuestionsPermission(): Promise<boolean> {
   }
 }
 
-async function getQuestionCount(userId: string | null) {
-  if (userId == null) {
-    return 0;
-  }
-
+async function getQuestionCount(userId: string) {
   return getQuestionCountDb(userId);
 }
