@@ -388,6 +388,54 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
   });
 
+  it("resolves an expanded customer object on customer.subscription.deleted", async () => {
+    const subscription = {
+      id: "sub_test_deleted_expanded",
+      object: "subscription",
+      customer: { id: "cus_test_deleted_expanded", object: "customer" },
+      status: "canceled",
+    } as unknown as Stripe.Subscription;
+    const event = makeStripeEvent({
+      type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted,
+      object: subscription,
+    });
+    primeHappyPath(event);
+
+    const response = await POST(
+      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockSyncSubscription).toHaveBeenCalledWith(
+      mockStripe,
+      "sub_test_deleted_expanded",
+      "cus_test_deleted_expanded",
+    );
+    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
+  });
+
+  it("skips syncing when a deleted subscription has no resolvable customer id", async () => {
+    const subscription = {
+      id: "sub_test_deleted_no_customer",
+      object: "subscription",
+      customer: null,
+      status: "canceled",
+    } as unknown as Stripe.Subscription;
+    const event = makeStripeEvent({
+      type: STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted,
+      object: subscription,
+    });
+    primeHappyPath(event);
+
+    const response = await POST(
+      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockSyncSubscription).not.toHaveBeenCalled();
+    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
+  });
+
   it("no-ops on an unhandled event type and still marks the event processed", async () => {
     const event = makeUnhandledStripeWebhookEvent();
     primeHappyPath(event);
@@ -438,6 +486,24 @@ describe("POST /api/stripe/webhooks — handler failure recovery", () => {
     expect(mockMarkProcessed).not.toHaveBeenCalled();
   });
 
+  it("stringifies non-Error unclaim failures before flagging remediation", async () => {
+    const event = makeCheckoutSessionCompletedEvent();
+    primeHappyPath(event);
+    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+    mockUnclaimEvent.mockRejectedValueOnce("plain unclaim failure");
+
+    const response = await POST(
+      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
+    );
+
+    expect(response.status).toBe(500);
+    expect(mockMarkRemediation).toHaveBeenCalledWith(
+      event.id,
+      "plain unclaim failure",
+    );
+    expect(mockMarkProcessed).not.toHaveBeenCalled();
+  });
+
   it("still returns 500 when even the remediation write fails", async () => {
     const event = makeCheckoutSessionCompletedEvent();
     primeHappyPath(event);
@@ -451,6 +517,29 @@ describe("POST /api/stripe/webhooks — handler failure recovery", () => {
 
     expect(response.status).toBe(500);
     expect(mockMarkRemediation).toHaveBeenCalledWith(event.id, "unclaim boom");
+    expect(mockMarkProcessed).not.toHaveBeenCalled();
+  });
+
+  it("stringifies non-Error remediation write failures for safe alert metadata", async () => {
+    const event = makeCheckoutSessionCompletedEvent();
+    primeHappyPath(event);
+    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+    mockMarkRemediation.mockRejectedValueOnce("plain flag failure");
+
+    const response = await POST(
+      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
+    );
+
+    expect(response.status).toBe(500);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
+      {
+        eventType: event.type,
+        markError: "plain flag failure",
+        unclaimError: "unclaim boom",
+      },
+    );
     expect(mockMarkProcessed).not.toHaveBeenCalled();
   });
 });

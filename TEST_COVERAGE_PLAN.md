@@ -1564,6 +1564,76 @@ Move next to a compact remaining branch gap such as
 the goal is smaller and lower-risk, cover `core/dal/helpers.ts` or the remaining
 permission helper branches first.
 
+### Stripe Webhook Route Branch Slice - 2026-05-27
+
+Files/tests updated:
+
+- `app/api/stripe/webhooks/route.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npx.cmd jest app/api/stripe/webhooks/route.test.ts --coverage --collectCoverageFrom=app/api/stripe/webhooks/route.ts --runInBand`
+- `npm.cmd test -- app/api/stripe/webhooks/route.test.ts --runInBand`
+- `npx.cmd biome format --write app/api/stripe/webhooks/route.test.ts`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- app/api/stripe/webhooks/route.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+
+Result:
+
+- Initial focused webhook coverage probe passed: 1 test suite, 19 tests, 0
+  snapshots, with `app/api/stripe/webhooks/route.ts` at 98.43% statements,
+  86.66% branches, 100% functions, and 100% lines.
+- Focused webhook Jest passed after the new cases: 1 test suite, 23 tests, 0
+  snapshots.
+- Focused webhook coverage probe passed after the new cases: 1 test suite, 23
+  tests, 0 snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `C:\nvm4w\nodejs\npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd run check:ci` passed.
+- `npm.cmd test -- --runInBand` passed before pulling `main`: 60 test suites,
+  440 tests, 0 snapshots.
+- After pulling `main`, `npm.cmd test -- --runInBand` passed: 60 test suites,
+  458 tests, 0 snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed before pulling `main`: 60
+  test suites, 440 tests, 0 snapshots.
+- After pulling `main`, `npm.cmd run test:coverage -- --runInBand` passed: 60
+  test suites, 458 tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- Final coverage summary after pulling `main`: 95.93% statements, 95.31%
+  branches, 90% functions, and 97.94% lines.
+- Updated webhook route coverage:
+  - `app/api/stripe/webhooks/route.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+- Confirmed pulled user Stripe sync coverage:
+  - `core/features/users/stripeSync.ts`: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+  - `core/features/users` aggregate: 100% statements, 100% branches, 100%
+    functions, and 100% lines.
+
+Notes:
+
+- Added focused branch coverage for `customer.subscription.deleted` with an
+  expanded customer object and with no resolvable customer id.
+- Added failure-recovery coverage for non-`Error` unclaim failures and
+  non-`Error` remediation-write failures, including safe alert metadata.
+- Pulling the latest `main` after this slice brought in the missing
+  `core/features/users/stripeSync.ts` 100% coverage slice.
+- No customer email fixtures were used in this slice.
+
+Recommendation:
+
+Move next to `core/features/auth/oauth/base.ts` if branch coverage remains the
+priority. If the goal is a smaller and lower-risk slice, cover
+`core/dal/helpers.ts` or the remaining permission helper branches first.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
