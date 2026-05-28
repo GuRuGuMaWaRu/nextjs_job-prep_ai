@@ -1696,6 +1696,70 @@ For the next focused cleanup, consider replacing remaining non-Stripe
 modules. Keep that separate from coverage work unless it directly improves a
 touched slice.
 
+### DAL Helpers Coverage Slice - 2026-05-28
+
+Files added or updated:
+
+- `core/dal/helpers.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+
+Commands run:
+
+- `npm.cmd test -- core/dal/helpers.test.ts --runInBand`
+- `npx.cmd jest core/dal/helpers.test.ts --coverage --collectCoverageFrom=core/dal/helpers.ts --runInBand`
+- `npx.cmd biome format --write core/dal/helpers.test.ts`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run lint -- core/dal/helpers.test.ts AGENTS.md TEST_COVERAGE_PLAN.md`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+
+Result:
+
+- Focused DAL helper Jest passed: 1 test suite, 5 tests, 0 snapshots.
+- Focused DAL helper coverage probe passed: 1 test suite, 5 tests, 0 snapshots.
+- `core/dal/helpers.ts` now reports 100% statements, 100% branches, 100%
+  functions, and 100% lines.
+- `npx.cmd biome format --write core/dal/helpers.test.ts` completed with no
+  fixes needed.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `C:\nvm4w\nodejs\npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd run check:ci` passed: 271 files checked.
+- `npx.cmd tsc --noEmit` passed.
+- Focused `biome lint` passed for the touched TypeScript test file.
+  `AGENTS.md` and `TEST_COVERAGE_PLAN.md` were passed to the command but not
+  checked by Biome.
+- `npm.cmd test -- --runInBand` passed: 61 test suites, 466 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 61 test suites, 466
+  tests, 0 snapshots.
+- Updated coverage summary: 96.07% statements, 95.5% branches, 90.1%
+  functions, and 98.08% lines.
+- Updated DAL coverage:
+  - `core/dal/helpers.ts`: 100% statements, 100% branches, 100% functions, and
+    100% lines.
+  - `core/dal` aggregate: 88.88% statements, 100% branches, 85.71% functions,
+    and 88.88% lines.
+
+Notes:
+
+- Added focused tests for `requireUser` and `requireUserWithData`, covering
+  successful auth delegation, missing `userId`, and missing profile data.
+- Mocked only the auth action module boundary.
+- Test data uses existing synthetic user fixtures with `@test.local` emails.
+- The known unsigned `npm.ps1` PowerShell blocker remains the only verification
+  issue; the working `.cmd` test, coverage, type-check, lint, and CI check
+  paths passed.
+
+Recommendation:
+
+Move next to `core/features/auth/oauth/base.ts` if branch coverage remains the
+priority. For another compact slice, cover remaining permission helper branches
+in `core/features/auth/permissions.ts`,
+`core/features/interviews/permissions.ts`, or
+`core/features/questions/permissions.ts`.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.
