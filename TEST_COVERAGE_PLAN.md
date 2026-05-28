@@ -11,21 +11,20 @@ Date: 2026-05-28
 Latest full verification:
 
 - `npm.cmd run check:ci` passed: 272 files checked.
-- `npm.cmd test -- --runInBand` passed: 62 test suites, 478 tests, 0
+- `npm.cmd test -- --runInBand` passed: 62 test suites, 481 tests, 0
   snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 62 test suites, 478
+- `npm.cmd run test:coverage -- --runInBand` passed: 62 test suites, 481
   tests, 0 snapshots.
-- `npx.cmd tsc --noEmit` passed after regenerating/removing stale generated
-  Next.js type files.
+- `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 96.19% |
-| Branches | 96.43% |
+| Statements | 96.24% |
+| Branches | 97.04% |
 | Functions | 90.1% |
-| Lines | 98.2% |
+| Lines | 98.26% |
 
 Recent file-specific result:
 
@@ -33,7 +32,21 @@ Recent file-specific result:
 | --- | ---: | ---: | ---: | ---: |
 | `core/features/auth/oauth/base.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/oauth/errors.ts` | 100% | 100% | 100% | 100% |
-| `core/features/auth/oauth` aggregate | 99.32% | 96.22% | 100% | 99.65% |
+| `core/features/auth/oauth/connectUser.ts` | 100% | 100% | 100% | 100% |
+| `core/features/auth/oauth` aggregate | 99.66% | 100% | 100% | 100% |
+
+Latest slice notes:
+
+- Updated `core/features/auth/oauth/connectUser.test.ts`.
+- Updated `core/features/auth/oauth/connectUser.ts`.
+- Updated `TEST_COVERAGE_PLAN.md`.
+- Simplified new OAuth-created users to persist `emailVerified: new Date()`
+  after the existing verified-email guard.
+- Added branch tests for already-verified email reuse, new-user verification
+  persistence, and the insert-conflict invariant error.
+- Required raw `npm test` attempt still fails before Jest starts because
+  unsigned `C:\nvm4w\nodejs\npm.ps1` is blocked by PowerShell execution policy.
+- Jest still emits the existing stale `baseline-browser-mapping` warning.
 
 ## Working Rules
 
@@ -87,20 +100,21 @@ Known local quirks:
 
 Recommended next slice:
 
-1. `core/features/auth/oauth/connectUser.ts`
-   - Best option if continuing OAuth branch coverage momentum.
-   - Current coverage: 96.66% statements, 77.77% branches, 100% functions,
-     96.66% lines.
-2. Remaining permission helper branches:
+1. Remaining permission helper branches:
    - `core/features/auth/permissions.ts`
    - `core/features/interviews/permissions.ts`
    - `core/features/questions/permissions.ts`
    - Lowest-risk path for small branch coverage gains.
-3. Component utility gaps:
+2. Component utility gaps:
    - `core/components/ui/password-input.tsx`
    - `core/components/ui/card.tsx`
    - Useful later, but component tests may be higher-friction than pure helper
      branches.
+3. Route branch gaps:
+   - `app/api/ai/questions/generate-question/route.ts`
+   - `app/api/ai/resumes/analyze/route.ts`
+   - `app/api/cron/sync-stripe-subscriptions/route.ts`
+   - Good follow-up once the low-risk helper branches are exhausted.
 
 ## Completed Slices
 
@@ -138,6 +152,7 @@ Recommended next slice:
 | 2026-05-28 | DAL helpers | `core/dal/helpers.ts` reached 100% coverage. |
 | 2026-05-28 | OAuth base branches | `core/features/auth/oauth/base.ts` reached 100% coverage. |
 | 2026-05-28 | OAuth errors branches | `core/features/auth/oauth/errors.ts` reached 100% coverage. |
+| 2026-05-28 | OAuth connect user branches | `core/features/auth/oauth/connectUser.ts` reached 100% coverage. |
 
 ## Archive
 
