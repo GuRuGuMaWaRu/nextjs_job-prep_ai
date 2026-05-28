@@ -11,9 +11,9 @@ Date: 2026-05-28
 Latest full verification:
 
 - `npm.cmd run check:ci` passed: 272 files checked.
-- `npm.cmd test -- --runInBand` passed: 62 test suites, 481 tests, 0
+- `npm.cmd test -- --runInBand` passed: 62 test suites, 485 tests, 0
   snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 62 test suites, 481
+- `npm.cmd run test:coverage -- --runInBand` passed: 62 test suites, 485
   tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
@@ -21,10 +21,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 96.24% |
-| Branches | 97.04% |
+| Statements | 96.41% |
+| Branches | 97.81% |
 | Functions | 90.1% |
-| Lines | 98.26% |
+| Lines | 98.44% |
 
 Recent file-specific result:
 
@@ -34,16 +34,21 @@ Recent file-specific result:
 | `core/features/auth/oauth/errors.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/oauth/connectUser.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/oauth` aggregate | 99.66% | 100% | 100% | 100% |
+| `core/features/auth/permissions.ts` | 100% | 100% | 100% | 100% |
+| `core/features/interviews/permissions.ts` | 100% | 100% | 100% | 100% |
+| `core/features/questions/permissions.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
-- Updated `core/features/auth/oauth/connectUser.test.ts`.
-- Updated `core/features/auth/oauth/connectUser.ts`.
+- Updated `core/features/auth/permissions.test.ts`.
+- Updated `core/features/interviews/permissions.test.ts`.
+- Updated `core/features/questions/permissions.ts`.
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Simplified new OAuth-created users to persist `emailVerified: new Date()`
-  after the existing verified-email guard.
-- Added branch tests for already-verified email reuse, new-user verification
-  persistence, and the insert-conflict invariant error.
+- Added branch tests for empty-plan fallback behavior, anonymous plan lookup,
+  subscription info fallback, and the interview count helper's missing-user
+  fallback.
+- Simplified the questions count helper to accept only the signed-in `userId`
+  string it receives after the anonymous-user guard.
 - Required raw `npm test` attempt still fails before Jest starts because
   unsigned `C:\nvm4w\nodejs\npm.ps1` is blocked by PowerShell execution policy.
 - Jest still emits the existing stale `baseline-browser-mapping` warning.
@@ -100,17 +105,11 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Remaining permission helper branches:
-   - `core/features/auth/permissions.ts`
-   - `core/features/interviews/permissions.ts`
-   - `core/features/questions/permissions.ts`
-   - Lowest-risk path for small branch coverage gains.
-2. Component utility gaps:
+1. Component utility gaps:
    - `core/components/ui/password-input.tsx`
    - `core/components/ui/card.tsx`
-   - Useful later, but component tests may be higher-friction than pure helper
-     branches.
-3. Route branch gaps:
+   - Next lowest-risk path after permission helpers reached 100%.
+2. Route branch gaps:
    - `app/api/ai/questions/generate-question/route.ts`
    - `app/api/ai/resumes/analyze/route.ts`
    - `app/api/cron/sync-stripe-subscriptions/route.ts`
@@ -153,6 +152,7 @@ Recommended next slice:
 | 2026-05-28 | OAuth base branches | `core/features/auth/oauth/base.ts` reached 100% coverage. |
 | 2026-05-28 | OAuth errors branches | `core/features/auth/oauth/errors.ts` reached 100% coverage. |
 | 2026-05-28 | OAuth connect user branches | `core/features/auth/oauth/connectUser.ts` reached 100% coverage. |
+| 2026-05-28 | Permission helper branches | Auth, interview, and question permission helpers reached 100% coverage. |
 
 ## Archive
 

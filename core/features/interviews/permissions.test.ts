@@ -82,6 +82,15 @@ describe("checkInterviewPermission", () => {
     expect(mockGetInterviewCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
   });
 
+  it("treats a missing current user as zero interviews after limited permission is granted", async () => {
+    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
+
+    await expect(checkInterviewPermission()).resolves.toBe(true);
+
+    expect(mockGetInterviewCountDb).not.toHaveBeenCalled();
+  });
+
   it("denies limited users at the free interview limit", async () => {
     mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     mockGetInterviewCountDb.mockResolvedValue(FREE_PLAN_LIMITS.interviews);
