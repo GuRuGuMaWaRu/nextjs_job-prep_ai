@@ -1634,6 +1634,68 @@ Move next to `core/features/auth/oauth/base.ts` if branch coverage remains the
 priority. If the goal is a smaller and lower-risk slice, cover
 `core/dal/helpers.ts` or the remaining permission helper branches first.
 
+### Stripe Fixture Type-Safety Cleanup - 2026-05-28
+
+Files updated:
+
+- `AGENTS.md`
+- `package.json`
+- `app/api/stripe/webhooks/route.test.ts`
+- `app/api/stripe/create-checkout-session/route.test.ts`
+- `app/api/stripe/create-portal-session/route.test.ts`
+- `app/api/stripe/cancel-subscription/route.test.ts`
+- `core/test-utils/factories/index.ts`
+- `core/test-utils/factories/stripeEvent.ts`
+- `core/test-utils/factories/stripeEvent.test.ts`
+- `core/test-utils/mocks/stripe.ts`
+
+Commands run:
+
+- `npx.cmd biome format --write AGENTS.md package.json app/api/stripe/webhooks/route.test.ts app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts core/test-utils/factories/stripeEvent.ts core/test-utils/factories/stripeEvent.test.ts core/test-utils/factories/index.ts core/test-utils/mocks/stripe.ts`
+- `npm.cmd test -- app/api/stripe/webhooks/route.test.ts app/api/stripe/create-checkout-session/route.test.ts app/api/stripe/create-portal-session/route.test.ts app/api/stripe/cancel-subscription/route.test.ts core/test-utils/factories/stripeEvent.test.ts --runInBand`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run typecheck`
+
+Result:
+
+- Focused Stripe route/factory tests passed: 5 test suites, 69 tests, 0
+  snapshots.
+- `npm test` still fails in PowerShell before Jest starts because the unsigned
+  `C:\nvm4w\nodejs\npm.ps1` shim is blocked by the local execution policy.
+- `npm.cmd run check:ci` passed: 270 files checked.
+- `npm.cmd test -- --runInBand` passed: 60 test suites, 461 tests, 0
+  snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 60 test suites, 461
+  tests, 0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd run typecheck` passed.
+- Updated coverage summary: 95.96% statements, 95.19% branches, 90.1%
+  functions, and 97.96% lines.
+
+Notes:
+
+- Replaced inline Stripe client double-casts in Stripe route tests with the
+  named `asStripeClient` mock-boundary helper.
+- Replaced inline `Stripe.Subscription` double-casts in webhook tests with
+  `makeStripeSubscription` and `makeStripeCustomer` fixtures.
+- Kept unavoidable broad casts centralized in named Stripe test factories and
+  mocks, with comments explaining the minimal external SDK shapes.
+- Added TypeScript quality guidance to `AGENTS.md`, including a no-`any`
+  preference, and a conservative `typecheck` package script without changing
+  `check:ci`.
+- Test data continues to use synthetic ids and `@test.local` emails only.
+
+Recommendation:
+
+For the next focused cleanup, consider replacing remaining non-Stripe
+`as unknown as` null-result mocks with typed helper constants near their test
+modules. Keep that separate from coverage work unless it directly improves a
+touched slice.
+
 ## Coverage Priorities
 
 1. Cover pure logic first.

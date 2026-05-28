@@ -6,6 +6,16 @@
 - All code should be formatted for readability with logical parts separated by empty lines.
 - In tests, place module-level `jest.mock(...)` calls before imports when mocking imported modules.
 
+## TypeScript Quality
+
+- Prefer precise types over type assertions.
+- Avoid `as unknown as ...` except at unavoidable external or test boundaries.
+- If a double assertion is needed, isolate it in a named helper or factory and explain why.
+- Prefer `satisfies`, `Pick`, narrow local types, typed factories, or proper runtime validation over broad casts.
+- Do not use `any`; prefer `unknown`, generics, precise interfaces, or narrow local types.
+- Keep mocks type-safe where practical, especially for external SDK payloads.
+- Run `npx.cmd tsc --noEmit` after TypeScript changes.
+
 ## General Rules
 
 - Never ever log customer emails.

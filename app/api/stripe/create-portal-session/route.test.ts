@@ -13,8 +13,6 @@ jest.mock("@/core/features/billing/stripe", () => ({
   isStripeConfigured: jest.fn(),
 }));
 
-import type Stripe from "stripe";
-
 import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
 import {
   getStripe,
@@ -24,6 +22,7 @@ import {
 } from "@/core/features/billing/stripe";
 import { TEST_USER_ID } from "@core/test-utils/constants";
 import { makeUser } from "@core/test-utils/factories";
+import { asStripeClient } from "@core/test-utils/mocks/stripe";
 
 import { POST } from "./route";
 
@@ -93,7 +92,7 @@ describe("POST /api/stripe/create-portal-session", () => {
     });
 
     mockGetStripe.mockReset();
-    mockGetStripe.mockReturnValue(mockStripe as unknown as Stripe);
+    mockGetStripe.mockReturnValue(asStripeClient(mockStripe));
 
     mockGetStripeBaseUrl.mockReset();
     mockGetStripeBaseUrl.mockReturnValue("https://app.test");
