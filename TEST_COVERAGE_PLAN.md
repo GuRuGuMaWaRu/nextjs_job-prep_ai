@@ -10,10 +10,10 @@ Date: 2026-05-28
 
 Latest full verification:
 
-- `npm.cmd run check:ci` passed: 272 files checked.
-- `npm.cmd test -- --runInBand` passed: 62 test suites, 485 tests, 0
+- `npm.cmd run check:ci` passed: 274 files checked.
+- `npm.cmd test -- --runInBand` passed: 64 test suites, 489 tests, 0
   snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 62 test suites, 485
+- `npm.cmd run test:coverage -- --runInBand` passed: 64 test suites, 489
   tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
@@ -21,10 +21,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 96.41% |
-| Branches | 97.81% |
-| Functions | 90.1% |
-| Lines | 98.44% |
+| Statements | 96.64% |
+| Branches | 98.28% |
+| Functions | 91.57% |
+| Lines | 98.62% |
 
 Recent file-specific result:
 
@@ -37,21 +37,27 @@ Recent file-specific result:
 | `core/features/auth/permissions.ts` | 100% | 100% | 100% | 100% |
 | `core/features/interviews/permissions.ts` | 100% | 100% | 100% | 100% |
 | `core/features/questions/permissions.ts` | 100% | 100% | 100% | 100% |
+| `core/components/ui/password-input.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/card.tsx` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
-- Updated `core/features/auth/permissions.test.ts`.
-- Updated `core/features/interviews/permissions.test.ts`.
-- Updated `core/features/questions/permissions.ts`.
+- Added `core/components/ui/password-input.test.tsx`.
+- Added `core/components/ui/card.test.tsx`.
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Added branch tests for empty-plan fallback behavior, anonymous plan lookup,
-  subscription info fallback, and the interview count helper's missing-user
-  fallback.
-- Simplified the questions count helper to accept only the signed-in `userId`
-  string it receives after the anonymous-user guard.
+- Covered password input prop forwarding, visibility toggle state, and disabled
+  control forwarding.
+- Covered card subcomponent exports, slot attributes, custom class merging, and
+  rendered content.
+- Focused Jest passed:
+  `npm.cmd test -- core/components/ui/password-input.test.tsx --runInBand` (3
+  tests) and `npm.cmd test -- core/components/ui/card.test.tsx --runInBand` (1
+  test).
+- Focused coverage probes passed with 100% coverage for
+  `core/components/ui/password-input.tsx` and `core/components/ui/card.tsx`.
 - Required raw `npm test` attempt still fails before Jest starts because
   unsigned `C:\nvm4w\nodejs\npm.ps1` is blocked by PowerShell execution policy.
-- Jest still emits the existing stale `baseline-browser-mapping` warning.
+- No production code was changed in this slice.
 
 ## Working Rules
 
@@ -106,9 +112,10 @@ Known local quirks:
 Recommended next slice:
 
 1. Component utility gaps:
-   - `core/components/ui/password-input.tsx`
-   - `core/components/ui/card.tsx`
-   - Next lowest-risk path after permission helpers reached 100%.
+   - `core/components/ui/badge.tsx`
+   - `core/components/ui/sonner.tsx`
+   - Next lowest-risk UI utilities after `password-input.tsx` and `card.tsx`
+     reached 100%.
 2. Route branch gaps:
    - `app/api/ai/questions/generate-question/route.ts`
    - `app/api/ai/resumes/analyze/route.ts`
@@ -153,6 +160,7 @@ Recommended next slice:
 | 2026-05-28 | OAuth errors branches | `core/features/auth/oauth/errors.ts` reached 100% coverage. |
 | 2026-05-28 | OAuth connect user branches | `core/features/auth/oauth/connectUser.ts` reached 100% coverage. |
 | 2026-05-28 | Permission helper branches | Auth, interview, and question permission helpers reached 100% coverage. |
+| 2026-05-28 | Component utility coverage | `core/components/ui/password-input.tsx` and `core/components/ui/card.tsx` reached 100% coverage. |
 
 ## Archive
 
