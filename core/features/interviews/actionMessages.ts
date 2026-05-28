@@ -4,6 +4,7 @@ export const INTERVIEW_ACTION_MESSAGES = {
     "Job posting not found or you don't have access to it.",
   createDatabaseError: "Failed to create interview. Please try again.",
   updateUnauthorized: "You must be logged in to update this interview.",
+  updateInvalidInput: "Invalid interview update.",
   updateDatabaseError: "Failed to update interview. Please try again.",
   feedbackUnauthorized: "You must be logged in to generate feedback.",
   feedbackDatabaseError: "Failed to save feedback. Please try again.",

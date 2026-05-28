@@ -287,6 +287,20 @@ describe("interview actions", () => {
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
+    it("rejects forged update fields before calling the service", async () => {
+      await expect(
+        updateInterviewAction("interview-1", {
+          duration: "00:12:34",
+          jobInfoId: "other-user-job-info",
+        }),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.updateInvalidInput,
+      });
+
+      expect(mockUpdateInterviewService).not.toHaveBeenCalled();
+    });
+
     it("maps unauthorized errors to a login message", async () => {
       mockUpdateInterviewService.mockRejectedValue(new UnauthorizedError());
 

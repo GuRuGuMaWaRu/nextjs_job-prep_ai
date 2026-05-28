@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
@@ -40,6 +41,16 @@ const aj = arcjet({
     }),
   ],
 });
+
+const updateInterviewSchema = z
+  .object({
+    humeChatId: z.string().min(1).optional(),
+    duration: z.string().min(1).optional(),
+  })
+  .strict()
+  .refine(
+    (data) => data.humeChatId !== undefined || data.duration !== undefined,
+  );
 
 /**
  * Create a new interview
@@ -126,10 +137,18 @@ export async function createInterviewAction({
  */
 export async function updateInterviewAction(
   id: string,
-  data: { humeChatId?: string; duration?: string },
+  unsafeData: unknown,
 ): Promise<ActionResult<void>> {
+  const validation = updateInterviewSchema.safeParse(unsafeData);
+  if (!validation.success) {
+    return {
+      success: false,
+      message: INTERVIEW_ACTION_MESSAGES.updateInvalidInput,
+    };
+  }
+
   try {
-    await updateInterviewService(id, data);
+    await updateInterviewService(id, validation.data);
 
     return { success: true, data: undefined };
   } catch (error) {
