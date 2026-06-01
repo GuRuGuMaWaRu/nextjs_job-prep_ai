@@ -50,6 +50,12 @@ describe("makeStripeSubscription", () => {
 });
 
 describe("makeStripeCustomer", () => {
+  it("returns a placeholder customer id by default", () => {
+    const customer = makeStripeCustomer();
+
+    expect(customer.id).toBe("cus_test_expanded");
+  });
+
   it("returns the minimal expanded customer shape", () => {
     const customer = makeStripeCustomer("cus_test_custom");
 
@@ -117,6 +123,17 @@ describe("makeStripeEvent", () => {
 });
 
 describe("named Stripe event builders", () => {
+  it("makeCheckoutSessionCompletedEvent builds a default paid session", () => {
+    const event = makeCheckoutSessionCompletedEvent();
+
+    expect(event.type).toBe(
+      STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted,
+    );
+    const session = event.data.object as Stripe.Checkout.Session;
+    expect(session.payment_status).toBe("paid");
+    expect(session.metadata?.userId).toMatch(/^user-/);
+  });
+
   it("makeCheckoutSessionCompletedEvent has the correct type and nested session", () => {
     const event = makeCheckoutSessionCompletedEvent({ userId: "user-c1" });
 

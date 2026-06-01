@@ -21,9 +21,34 @@ describe("createDrizzleMutationChainMock", () => {
 
     await expect(chain.returning({ id: "column" })).resolves.toBe(rows);
   });
+
+  it("supports promise finally handlers on the chain", async () => {
+    const chain = createDrizzleMutationChainMock([{ id: "user-1" }]);
+    const onFinally = jest.fn();
+
+    await chain.finally(onFinally);
+
+    expect(onFinally).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports promise catch handlers on the chain", async () => {
+    const chain = createDrizzleMutationChainMock([{ id: "user-1" }]);
+    const onCatch = jest.fn();
+
+    await chain.catch(onCatch);
+
+    expect(onCatch).not.toHaveBeenCalled();
+  });
 });
 
 describe("createMockDrizzleTableQuery", () => {
+  it("defaults query methods to resolving undefined", async () => {
+    const query = createMockDrizzleTableQuery();
+
+    await expect(query.findFirst()).resolves.toBeUndefined();
+    await expect(query.findMany()).resolves.toBeUndefined();
+  });
+
   it("exposes findFirst and findMany as jest functions with configured results", async () => {
     const query = createMockDrizzleTableQuery({
       findFirst: { id: "user-1" },
