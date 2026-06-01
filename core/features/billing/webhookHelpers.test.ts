@@ -267,6 +267,32 @@ describe("fulfillCheckoutSession", () => {
     );
     expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
+
+  it("skips sessions whose retrieved expanded subscription has no customer id", async () => {
+    const session = makeStripeCheckoutSession({
+      id: "cs_test_subscription_customer_missing",
+      userId: "user-test",
+      customerId: "cus_test_checkout",
+      subscriptionId: "sub_test_customer_missing",
+    });
+    retrieveSubscription.mockResolvedValueOnce(
+      makeStripeSubscription({
+        id: "sub_test_customer_missing",
+        customer: null,
+        status: "active",
+      }),
+    );
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "fulfillCheckoutSession: subscription is not fulfillable",
+      ),
+      "cs_test_subscription_customer_missing",
+    );
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
+  });
 });
 
 describe("markStripeEventProcessed", () => {
