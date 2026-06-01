@@ -61,6 +61,7 @@ import { generateAiQuestion } from "@/core/services/ai/questions";
 import {
   DatabaseError,
   NotFoundError,
+  PermissionError,
   UnauthorizedError,
 } from "@/core/dal/errors";
 import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
@@ -104,6 +105,13 @@ async function expectTextResponse(
 ): Promise<void> {
   expect(response.status).toBe(status);
   await expect(response.text()).resolves.toBe(body);
+}
+
+function makeInaccessibleJobInfoResult(): Awaited<
+  ReturnType<typeof getJobInfoAction>
+> {
+  // The route defensively handles null, but the action's exported type is narrower.
+  return null as unknown as Awaited<ReturnType<typeof getJobInfoAction>>;
 }
 
 describe("POST /api/ai/questions/generate-question", () => {
@@ -184,6 +192,22 @@ describe("POST /api/ai/questions/generate-question", () => {
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
 
+  it("returns 403 when the job info is inaccessible", async () => {
+    mockGetJobInfoAction.mockResolvedValueOnce(makeInaccessibleJobInfoResult());
+
+    const response = await POST(
+      buildJsonRequest({ prompt: "medium", jobInfoId }),
+    );
+
+    await expectTextResponse(
+      response,
+      403,
+      "You do not have permission to do this",
+    );
+    expect(mockGetQuestionsAction).not.toHaveBeenCalled();
+    expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
+  });
+
   it("returns a streamed success response and stores the generated question", async () => {
     const response = await POST(
       buildJsonRequest({ prompt: "medium", jobInfoId }),
@@ -251,6 +275,22 @@ describe("POST /api/ai/questions/generate-question", () => {
     );
   });
 
+  it("maps permission action failures to a 403 response", async () => {
+    mockGetJobInfoAction.mockRejectedValueOnce(
+      new PermissionError("Job info is not available"),
+    );
+
+    const response = await POST(
+      buildJsonRequest({ prompt: "medium", jobInfoId }),
+    );
+
+    await expectTextResponse(
+      response,
+      403,
+      "You do not have permission to do this",
+    );
+  });
+
   it("maps database failures to a 500 response", async () => {
     mockGetQuestionsAction.mockRejectedValueOnce(
       new DatabaseError("Question lookup failed"),
@@ -264,6 +304,24 @@ describe("POST /api/ai/questions/generate-question", () => {
       response,
       500,
       "Database error while generating question",
+    );
+  });
+
+  it("maps unexpected generation failures to a 500 response", async () => {
+    mockGetQuestionsAction.mockRejectedValueOnce(new Error("Model offline"));
+
+    const response = await POST(
+      buildJsonRequest({ prompt: "medium", jobInfoId }),
+    );
+
+    await expectTextResponse(
+      response,
+      500,
+      "An error occurred while generating your question",
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error generating question:",
+      expect.any(Error),
     );
   });
 });
