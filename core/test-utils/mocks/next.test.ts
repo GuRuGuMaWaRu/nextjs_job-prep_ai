@@ -71,6 +71,17 @@ describe("createMockCookieStore", () => {
 
     expect(store.has("x")).toBe(false);
   });
+
+  it("_dump returns the current cookie records", () => {
+    const store = createMockCookieStore([{ name: "a", value: "1" }]);
+
+    store.set("b", "2");
+
+    expect(store._dump()).toEqual([
+      { name: "a", value: "1" },
+      { name: "b", value: "2", options: undefined },
+    ]);
+  });
 });
 
 describe("createNextHeadersMock", () => {
@@ -107,6 +118,13 @@ describe("createNextHeadersMock", () => {
 });
 
 describe("createNextNavigationMock", () => {
+  it("NextRedirectError defaults to a temporary redirect digest", () => {
+    const error = new NextRedirectError("/target");
+
+    expect(error.message).toBe("NEXT_REDIRECT /target");
+    expect(error.digest).toBe("NEXT_REDIRECT;/target");
+  });
+
   it("redirect throws NextRedirectError and records the URL", () => {
     const mock = createNextNavigationMock();
 

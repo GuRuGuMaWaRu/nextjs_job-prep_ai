@@ -10,24 +10,29 @@ Date: 2026-06-01
 
 Latest full verification:
 
-- `npm test -- core/features/auth/components/OAuthSignInSection.test.tsx
-  core/features/billing/webhookHelpers.test.ts
-  core/features/interviews/service.test.ts --runInBand --watchman=false`
-  passed: 3 test suites, 37 tests, 0 snapshots.
+- `npm test -- core/dal/errors.test.ts core/drizzle/schemaHelpers.test.ts
+  core/test-utils/factories/stripeEvent.test.ts
+  core/test-utils/factories/user.test.ts core/test-utils/mocks/db.test.ts
+  core/test-utils/mocks/next.test.ts --runInBand --watchman=false` passed:
+  6 test suites, 58 tests, 0 snapshots.
 - Focused coverage probes passed with 100% statements, branches, functions, and
   lines for:
-  - `core/features/auth/components/OAuthSignInSection.tsx`
-  - `core/features/billing/webhookHelpers.ts`
-  - `core/features/interviews/service.ts`
-- `npx biome format --write
-  core/features/auth/components/OAuthSignInSection.test.tsx
-  core/features/billing/webhookHelpers.test.ts
-  core/features/interviews/service.test.ts` passed.
-- `npm run check:ci` passed: 277 files checked.
-- `npm test -- --runInBand --watchman=false` passed: 67 test suites, 507
+  - `core/dal/errors.ts`
+  - `core/drizzle/schemaHelpers.ts`
+  - `core/test-utils/factories/stripeEvent.ts`
+  - `core/test-utils/factories/user.ts`
+  - `core/test-utils/mocks/db.ts`
+  - `core/test-utils/mocks/next.ts`
+- `npx biome format --write core/dal/errors.test.ts
+  core/drizzle/schemaHelpers.test.ts
+  core/test-utils/factories/stripeEvent.test.ts
+  core/test-utils/factories/user.test.ts core/test-utils/mocks/db.test.ts
+  core/test-utils/mocks/next.test.ts` passed.
+- `npm run check:ci` passed: 279 files checked.
+- `npm test -- --runInBand --watchman=false` passed: 69 test suites, 522
   tests, 0 snapshots.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 67 test
-  suites, 507 tests, 0 snapshots.
+- `npm run test:coverage -- --runInBand --watchman=false` passed: 69 test
+  suites, 522 tests, 0 snapshots.
 - `npx tsc --noEmit` passed.
 
 Previous full verification:
@@ -43,10 +48,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.15% |
-| Branches | 99.68% |
-| Functions | 91.94% |
-| Lines | 98.92% |
+| Statements | 97.60% |
+| Branches | 100% |
+| Functions | 94.13% |
+| Lines | 99.34% |
 
 Recent file-specific result:
 
@@ -70,30 +75,34 @@ Recent file-specific result:
 | `core/features/auth/components/OAuthSignInSection.tsx` | 100% | 100% | 100% | 100% |
 | `core/features/billing/webhookHelpers.ts` | 100% | 100% | 100% | 100% |
 | `core/features/interviews/service.ts` | 100% | 100% | 100% | 100% |
+| `core/dal/errors.ts` | 100% | 100% | 100% | 100% |
+| `core/drizzle/schemaHelpers.ts` | 100% | 100% | 100% | 100% |
+| `core/test-utils/factories/stripeEvent.ts` | 100% | 100% | 100% | 100% |
+| `core/test-utils/factories/user.ts` | 100% | 100% | 100% | 100% |
+| `core/test-utils/mocks/db.ts` | 100% | 100% | 100% | 100% |
+| `core/test-utils/mocks/next.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
+- Added focused tests:
+  - `core/dal/errors.test.ts`
+  - `core/drizzle/schemaHelpers.test.ts`
 - Expanded focused tests:
-  - `core/features/auth/components/OAuthSignInSection.test.tsx`
-  - `core/features/billing/webhookHelpers.test.ts`
-  - `core/features/interviews/service.test.ts`
+  - `core/test-utils/factories/stripeEvent.test.ts`
+  - `core/test-utils/factories/user.test.ts`
+  - `core/test-utils/mocks/db.test.ts`
+  - `core/test-utils/mocks/next.test.ts`
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Covered the OAuth provider defensive default path for unsupported runtime
-  values.
-- Covered checkout fulfillment when Stripe returns an expanded subscription
-  payload without a customer id.
-- Covered feedback generation rejection when no accessible interview exists.
-- Isolated the interview DAL nullable mock boundary in a named helper to avoid
-  repeating broad casts.
-- Focused Jest passed:
-  `npm test -- core/features/auth/components/OAuthSignInSection.test.tsx
-  core/features/billing/webhookHelpers.test.ts
-  core/features/interviews/service.test.ts --runInBand --watchman=false` (37
-  tests).
-- Focused coverage probes passed with 100% coverage for all three target files.
-- Full coverage increased statements from 96.98% to 97.15%, branches from
-  99.21% to 99.68%, functions from 91.57% to 91.94%, and lines from 98.74% to
-  98.92%.
+- Covered DAL error names/messages/causes and Drizzle shared column helper
+  metadata using public column instances.
+- Covered Stripe fixture default customer/session paths, current-user redirect
+  sentinel behavior, Drizzle mock promise helpers/default query results, and
+  Next mock cookie dump/default redirect digest behavior.
+- Focused Jest passed for the six touched helper test files (58 tests).
+- Focused coverage probes passed with 100% coverage for all six target files.
+- Full coverage increased statements from 97.15% to 97.60%, branches from
+  99.68% to 100%, functions from 91.94% to 94.13%, and lines from 98.92% to
+  99.34%.
 - `--watchman=false` remains required for Jest commands on this macOS worktree.
 - No production code was changed in this slice.
 
@@ -152,13 +161,17 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Remaining low-risk helper and fixture gaps:
-   - `core/dal/errors.ts`
-   - `core/drizzle/schemaHelpers.ts`
-   - `core/test-utils/factories/stripeEvent.ts`
-   - `core/test-utils/factories/user.ts`
-   - `core/test-utils/mocks/db.ts`
-   - `core/test-utils/mocks/next.ts`
+1. Remaining schema declaration coverage gaps:
+   - `core/drizzle/schema/interview.ts`
+   - `core/drizzle/schema/jobInfo.ts`
+   - `core/drizzle/schema/question.ts`
+   - `core/drizzle/schema/session.ts`
+   - `core/drizzle/schema/token.ts`
+   - `core/drizzle/schema/userOAuthAccount.ts`
+2. Small residual helper gaps:
+   - `core/features/auth/constants.ts`
+   - `core/features/auth/oauth/google.ts`
+   - `core/test-utils/factories/index.ts`
 
 ## Completed Slices
 
@@ -203,6 +216,7 @@ Recommended next slice:
 | 2026-06-01 | Component utility coverage | `core/components/ui/button.tsx` reached 100% coverage. |
 | 2026-06-01 | Route branch coverage | AI question generation, resume analysis, and Stripe subscription cron routes reached 100% coverage. |
 | 2026-06-01 | Component and helper gaps | OAuth sign-in section, billing webhook helpers, and interview service reached 100% coverage. |
+| 2026-06-01 | Helper and fixture gaps | DAL errors, schema helpers, Stripe/user factories, and DB/Next mocks reached 100% coverage. |
 
 ## Archive
 

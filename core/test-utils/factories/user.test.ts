@@ -89,6 +89,12 @@ describe("makeCurrentUser", () => {
     expect(currentUser.redirectToSignIn).toEqual(expect.any(Function));
   });
 
+  it("throws a redirect sentinel from the default sign-in redirect", () => {
+    const currentUser = makeCurrentUser();
+
+    expect(() => currentUser.redirectToSignIn()).toThrow("redirect");
+  });
+
   it("accepts overrides for anonymous-user scenarios", () => {
     const currentUser = makeCurrentUser({ userId: null });
 
