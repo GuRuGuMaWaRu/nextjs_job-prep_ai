@@ -5,6 +5,7 @@ jest.mock("@/core/features/auth/actions", () => ({
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import { signInWithOAuthAction } from "@/core/features/auth/actions";
 
 import { OAuthSignInSection } from "./OAuthSignInSection";
@@ -55,5 +56,15 @@ describe("OAuthSignInSection", () => {
     expect(mockSignInWithOAuthAction).toHaveBeenCalledWith("discord", {
       errorReturn: "sign-up",
     });
+  });
+
+  it("throws for an unsupported provider value at runtime", () => {
+    const unsupportedProvider = "linkedin" as OAuthProvider;
+
+    expect(() =>
+      render(
+        <OAuthSignInSection configuredOAuthProviders={[unsupportedProvider]} />,
+      ),
+    ).toThrow("Unexpected: linkedin");
   });
 });

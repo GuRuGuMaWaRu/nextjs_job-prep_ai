@@ -65,9 +65,19 @@ const mockGenerateAiInterviewFeedback = jest.mocked(
   generateAiInterviewFeedback,
 );
 
+type InterviewByIdDalResult = Awaited<ReturnType<typeof getInterviewByIdDal>>;
+
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 const OTHER_USER_ID = TEST_OTHER_USER_ID;
 const SIGNED_IN_USER_NAME = TEST_USER_NAME;
+
+function mockNoInterviewFound() {
+  // The service handles a nullable DAL result, but the mocked DAL type is inferred
+  // from the selected relation shape. Keep the boundary cast in one helper.
+  mockGetInterviewByIdDal.mockResolvedValue(
+    null as unknown as InterviewByIdDalResult,
+  );
+}
 
 describe("interview service", () => {
   beforeEach(() => {
@@ -95,9 +105,7 @@ describe("interview service", () => {
   });
 
   it("returns null when the interview does not exist", async () => {
-    mockGetInterviewByIdDal.mockResolvedValue(
-      null as unknown as Awaited<ReturnType<typeof getInterviewByIdDal>>,
-    );
+    mockNoInterviewFound();
 
     await expect(
       getInterviewByIdService("interview-1", SIGNED_IN_USER_ID),
@@ -158,9 +166,7 @@ describe("interview service", () => {
   });
 
   it("rejects interview updates when no accessible interview exists", async () => {
-    mockGetInterviewByIdDal.mockResolvedValue(
-      null as unknown as Awaited<ReturnType<typeof getInterviewByIdDal>>,
-    );
+    mockNoInterviewFound();
 
     await expect(
       updateInterviewService("interview-1", { duration: "00:01:00" }),
@@ -217,6 +223,17 @@ describe("interview service", () => {
     ).rejects.toBeInstanceOf(PermissionError);
 
     expect(mockGenerateAiInterviewFeedback).not.toHaveBeenCalled();
+  });
+
+  it("rejects feedback generation when no accessible interview exists", async () => {
+    mockNoInterviewFound();
+
+    await expect(
+      generateInterviewFeedbackService("interview-1"),
+    ).rejects.toBeInstanceOf(PermissionError);
+
+    expect(mockGenerateAiInterviewFeedback).not.toHaveBeenCalled();
+    expect(mockUpdateInterviewDal).not.toHaveBeenCalled();
   });
 
   it("throws when AI feedback generation returns no feedback", async () => {
