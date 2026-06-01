@@ -6,9 +6,26 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-05-28
+Date: 2026-06-01
 
 Latest full verification:
+
+- `npm run check:ci` passed: 276 files checked.
+- `npm test -- --runInBand --watchman=false` passed: 66 test suites, 495
+  tests, 0 snapshots.
+- `npm run test:coverage -- --runInBand --watchman=false` passed: 66 test
+  suites, 495 tests, 0 snapshots.
+- `npx tsc --noEmit` passed.
+- Initial `npm test -- core/components/ui/badge.test.tsx
+  core/components/ui/sonner.test.tsx --runInBand` failed before Jest started
+  because Watchman could not write
+  `/Users/gurugumawaru/Library/LaunchAgents/com.github.facebook.watchman.plist`;
+  rerunning with `--watchman=false` passed.
+- Initial sandboxed `npm ci` failed with npm's `Exit handler never called`
+  error while writing npm logs outside the workspace; rerunning with elevated
+  filesystem access passed.
+
+Previous full verification:
 
 - `npm.cmd run check:ci` passed: 274 files checked.
 - `npm.cmd test -- --runInBand` passed: 64 test suites, 489 tests, 0
@@ -21,8 +38,8 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 96.64% |
-| Branches | 98.28% |
+| Statements | 96.69% |
+| Branches | 98.59% |
 | Functions | 91.57% |
 | Lines | 98.62% |
 
@@ -39,24 +56,28 @@ Recent file-specific result:
 | `core/features/questions/permissions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/password-input.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/card.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/badge.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/sonner.tsx` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
-- Added `core/components/ui/password-input.test.tsx`.
-- Added `core/components/ui/card.test.tsx`.
+- Added `core/components/ui/badge.test.tsx`.
+- Added `core/components/ui/sonner.test.tsx`.
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Covered password input prop forwarding, visibility toggle state, and disabled
-  control forwarding.
-- Covered card subcomponent exports, slot attributes, custom class merging, and
-  rendered content.
+- Covered badge prop forwarding, variant classes, `asChild` rendering, and
+  exported variant helper output.
+- Covered toaster theme fallback, caller prop forwarding, icon map creation, and
+  CSS variable style forwarding.
 - Focused Jest passed:
-  `npm.cmd test -- core/components/ui/password-input.test.tsx --runInBand` (3
-  tests) and `npm.cmd test -- core/components/ui/card.test.tsx --runInBand` (1
-  test).
+  `npm test -- core/components/ui/badge.test.tsx
+  core/components/ui/sonner.test.tsx --runInBand --watchman=false` (6 tests).
 - Focused coverage probes passed with 100% coverage for
-  `core/components/ui/password-input.tsx` and `core/components/ui/card.tsx`.
-- Required raw `npm test` attempt still fails before Jest starts because
-  unsigned `C:\nvm4w\nodejs\npm.ps1` is blocked by PowerShell execution policy.
+  `core/components/ui/badge.tsx` and `core/components/ui/sonner.tsx`.
+- Full coverage passed with `core/components/ui` aggregate at 97.87%
+  statements, 100% branches, 100% functions, and 100% lines.
+- Required raw focused Jest attempt failed before Jest started because Watchman
+  could not write the local LaunchAgent plist; `--watchman=false` is the working
+  local path on this macOS worktree.
 - No production code was changed in this slice.
 
 ## Working Rules
@@ -97,6 +118,9 @@ Known local quirks:
 - Raw `npm test` fails in PowerShell before Jest starts because unsigned
   `C:\nvm4w\nodejs\npm.ps1` is blocked by the local execution policy. Use
   `npm.cmd` for real verification after recording the raw blocker.
+- On this macOS worktree, Jest can fail before tests start when Watchman tries
+  to write `~/Library/LaunchAgents/com.github.facebook.watchman.plist`. Add
+  `--watchman=false` to Jest commands when that happens.
 - Sandboxed coverage report writes can fail with `EPERM` under `coverage`.
   Rerun the same coverage command outside the sandbox when needed.
 - Sandboxed Biome writes can fail with `Access is denied. (os error 5)` for
@@ -112,10 +136,9 @@ Known local quirks:
 Recommended next slice:
 
 1. Component utility gaps:
-   - `core/components/ui/badge.tsx`
-   - `core/components/ui/sonner.tsx`
-   - Next lowest-risk UI utilities after `password-input.tsx` and `card.tsx`
-     reached 100%.
+   - `core/components/ui/button.tsx`
+   - Next lowest-risk UI utilities after `badge.tsx` and `sonner.tsx` reached
+     100%.
 2. Route branch gaps:
    - `app/api/ai/questions/generate-question/route.ts`
    - `app/api/ai/resumes/analyze/route.ts`
@@ -161,6 +184,7 @@ Recommended next slice:
 | 2026-05-28 | OAuth connect user branches | `core/features/auth/oauth/connectUser.ts` reached 100% coverage. |
 | 2026-05-28 | Permission helper branches | Auth, interview, and question permission helpers reached 100% coverage. |
 | 2026-05-28 | Component utility coverage | `core/components/ui/password-input.tsx` and `core/components/ui/card.tsx` reached 100% coverage. |
+| 2026-06-01 | Component utility coverage | `core/components/ui/badge.tsx` and `core/components/ui/sonner.tsx` reached 100% coverage. |
 
 ## Archive
 
