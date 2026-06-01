@@ -10,12 +10,20 @@ Date: 2026-06-01
 
 Latest full verification:
 
-- `npm run check:ci` passed: 276 files checked.
-- `npm test -- --runInBand --watchman=false` passed: 66 test suites, 495
+- `npm run check:ci` passed: 277 files checked.
+- `npm test -- --runInBand --watchman=false` passed: 67 test suites, 499
   tests, 0 snapshots.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 66 test
-  suites, 495 tests, 0 snapshots.
+- `npm run test:coverage -- --runInBand --watchman=false` passed: 67 test
+  suites, 499 tests, 0 snapshots.
 - `npx tsc --noEmit` passed.
+- `npx biome format --write core/components/ui/button.test.tsx` passed.
+- Sandboxed coverage writes failed with `EPERM` for `coverage/coverage-final.json`;
+  rerunning the focused and full coverage commands with elevated filesystem
+  access passed.
+- Sandboxed Biome format failed with `Operation not permitted`; rerunning with
+  elevated filesystem access passed with no changes needed.
+- Sandboxed `npx tsc --noEmit` failed with `EPERM` for
+  `tsconfig.tsbuildinfo`; rerunning with elevated filesystem access passed.
 - Initial `npm test -- core/components/ui/badge.test.tsx
   core/components/ui/sonner.test.tsx --runInBand` failed before Jest started
   because Watchman could not write
@@ -38,7 +46,7 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 96.69% |
+| Statements | 96.75% |
 | Branches | 98.59% |
 | Functions | 91.57% |
 | Lines | 98.62% |
@@ -58,26 +66,24 @@ Recent file-specific result:
 | `core/components/ui/card.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/badge.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/sonner.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/button.tsx` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
-- Added `core/components/ui/badge.test.tsx`.
-- Added `core/components/ui/sonner.test.tsx`.
+- Added `core/components/ui/button.test.tsx`.
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Covered badge prop forwarding, variant classes, `asChild` rendering, and
-  exported variant helper output.
-- Covered toaster theme fallback, caller prop forwarding, icon map creation, and
-  CSS variable style forwarding.
+- Covered button prop forwarding, selected variant and size classes, `asChild`
+  rendering, and exported variant helper output.
 - Focused Jest passed:
-  `npm test -- core/components/ui/badge.test.tsx
-  core/components/ui/sonner.test.tsx --runInBand --watchman=false` (6 tests).
-- Focused coverage probes passed with 100% coverage for
-  `core/components/ui/badge.tsx` and `core/components/ui/sonner.tsx`.
-- Full coverage passed with `core/components/ui` aggregate at 97.87%
+- `npm test -- core/components/ui/button.test.tsx --runInBand
+  --watchman=false` (4 tests).
+- Focused coverage probe passed with 100% coverage for
+  `core/components/ui/button.tsx`.
+- Full coverage passed with `core/components/ui` aggregate at 100%
   statements, 100% branches, 100% functions, and 100% lines.
-- Required raw focused Jest attempt failed before Jest started because Watchman
-  could not write the local LaunchAgent plist; `--watchman=false` is the working
-  local path on this macOS worktree.
+- Full coverage increased statements from 96.69% to 96.75%; branches,
+  functions, and lines stayed at 98.59%, 91.57%, and 98.62%.
+- `--watchman=false` remains required for Jest commands on this macOS worktree.
 - No production code was changed in this slice.
 
 ## Working Rules
@@ -135,15 +141,12 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Component utility gaps:
-   - `core/components/ui/button.tsx`
-   - Next lowest-risk UI utilities after `badge.tsx` and `sonner.tsx` reached
-     100%.
-2. Route branch gaps:
+1. Route branch gaps:
    - `app/api/ai/questions/generate-question/route.ts`
    - `app/api/ai/resumes/analyze/route.ts`
    - `app/api/cron/sync-stripe-subscriptions/route.ts`
-   - Good follow-up once the low-risk helper branches are exhausted.
+   - Good follow-up now that the low-risk component utility branches are
+     exhausted.
 
 ## Completed Slices
 
@@ -185,6 +188,7 @@ Recommended next slice:
 | 2026-05-28 | Permission helper branches | Auth, interview, and question permission helpers reached 100% coverage. |
 | 2026-05-28 | Component utility coverage | `core/components/ui/password-input.tsx` and `core/components/ui/card.tsx` reached 100% coverage. |
 | 2026-06-01 | Component utility coverage | `core/components/ui/badge.tsx` and `core/components/ui/sonner.tsx` reached 100% coverage. |
+| 2026-06-01 | Component utility coverage | `core/components/ui/button.tsx` reached 100% coverage. |
 
 ## Archive
 
