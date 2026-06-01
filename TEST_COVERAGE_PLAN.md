@@ -10,25 +10,25 @@ Date: 2026-06-01
 
 Latest full verification:
 
+- `npm test -- app/api/ai/questions/generate-question/route.test.ts
+  app/api/ai/resumes/analyze/route.test.ts
+  app/api/cron/sync-stripe-subscriptions/route.test.ts --runInBand
+  --watchman=false` passed: 3 test suites, 29 tests, 0 snapshots.
+- Focused coverage probes passed with 100% statements, branches, functions, and
+  lines for:
+  - `app/api/ai/questions/generate-question/route.ts`
+  - `app/api/ai/resumes/analyze/route.ts`
+  - `app/api/cron/sync-stripe-subscriptions/route.ts`
+- `npx biome format --write
+  app/api/ai/questions/generate-question/route.test.ts
+  app/api/ai/resumes/analyze/route.test.ts
+  app/api/cron/sync-stripe-subscriptions/route.test.ts` passed.
 - `npm run check:ci` passed: 277 files checked.
-- `npm test -- --runInBand --watchman=false` passed: 67 test suites, 499
+- `npm test -- --runInBand --watchman=false` passed: 67 test suites, 504
   tests, 0 snapshots.
 - `npm run test:coverage -- --runInBand --watchman=false` passed: 67 test
-  suites, 499 tests, 0 snapshots.
+  suites, 504 tests, 0 snapshots.
 - `npx tsc --noEmit` passed.
-- `npx biome format --write core/components/ui/button.test.tsx` passed.
-- Sandboxed coverage writes failed with `EPERM` for `coverage/coverage-final.json`;
-  rerunning the focused and full coverage commands with elevated filesystem
-  access passed.
-- Sandboxed Biome format failed with `Operation not permitted`; rerunning with
-  elevated filesystem access passed with no changes needed.
-- Sandboxed `npx tsc --noEmit` failed with `EPERM` for
-  `tsconfig.tsbuildinfo`; rerunning with elevated filesystem access passed.
-- Initial `npm test -- core/components/ui/badge.test.tsx
-  core/components/ui/sonner.test.tsx --runInBand` failed before Jest started
-  because Watchman could not write
-  `/Users/gurugumawaru/Library/LaunchAgents/com.github.facebook.watchman.plist`;
-  rerunning with `--watchman=false` passed.
 - Initial sandboxed `npm ci` failed with npm's `Exit handler never called`
   error while writing npm logs outside the workspace; rerunning with elevated
   filesystem access passed.
@@ -46,10 +46,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 96.75% |
-| Branches | 98.59% |
+| Statements | 96.98% |
+| Branches | 99.21% |
 | Functions | 91.57% |
-| Lines | 98.62% |
+| Lines | 98.74% |
 
 Recent file-specific result:
 
@@ -67,22 +67,33 @@ Recent file-specific result:
 | `core/components/ui/badge.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/sonner.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/button.tsx` | 100% | 100% | 100% | 100% |
+| `app/api/ai/questions/generate-question/route.ts` | 100% | 100% | 100% | 100% |
+| `app/api/ai/resumes/analyze/route.ts` | 100% | 100% | 100% | 100% |
+| `app/api/cron/sync-stripe-subscriptions/route.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
-- Added `core/components/ui/button.test.tsx`.
+- Expanded route tests:
+  - `app/api/ai/questions/generate-question/route.test.ts`
+  - `app/api/ai/resumes/analyze/route.test.ts`
+  - `app/api/cron/sync-stripe-subscriptions/route.test.ts`
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Covered button prop forwarding, selected variant and size classes, `asChild`
-  rendering, and exported variant helper output.
+- Covered generate-question inaccessible job info, permission error, and
+  unexpected error handling.
+- Covered resume analysis validation fallback when no issue message is
+  available.
+- Covered cron rejected reconciliation failures after the five returned error
+  samples are full.
 - Focused Jest passed:
-- `npm test -- core/components/ui/button.test.tsx --runInBand
-  --watchman=false` (4 tests).
-- Focused coverage probe passed with 100% coverage for
-  `core/components/ui/button.tsx`.
-- Full coverage passed with `core/components/ui` aggregate at 100%
-  statements, 100% branches, 100% functions, and 100% lines.
-- Full coverage increased statements from 96.69% to 96.75%; branches,
-  functions, and lines stayed at 98.59%, 91.57%, and 98.62%.
+  `npm test -- app/api/ai/questions/generate-question/route.test.ts
+  app/api/ai/resumes/analyze/route.test.ts
+  app/api/cron/sync-stripe-subscriptions/route.test.ts --runInBand
+  --watchman=false` (29 tests).
+- Focused coverage probes passed with 100% coverage for all three target route
+  files.
+- Full coverage increased statements from 96.75% to 96.98%, branches from
+  98.59% to 99.21%, and lines from 98.62% to 98.74%; functions stayed at
+  91.57%.
 - `--watchman=false` remains required for Jest commands on this macOS worktree.
 - No production code was changed in this slice.
 
@@ -141,12 +152,11 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Route branch gaps:
-   - `app/api/ai/questions/generate-question/route.ts`
-   - `app/api/ai/resumes/analyze/route.ts`
-   - `app/api/cron/sync-stripe-subscriptions/route.ts`
-   - Good follow-up now that the low-risk component utility branches are
-     exhausted.
+1. Remaining component and helper gaps:
+   - `core/features/auth/components/OAuthSignInSection.tsx`
+   - `core/features/billing/webhookHelpers.ts`
+   - `core/features/interviews/service.ts`
+   - Good follow-up now that API route branch coverage is closed.
 
 ## Completed Slices
 
@@ -189,6 +199,7 @@ Recommended next slice:
 | 2026-05-28 | Component utility coverage | `core/components/ui/password-input.tsx` and `core/components/ui/card.tsx` reached 100% coverage. |
 | 2026-06-01 | Component utility coverage | `core/components/ui/badge.tsx` and `core/components/ui/sonner.tsx` reached 100% coverage. |
 | 2026-06-01 | Component utility coverage | `core/components/ui/button.tsx` reached 100% coverage. |
+| 2026-06-01 | Route branch coverage | AI question generation, resume analysis, and Stripe subscription cron routes reached 100% coverage. |
 
 ## Archive
 

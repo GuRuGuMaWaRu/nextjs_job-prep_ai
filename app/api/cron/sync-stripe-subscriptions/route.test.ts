@@ -220,6 +220,33 @@ describe("GET /api/cron/sync-stripe-subscriptions", () => {
     });
   });
 
+  it("limits returned error samples for rejected reconciliation failures", async () => {
+    const userIds = Array.from({ length: 6 }, (_, idx) => `user-${idx + 1}`);
+    mockGetUserIdsWithStripeSubscriptionDb.mockResolvedValueOnce(userIds);
+    mockReconcileUserStripeSubscription.mockRejectedValue(
+      new Error("stripe_unavailable"),
+    );
+
+    const response = await GET(buildCronRequest());
+
+    await expectJsonResponse(response, 200, {
+      ok: true,
+      batchLimit: 500,
+      candidates: 6,
+      processed: 0,
+      updated: 0,
+      skipped: 0,
+      errors: 6,
+      errorSamples: [
+        "user-1:stripe_unavailable",
+        "user-2:stripe_unavailable",
+        "user-3:stripe_unavailable",
+        "user-4:stripe_unavailable",
+        "user-5:stripe_unavailable",
+      ],
+    });
+  });
+
   it("propagates unexpected user lookup failures", async () => {
     mockGetUserIdsWithStripeSubscriptionDb.mockRejectedValueOnce(
       new Error("database offline"),

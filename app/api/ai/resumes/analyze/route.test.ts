@@ -10,13 +10,32 @@ jest.mock("@/core/features/resumeAnalysis/permissions", () => ({
   checkResumeAnalysisPermission: jest.fn(),
 }));
 
+jest.mock("@/core/features/resumeAnalysis/schemas", () => {
+  const actual = jest.requireActual<
+    typeof import("@/core/features/resumeAnalysis/schemas")
+  >("@/core/features/resumeAnalysis/schemas");
+
+  return {
+    ...actual,
+    resumeAnalysisInputSchema: {
+      ...actual.resumeAnalysisInputSchema,
+      safeParse: jest.fn((input: unknown) =>
+        actual.resumeAnalysisInputSchema.safeParse(input),
+      ),
+    },
+  };
+});
+
 jest.mock("@/core/services/ai/resumes/ai", () => ({
   analyzeResumeForJob: jest.fn(),
 }));
 
+import { z } from "zod";
+
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
+import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import {
   DatabaseError,
@@ -35,6 +54,12 @@ const mockCheckResumeAnalysisPermission = jest.mocked(
   checkResumeAnalysisPermission,
 );
 const mockAnalyzeResumeForJob = jest.mocked(analyzeResumeForJob);
+const mockResumeAnalysisSafeParse = jest.mocked(
+  resumeAnalysisInputSchema.safeParse,
+);
+const actualResumeAnalysisInputSchema = jest.requireActual<
+  typeof import("@/core/features/resumeAnalysis/schemas")
+>("@/core/features/resumeAnalysis/schemas").resumeAnalysisInputSchema;
 
 const jobInfoId = "00000000-0000-4000-8000-000000000401";
 
@@ -105,6 +130,9 @@ describe("POST /api/ai/resumes/analyze", () => {
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
     mockCheckResumeAnalysisPermission.mockResolvedValue(true);
+    mockResumeAnalysisSafeParse.mockImplementation((input) =>
+      actualResumeAnalysisInputSchema.safeParse(input),
+    );
     mockAnalyzeStream();
 
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -120,6 +148,19 @@ describe("POST /api/ai/resumes/analyze", () => {
     await expectTextResponse(response, 400, "Missing resume or job info id");
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
     expect(mockCheckResumeAnalysisPermission).not.toHaveBeenCalled();
+    expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
+  });
+
+  it("returns the fallback validation message when no issue message is available", async () => {
+    mockResumeAnalysisSafeParse.mockReturnValueOnce({
+      success: false,
+      error: new z.ZodError([]),
+    });
+
+    const response = await POST(buildFormRequest());
+
+    await expectTextResponse(response, 400, "Missing resume or job info id");
+    expect(mockGetJobInfoAction).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
