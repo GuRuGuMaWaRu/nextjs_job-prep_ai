@@ -107,7 +107,7 @@ describe("JobInfoForm", () => {
   it("renders existing job info and submits edits to updateJobInfoAction with the job id", async () => {
     mockUpdateJobInfoAction.mockResolvedValue({
       success: true,
-      data: { id: "job-info-existing" },
+      data: { id: existingJobInfo.id },
     });
 
     render(<JobInfoForm jobInfo={existingJobInfo} />);
@@ -147,6 +147,8 @@ describe("JobInfoForm", () => {
       });
     });
     expect(mockCreateJobInfoAction).not.toHaveBeenCalled();
+    expect(mockToast.success).toHaveBeenCalledWith("Job information updated!");
+    expect(mockPush).toHaveBeenCalledWith(routes.jobInfo(existingJobInfo.id));
   });
 
   it("does not call server actions and shows validation feedback when required fields are invalid", async () => {
