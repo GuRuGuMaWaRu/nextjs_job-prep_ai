@@ -43,7 +43,7 @@ beforeEach(() => {
   global.fetch = jest.fn();
 });
 
-describe("mapGoogleUserToResolved", () => {
+describe("googleOAuthUserInfoSchema", () => {
   it("accepts a valid Google userinfo payload", () => {
     const result = googleOAuthUserInfoSchema.safeParse({
       sub: "sub-id",
@@ -76,7 +76,9 @@ describe("mapGoogleUserToResolved", () => {
 
     expect(result.success).toBe(false);
   });
+});
 
+describe("mapGoogleUserToResolved", () => {
   it("maps email_verified true to emailVerified true", () => {
     expect(
       mapGoogleUserToResolved({
