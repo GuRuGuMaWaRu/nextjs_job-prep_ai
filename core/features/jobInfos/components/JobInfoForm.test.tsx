@@ -40,6 +40,14 @@ const validJobInfoInput = {
   description: "React and Next.js interview preparation.",
 } as const;
 
+const existingJobInfo = {
+  id: "job-info-existing",
+  name: "Backend prep",
+  title: "Platform Engineer",
+  experienceLevel: "senior",
+  description: "Systems design interview prep.",
+} as const;
+
 function mockRouter() {
   mockUseRouter.mockReturnValue({
     back: jest.fn(),
@@ -102,25 +110,17 @@ describe("JobInfoForm", () => {
       data: { id: "job-info-existing" },
     });
 
-    render(
-      <JobInfoForm
-        jobInfo={{
-          id: "job-info-existing",
-          name: "Backend prep",
-          title: "Platform Engineer",
-          experienceLevel: "senior",
-          description: "Systems design interview prep.",
-        }}
-      />,
-    );
+    render(<JobInfoForm jobInfo={existingJobInfo} />);
 
-    expect(screen.getByLabelText("Name")).toHaveValue("Backend prep");
-    expect(screen.getByLabelText("Job Title")).toHaveValue("Platform Engineer");
+    expect(screen.getByLabelText("Name")).toHaveValue(existingJobInfo.name);
+    expect(screen.getByLabelText("Job Title")).toHaveValue(
+      existingJobInfo.title,
+    );
     expect(
       screen.getByRole("combobox", { name: "Experience Level" }),
     ).toHaveTextContent("Senior");
     expect(screen.getByLabelText("Description")).toHaveValue(
-      "Systems design interview prep.",
+      existingJobInfo.description,
     );
 
     const user = userEvent.setup();
@@ -141,13 +141,10 @@ describe("JobInfoForm", () => {
     );
 
     await waitFor(() => {
-      expect(mockUpdateJobInfoAction).toHaveBeenCalledWith(
-        "job-info-existing",
-        {
-          ...validJobInfoInput,
-          experienceLevel: "senior",
-        },
-      );
+      expect(mockUpdateJobInfoAction).toHaveBeenCalledWith(existingJobInfo.id, {
+        ...validJobInfoInput,
+        experienceLevel: existingJobInfo.experienceLevel,
+      });
     });
     expect(mockCreateJobInfoAction).not.toHaveBeenCalled();
   });
