@@ -49,6 +49,7 @@ export function JobInfoCard({
             >
               <Link
                 href={routes.jobInfo(jobInfo.id)}
+                aria-label="View job info"
                 className="flex items-center justify-center h-1/2 border-b-2 link-button transition-colors hover:bg-accent! dark:hover:bg-accent/50!"
               >
                 <ArrowRightIcon className="size-6 " />
@@ -59,6 +60,7 @@ export function JobInfoCard({
               requireAreYouSure
               areYouSureDescription="Deleting this Job Info will also remove all related interviews and questions."
               successMessage={`Job info for "${jobInfo.name}" removed successfully`}
+              aria-label="Delete job info"
               className="w-full h-1/2 delete-button"
               variant="ghost"
             >
