@@ -6,6 +6,7 @@ jest.mock("@/core/data/env/server", () => ({
 
 import {
   createGoogleOAuthClient,
+  googleOAuthUserInfoSchema,
   mapGoogleUserToResolved,
 } from "@/core/features/auth/oauth/google";
 import type { Cookies } from "@/core/features/auth/oauth/types";
@@ -40,6 +41,41 @@ function createClient() {
 beforeEach(() => {
   jest.clearAllMocks();
   global.fetch = jest.fn();
+});
+
+describe("googleOAuthUserInfoSchema", () => {
+  it("accepts a valid Google userinfo payload", () => {
+    const result = googleOAuthUserInfoSchema.safeParse({
+      sub: "sub-id",
+      email: "candidate@test.local",
+      name: "Test Candidate",
+      email_verified: true,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects malformed Google userinfo payloads", () => {
+    const result = googleOAuthUserInfoSchema.safeParse({
+      sub: "sub-id",
+      email: "not-an-email",
+      name: "Test Candidate",
+      email_verified: true,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects Google payloads with non-boolean email verification", () => {
+    const result = googleOAuthUserInfoSchema.safeParse({
+      sub: "sub-id",
+      email: "candidate@test.local",
+      name: "Test Candidate",
+      email_verified: "true",
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("mapGoogleUserToResolved", () => {

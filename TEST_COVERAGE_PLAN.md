@@ -6,49 +6,40 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-01
+Date: 2026-06-03
 
 Latest full verification:
 
-- `npm test -- core/dal/errors.test.ts core/drizzle/schemaHelpers.test.ts
-  core/test-utils/factories/stripeEvent.test.ts
-  core/test-utils/factories/user.test.ts core/test-utils/mocks/db.test.ts
-  core/test-utils/mocks/next.test.ts --runInBand --watchman=false` passed:
-  6 test suites, 58 tests, 0 snapshots.
+- `npm.cmd test -- core/features/auth/oauth/google.test.ts --runInBand`
+  passed: 1 test suite, 8 tests, 0 snapshots.
 - Focused coverage probes passed with 100% statements, branches, functions, and
   lines for:
-  - `core/dal/errors.ts`
-  - `core/drizzle/schemaHelpers.ts`
-  - `core/test-utils/factories/stripeEvent.ts`
-  - `core/test-utils/factories/user.ts`
-  - `core/test-utils/mocks/db.ts`
-  - `core/test-utils/mocks/next.ts`
-- `npx biome format --write core/dal/errors.test.ts
-  core/drizzle/schemaHelpers.test.ts
-  core/test-utils/factories/stripeEvent.test.ts
-  core/test-utils/factories/user.test.ts core/test-utils/mocks/db.test.ts
-  core/test-utils/mocks/next.test.ts` passed.
-- `npm run check:ci` passed: 279 files checked.
-- `npm test -- --runInBand --watchman=false` passed: 69 test suites, 522
+  - `core/features/auth/oauth/google.ts`
+- `npx.cmd biome format --write core/features/auth/oauth/google.test.ts
+  TEST_COVERAGE_PLAN.md` passed.
+- `npm test` still fails before Jest starts because unsigned
+  `C:\nvm4w\nodejs\npm.ps1` is blocked by the local PowerShell execution
+  policy.
+- `npm.cmd run check:ci` passed: 279 files checked.
+- `npm.cmd test -- --runInBand` passed: 69 test suites, 525 tests, 0 snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 69 test suites, 525
   tests, 0 snapshots.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 69 test
-  suites, 522 tests, 0 snapshots.
-- `npx tsc --noEmit` passed.
+- `npx.cmd tsc --noEmit` passed.
 
 Previous full verification:
 
-- `npm.cmd run check:ci` passed: 274 files checked.
-- `npm.cmd test -- --runInBand` passed: 64 test suites, 489 tests, 0
-  snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 64 test suites, 489
-  tests, 0 snapshots.
+- `npm run check:ci` passed: 279 files checked.
+- `npm test -- --runInBand --watchman=false` passed: 69 test suites, 522 tests,
+  0 snapshots.
+- `npm run test:coverage -- --runInBand --watchman=false` passed: 69 test
+  suites, 522 tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.60% |
+| Statements | 97.66% |
 | Branches | 100% |
 | Functions | 94.13% |
 | Lines | 99.34% |
@@ -57,53 +48,24 @@ Recent file-specific result:
 
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
-| `core/features/auth/oauth/base.ts` | 100% | 100% | 100% | 100% |
-| `core/features/auth/oauth/errors.ts` | 100% | 100% | 100% | 100% |
-| `core/features/auth/oauth/connectUser.ts` | 100% | 100% | 100% | 100% |
-| `core/features/auth/oauth` aggregate | 99.66% | 100% | 100% | 100% |
-| `core/features/auth/permissions.ts` | 100% | 100% | 100% | 100% |
-| `core/features/interviews/permissions.ts` | 100% | 100% | 100% | 100% |
-| `core/features/questions/permissions.ts` | 100% | 100% | 100% | 100% |
-| `core/components/ui/password-input.tsx` | 100% | 100% | 100% | 100% |
-| `core/components/ui/card.tsx` | 100% | 100% | 100% | 100% |
-| `core/components/ui/badge.tsx` | 100% | 100% | 100% | 100% |
-| `core/components/ui/sonner.tsx` | 100% | 100% | 100% | 100% |
-| `core/components/ui/button.tsx` | 100% | 100% | 100% | 100% |
-| `app/api/ai/questions/generate-question/route.ts` | 100% | 100% | 100% | 100% |
-| `app/api/ai/resumes/analyze/route.ts` | 100% | 100% | 100% | 100% |
-| `app/api/cron/sync-stripe-subscriptions/route.ts` | 100% | 100% | 100% | 100% |
-| `core/features/auth/components/OAuthSignInSection.tsx` | 100% | 100% | 100% | 100% |
-| `core/features/billing/webhookHelpers.ts` | 100% | 100% | 100% | 100% |
-| `core/features/interviews/service.ts` | 100% | 100% | 100% | 100% |
-| `core/dal/errors.ts` | 100% | 100% | 100% | 100% |
-| `core/drizzle/schemaHelpers.ts` | 100% | 100% | 100% | 100% |
-| `core/test-utils/factories/stripeEvent.ts` | 100% | 100% | 100% | 100% |
-| `core/test-utils/factories/user.ts` | 100% | 100% | 100% | 100% |
-| `core/test-utils/mocks/db.ts` | 100% | 100% | 100% | 100% |
-| `core/test-utils/mocks/next.ts` | 100% | 100% | 100% | 100% |
+| `core/features/auth/oauth/google.ts` | 100% | 100% | 100% | 100% |
+| `core/features/auth/oauth` aggregate | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
 - Added focused tests:
-  - `core/dal/errors.test.ts`
-  - `core/drizzle/schemaHelpers.test.ts`
-- Expanded focused tests:
-  - `core/test-utils/factories/stripeEvent.test.ts`
-  - `core/test-utils/factories/user.test.ts`
-  - `core/test-utils/mocks/db.test.ts`
-  - `core/test-utils/mocks/next.test.ts`
+  - `core/features/auth/oauth/google.test.ts`
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Covered DAL error names/messages/causes and Drizzle shared column helper
-  metadata using public column instances.
-- Covered Stripe fixture default customer/session paths, current-user redirect
-  sentinel behavior, Drizzle mock promise helpers/default query results, and
-  Next mock cookie dump/default redirect digest behavior.
-- Focused Jest passed for the six touched helper test files (58 tests).
-- Focused coverage probes passed with 100% coverage for all six target files.
-- Full coverage increased statements from 97.15% to 97.60%, branches from
-  99.68% to 100%, functions from 91.94% to 94.13%, and lines from 98.92% to
-  99.34%.
-- `--watchman=false` remains required for Jest commands on this macOS worktree.
+- Removed the schema declaration test file because it mostly mirrored Drizzle
+  metadata instead of testing user-visible behavior.
+- Covered Google OAuth userinfo schema acceptance/rejection for valid emails,
+  malformed emails, and invalid `email_verified` payloads.
+- Focused Jest passed for the Google OAuth provider test file (8 tests).
+- Focused coverage probe passed with 100% coverage for
+  `core/features/auth/oauth/google.ts`.
+- Full coverage is now 97.66% statements, 100% branches, 94.13% functions, and
+  99.34% lines. This is intentionally lower than the declaration-test spike,
+  but slightly above the previous useful baseline.
 - No production code was changed in this slice.
 
 ## Working Rules
@@ -161,17 +123,15 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Remaining schema declaration coverage gaps:
-   - `core/drizzle/schema/interview.ts`
-   - `core/drizzle/schema/jobInfo.ts`
-   - `core/drizzle/schema/question.ts`
-   - `core/drizzle/schema/session.ts`
-   - `core/drizzle/schema/token.ts`
-   - `core/drizzle/schema/userOAuthAccount.ts`
-2. Small residual helper gaps:
+1. Behavior-oriented validation or operation gaps:
+   - Form/server-action validation paths that reject malformed user input.
+   - Service operations that create, update, delete, or enforce ownership.
+   - API route error paths that exercise request parsing and expected outcomes.
+2. Small residual helper gaps where behavior is meaningful:
    - `core/features/auth/constants.ts`
-   - `core/features/auth/oauth/google.ts`
    - `core/test-utils/factories/index.ts`
+3. Avoid declaration-only schema tests unless they are backed by integration
+   behavior, migration behavior, or a documented high-risk database contract.
 
 ## Completed Slices
 
@@ -217,6 +177,7 @@ Recommended next slice:
 | 2026-06-01 | Route branch coverage | AI question generation, resume analysis, and Stripe subscription cron routes reached 100% coverage. |
 | 2026-06-01 | Component and helper gaps | OAuth sign-in section, billing webhook helpers, and interview service reached 100% coverage. |
 | 2026-06-01 | Helper and fixture gaps | DAL errors, schema helpers, Stripe/user factories, and DB/Next mocks reached 100% coverage. |
+| 2026-06-03 | Google OAuth validation | Google OAuth userinfo validation reached 100% provider coverage without declaration-only schema tests. |
 
 ## Archive
 
