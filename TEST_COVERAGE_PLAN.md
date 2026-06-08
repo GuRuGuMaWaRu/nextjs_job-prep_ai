@@ -10,6 +10,19 @@ Date: 2026-06-08
 
 Latest full verification:
 
+- `npx jest core/components/ui/form.test.tsx --runInBand --watchman=false`
+  passed: 1 test suite, 3 tests, 0 snapshots.
+- Focused coverage probes passed with 94.28% statements, 80% branches, 100%
+  functions, and 94.28% lines for:
+  - `core/components/ui/form.tsx`
+- `npx biome format --write core/components/ui/form.test.tsx` passed.
+- `npx biome ci .` passed: 283 files checked.
+- `npx tsc --noEmit` passed.
+- `npm run test:coverage -- --runInBand --watchman=false` passed: 73 test
+  suites, 543 tests, 0 snapshots.
+
+Previous full verification:
+
 - `npx jest core/components/ui/action-button.test.tsx --runInBand
   --watchman=false` passed: 1 test suite, 4 tests, 0 snapshots.
 - Focused coverage probes passed with 100% statements, branches, functions, and
@@ -20,7 +33,7 @@ Latest full verification:
 - `npm run test:coverage -- --runInBand --watchman=false` passed: 72 test
   suites, 540 tests, 0 snapshots.
 
-Previous full verification:
+Earlier full verification:
 
 - `npm run check:ci` passed: 279 files checked.
 - `npm test -- --runInBand --watchman=false` passed: 69 test suites, 522 tests,
@@ -43,9 +56,25 @@ Recent file-specific result:
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
 
 Latest slice notes:
+
+- Added focused tests:
+  - `core/components/ui/form.test.tsx`
+- Updated `TEST_COVERAGE_PLAN.md`.
+- Covered label-to-control accessibility wiring, description-only
+  `aria-describedby` behavior, validation error message replacement,
+  invalid-state attributes, and empty message suppression.
+- Focused Jest passed for the Form test file (3 tests).
+- Focused coverage probe passed with 94.28% statements, 80% branches, 100%
+  functions, and 94.28% lines for `core/components/ui/form.tsx`.
+- Full coverage remains 97.29% statements, 99.71% branches, 93.92% functions,
+  and 98.88% lines after rounding.
+- No production code was changed in this slice.
+
+Previous slice notes:
 
 - Added focused tests:
   - `core/components/ui/action-button.test.tsx`
@@ -116,7 +145,6 @@ Known local quirks:
 Recommended next slice:
 
 1. Behavior-oriented UI primitive gaps:
-   - `core/components/ui/form.tsx` accessibility/error-message behavior.
    - `core/components/ui/alert-dialog.tsx` wrapper rendering and prop forwarding.
    - `core/components/ui/select.tsx` exported wrapper rendering where Radix
      behavior can be tested without brittle implementation assertions.
@@ -172,6 +200,7 @@ Recommended next slice:
 | 2026-06-01 | Helper and fixture gaps | DAL errors, schema helpers, Stripe/user factories, and DB/Next mocks reached 100% coverage. |
 | 2026-06-03 | Google OAuth validation | Google OAuth userinfo validation reached 100% provider coverage without declaration-only schema tests. |
 | 2026-06-08 | Action button behavior | `core/components/ui/action-button.tsx` reached 100% coverage with user-visible success, error, click, and pending-dialog behavior. |
+| 2026-06-08 | Form accessibility behavior | Covered `core/components/ui/form.tsx` label, description, validation-message, invalid-state, and empty-message behavior. |
 
 ## Archive
 
