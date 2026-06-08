@@ -6,25 +6,19 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-03
+Date: 2026-06-08
 
 Latest full verification:
 
-- `npm.cmd test -- core/features/auth/oauth/google.test.ts --runInBand`
-  passed: 1 test suite, 8 tests, 0 snapshots.
+- `npx jest core/components/ui/action-button.test.tsx --runInBand
+  --watchman=false` passed: 1 test suite, 4 tests, 0 snapshots.
 - Focused coverage probes passed with 100% statements, branches, functions, and
   lines for:
-  - `core/features/auth/oauth/google.ts`
-- `npx.cmd biome format --write core/features/auth/oauth/google.test.ts
-  TEST_COVERAGE_PLAN.md` passed.
-- `npm test` still fails before Jest starts because unsigned
-  `C:\nvm4w\nodejs\npm.ps1` is blocked by the local PowerShell execution
-  policy.
-- `npm.cmd run check:ci` passed: 279 files checked.
-- `npm.cmd test -- --runInBand` passed: 69 test suites, 525 tests, 0 snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 69 test suites, 525
-  tests, 0 snapshots.
-- `npx.cmd tsc --noEmit` passed.
+  - `core/components/ui/action-button.tsx`
+- `npx biome format --write core/components/ui/action-button.test.tsx` passed.
+- `npx tsc --noEmit` passed.
+- `npm run test:coverage -- --runInBand --watchman=false` passed: 72 test
+  suites, 540 tests, 0 snapshots.
 
 Previous full verification:
 
@@ -39,33 +33,31 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.66% |
-| Branches | 100% |
-| Functions | 94.13% |
-| Lines | 99.34% |
+| Statements | 97.29% |
+| Branches | 99.71% |
+| Functions | 93.92% |
+| Lines | 98.88% |
 
 Recent file-specific result:
 
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
-| `core/features/auth/oauth/google.ts` | 100% | 100% | 100% | 100% |
-| `core/features/auth/oauth` aggregate | 100% | 100% | 100% | 100% |
+| `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
 
 Latest slice notes:
 
 - Added focused tests:
-  - `core/features/auth/oauth/google.test.ts`
+  - `core/components/ui/action-button.test.tsx`
 - Updated `TEST_COVERAGE_PLAN.md`.
-- Removed the schema declaration test file because it mostly mirrored Drizzle
-  metadata instead of testing user-visible behavior.
-- Covered Google OAuth userinfo schema acceptance/rejection for valid emails,
-  malformed emails, and invalid `email_verified` payloads.
-- Focused Jest passed for the Google OAuth provider test file (8 tests).
+- Covered direct action execution, forwarded click handlers, success toasts,
+  explicit error toasts, generic fallback error toasts, and confirmation dialogs
+  that remain open while an async action is pending.
+- Focused Jest passed for the ActionButton test file (4 tests).
 - Focused coverage probe passed with 100% coverage for
-  `core/features/auth/oauth/google.ts`.
-- Full coverage is now 97.66% statements, 100% branches, 94.13% functions, and
-  99.34% lines. This is intentionally lower than the declaration-test spike,
-  but slightly above the previous useful baseline.
+  `core/components/ui/action-button.tsx`.
+- Full coverage is now 97.29% statements, 99.71% branches, 93.92% functions,
+  and 98.88% lines.
 - No production code was changed in this slice.
 
 ## Working Rules
@@ -123,10 +115,11 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Behavior-oriented validation or operation gaps:
-   - Form/server-action validation paths that reject malformed user input.
-   - Service operations that create, update, delete, or enforce ownership.
-   - API route error paths that exercise request parsing and expected outcomes.
+1. Behavior-oriented UI primitive gaps:
+   - `core/components/ui/form.tsx` accessibility/error-message behavior.
+   - `core/components/ui/alert-dialog.tsx` wrapper rendering and prop forwarding.
+   - `core/components/ui/select.tsx` exported wrapper rendering where Radix
+     behavior can be tested without brittle implementation assertions.
 2. Small residual helper gaps where behavior is meaningful:
    - `core/features/auth/constants.ts`
    - `core/test-utils/factories/index.ts`
@@ -178,6 +171,7 @@ Recommended next slice:
 | 2026-06-01 | Component and helper gaps | OAuth sign-in section, billing webhook helpers, and interview service reached 100% coverage. |
 | 2026-06-01 | Helper and fixture gaps | DAL errors, schema helpers, Stripe/user factories, and DB/Next mocks reached 100% coverage. |
 | 2026-06-03 | Google OAuth validation | Google OAuth userinfo validation reached 100% provider coverage without declaration-only schema tests. |
+| 2026-06-08 | Action button behavior | `core/components/ui/action-button.tsx` reached 100% coverage with user-visible success, error, click, and pending-dialog behavior. |
 
 ## Archive
 
