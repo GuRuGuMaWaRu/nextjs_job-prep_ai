@@ -10,6 +10,18 @@ Date: 2026-06-08
 
 Latest full verification:
 
+- `npm.cmd test -- core/features/auth/actions.test.ts` passed: 1 test suite, 10
+  tests, 0 snapshots.
+- Focused coverage probe passed with 74.03% statements, 60% branches, 76.92%
+  functions, and 73.78% lines for:
+  - `core/features/auth/actions.ts`
+- `npx.cmd biome ci core/features/auth/actions.test.ts` passed.
+- `npx.cmd biome ci .` passed: 284 files checked.
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd test` passed: 74 test suites, 554 tests, 0 snapshots.
+
+Previous full verification:
+
 - `npx jest core/components/ui/form.test.tsx --runInBand --watchman=false`
   passed: 1 test suite, 3 tests, 0 snapshots.
 - Focused coverage probes passed with 94.28% statements, 80% branches, 100%
@@ -21,7 +33,7 @@ Latest full verification:
 - `npm run test:coverage -- --runInBand --watchman=false` passed: 73 test
   suites, 543 tests, 0 snapshots.
 
-Previous full verification:
+Earlier full verification:
 
 - `npx jest core/components/ui/action-button.test.tsx --runInBand
   --watchman=false` passed: 1 test suite, 4 tests, 0 snapshots.
@@ -55,11 +67,29 @@ Recent file-specific result:
 
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
+| `core/features/auth/actions.ts` | 74.03% | 60% | 76.92% | 73.78% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
 
 Latest slice notes:
+
+- Added focused tests:
+  - `core/features/auth/actions.test.ts`
+- Updated `TEST_COVERAGE_PLAN.md`.
+- Covered sign-up and sign-in validation states, duplicate email handling, bad
+  password handling, sign-out session/cookie/revalidation/redirect behavior,
+  `getCurrentUserAction` and `getCurrentUserWithProfileAction` cache behavior,
+  anonymous redirect helper behavior, and `validateSessionAction` valid,
+  invalid, and thrown-error branches.
+- Focused Jest passed for the Auth actions test file (10 tests).
+- Focused coverage probe passed with 74.03% statements, 60% branches, 76.92%
+  functions, and 73.78% lines for `core/features/auth/actions.ts`.
+- Full Biome CI, TypeScript, and Jest verification passed after a formatter-only
+  import cleanup.
+- No production code was changed in this slice.
+
+Previous slice notes:
 
 - Added focused tests:
   - `core/components/ui/form.test.tsx`
@@ -74,7 +104,7 @@ Latest slice notes:
   and 98.88% lines after rounding.
 - No production code was changed in this slice.
 
-Previous slice notes:
+Earlier slice notes:
 
 - Added focused tests:
   - `core/components/ui/action-button.test.tsx`
@@ -201,6 +231,7 @@ Recommended next slice:
 | 2026-06-03 | Google OAuth validation | Google OAuth userinfo validation reached 100% provider coverage without declaration-only schema tests. |
 | 2026-06-08 | Action button behavior | `core/components/ui/action-button.tsx` reached 100% coverage with user-visible success, error, click, and pending-dialog behavior. |
 | 2026-06-08 | Form accessibility behavior | Covered `core/components/ui/form.tsx` label, description, validation-message, invalid-state, and empty-message behavior. |
+| 2026-06-08 | Auth server actions | Added direct coverage for auth action validation, duplicate email, bad password, sign-out, current-user cache behavior, and session validation branches. |
 
 ## Archive
 
