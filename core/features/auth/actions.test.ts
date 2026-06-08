@@ -107,7 +107,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { routes } from "@/core/data/routes";
-import { deleteSessionCookie, getSessionToken, setSessionCookie } from "./cookies";
+import {
+  deleteSessionCookie,
+  getSessionToken,
+  setSessionCookie,
+} from "./cookies";
 import { createUserDb, findUserByEmailDb } from "./db";
 import { hashPassword, verifyPassword } from "./password";
 import {
