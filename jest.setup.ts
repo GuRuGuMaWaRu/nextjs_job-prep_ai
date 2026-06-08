@@ -15,3 +15,23 @@ if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
     }),
   });
 }
+
+if (
+  typeof HTMLElement !== "undefined" &&
+  typeof HTMLElement.prototype.hasPointerCapture !== "function"
+) {
+  Object.defineProperty(HTMLElement.prototype, "hasPointerCapture", {
+    writable: true,
+    value: () => false,
+  });
+}
+
+if (
+  typeof Element !== "undefined" &&
+  typeof Element.prototype.scrollIntoView !== "function"
+) {
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
+    writable: true,
+    value: jest.fn(),
+  });
+}

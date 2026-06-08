@@ -104,6 +104,32 @@ describe("JobInfoForm", () => {
     expect(mockUpdateJobInfoAction).not.toHaveBeenCalled();
   });
 
+  it("submits the experience level selected through the combobox", async () => {
+    mockCreateJobInfoAction.mockResolvedValue({
+      success: true,
+      data: { id: "job-info-new" },
+    });
+
+    render(<JobInfoForm />);
+
+    const user = await fillRequiredFields();
+    await user.click(
+      screen.getByRole("combobox", { name: "Experience Level" }),
+    );
+    await user.click(await screen.findByRole("option", { name: "Senior" }));
+    await user.click(
+      screen.getByRole("button", { name: "Save Job Information" }),
+    );
+
+    await waitFor(() => {
+      expect(mockCreateJobInfoAction).toHaveBeenCalledWith({
+        ...validJobInfoInput,
+        experienceLevel: "senior",
+      });
+    });
+    expect(mockUpdateJobInfoAction).not.toHaveBeenCalled();
+  });
+
   it("renders existing job info and submits edits to updateJobInfoAction with the job id", async () => {
     mockUpdateJobInfoAction.mockResolvedValue({
       success: true,
