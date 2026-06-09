@@ -105,8 +105,16 @@ jest.mock("@/core/features/users/actions", () => ({
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 import { routes } from "@/core/data/routes";
+import { getOAuthClient } from "@/core/features/auth/oauth/base";
+import { getOAuthConfig } from "@/core/features/auth/oauth/config";
+import {
+  clearOAuthErrorReturnCookie,
+  setOAuthErrorReturnForNextOAuth,
+} from "@/core/features/auth/oauth/oauthErrorReturn";
+import type { Cookies } from "@/core/features/auth/oauth/types";
 import {
   deleteSessionCookie,
   getSessionToken,
@@ -130,6 +138,7 @@ import {
   getCurrentUserAction,
   getCurrentUserWithProfileAction,
   signInAction,
+  signInWithOAuthAction,
   signOutAction,
   signUpAction,
   validateSessionAction,
@@ -137,6 +146,15 @@ import {
 
 const mockRedirect = jest.mocked(redirect);
 const mockRevalidatePath = jest.mocked(revalidatePath);
+const mockCookies = jest.mocked(cookies);
+const mockGetOAuthClient = jest.mocked(getOAuthClient);
+const mockGetOAuthConfig = jest.mocked(getOAuthConfig);
+const mockClearOAuthErrorReturnCookie = jest.mocked(
+  clearOAuthErrorReturnCookie,
+);
+const mockSetOAuthErrorReturnForNextOAuth = jest.mocked(
+  setOAuthErrorReturnForNextOAuth,
+);
 const mockDeleteSessionCookie = jest.mocked(deleteSessionCookie);
 const mockGetSessionToken = jest.mocked(getSessionToken);
 const mockSetSessionCookie = jest.mocked(setSessionCookie);
@@ -173,6 +191,20 @@ function buildFormData(
   }
 
   return formData;
+}
+
+function createMockOAuthClient(authUrl: string) {
+  const createAuthUrl: jest.MockedFunction<
+    (cookies: Pick<Cookies, "set">) => string
+  > = jest.fn((_cookies: Pick<Cookies, "set">) => authUrl);
+
+  // OAuthClient has private fields, so a structural test double needs a narrow
+  // boundary cast after defining the public method this action calls.
+  const client = {
+    createAuthUrl,
+  } as unknown as ReturnType<typeof getOAuthClient>;
+
+  return { client, createAuthUrl };
 }
 
 async function expectRedirectTo(
@@ -231,6 +263,31 @@ describe("auth actions", () => {
     expect(mockSetSessionCookie).not.toHaveBeenCalled();
   });
 
+  it("treats non-string sign-up form values as empty strings", async () => {
+    const result = await signUpAction(
+      null,
+      buildFormData({
+        name: new Blob(["Ada"]),
+        email: new Blob(["ada@test.local"]),
+        password: new Blob(["abc12345"]),
+      }),
+    );
+
+    expect(result).toEqual({
+      error: "Please correct the highlighted fields.",
+      fields: {
+        name: "",
+        email: "",
+      },
+      fieldErrors: {
+        name: "Name is required",
+        email: "Email is required",
+        password: "Password must be at least 8 characters",
+      },
+    });
+    expect(mockFindUserByEmailDb).not.toHaveBeenCalled();
+  });
+
   it("returns duplicate email errors without hashing or creating a session", async () => {
     const existingUser = makeUser({ email: "ada@test.local" });
     mockFindUserByEmailDb.mockResolvedValueOnce(existingUser);
@@ -259,6 +316,61 @@ describe("auth actions", () => {
     expect(mockCreateSession).not.toHaveBeenCalled();
   });
 
+  it("creates a user session and redirects after successful sign-up", async () => {
+    const session = makeSession({ userId: TEST_USER_ID });
+    mockFindUserByEmailDb.mockResolvedValueOnce(undefined);
+    mockCreateSession.mockResolvedValueOnce(session);
+
+    await expectRedirectTo(
+      signUpAction(
+        null,
+        buildFormData({
+          name: "Ada Lovelace",
+          email: "ADA@test.local",
+          password: "abc12345",
+        }),
+      ),
+      routes.app,
+    );
+
+    expect(mockFindUserByEmailDb).toHaveBeenCalledWith("ADA@test.local");
+    expect(mockCreateUserDb).toHaveBeenCalledWith({
+      id: TEST_USER_ID,
+      name: "Ada Lovelace",
+      email: "ada@test.local",
+      passwordHash: "hashed-password",
+    });
+    expect(mockSetSessionCookie).toHaveBeenCalledWith(
+      session.token,
+      session.expiresAt,
+    );
+  });
+
+  it("returns a sign-up error and preserved fields when user creation throws", async () => {
+    const error = new Error("insert failed");
+    mockFindUserByEmailDb.mockResolvedValueOnce(undefined);
+    mockCreateUserDb.mockRejectedValueOnce(error);
+
+    const result = await signUpAction(
+      null,
+      buildFormData({
+        name: "Ada Lovelace",
+        email: "ada@test.local",
+        password: "abc12345",
+      }),
+    );
+
+    expect(result).toEqual({
+      error: "An error occurred during signup",
+      fields: {
+        name: "Ada Lovelace",
+        email: "ada@test.local",
+      },
+    });
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Signup error:", error);
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+
   it("returns sign-in validation errors without loading a user", async () => {
     const result = await signInAction(
       null,
@@ -274,12 +386,36 @@ describe("auth actions", () => {
         email: "bad-email",
       },
       fieldErrors: {
+        name: undefined,
         email: "Invalid email address",
         password: "Password is required",
       },
     });
     expect(mockFindUserByEmailDb).not.toHaveBeenCalled();
     expect(mockVerifyPassword).not.toHaveBeenCalled();
+  });
+
+  it("treats non-string sign-in form values as empty strings", async () => {
+    const result = await signInAction(
+      null,
+      buildFormData({
+        email: new Blob(["ada@test.local"]),
+        password: new Blob(["abc12345"]),
+      }),
+    );
+
+    expect(result).toEqual({
+      error: "Please correct the highlighted fields.",
+      fields: {
+        email: "",
+      },
+      fieldErrors: {
+        name: undefined,
+        email: "Email is required",
+        password: "Password is required",
+      },
+    });
+    expect(mockFindUserByEmailDb).not.toHaveBeenCalled();
   });
 
   it("returns a generic sign-in error for a bad password", async () => {
@@ -311,12 +447,119 @@ describe("auth actions", () => {
     expect(mockSetSessionCookie).not.toHaveBeenCalled();
   });
 
+  it("returns a generic sign-in error when the user is not found", async () => {
+    mockFindUserByEmailDb.mockResolvedValueOnce(undefined);
+
+    const result = await signInAction(
+      null,
+      buildFormData({
+        email: "ada@test.local",
+        password: "abc12345",
+      }),
+    );
+
+    expect(result).toEqual({
+      error: "Invalid email or password",
+      fields: {
+        email: "ada@test.local",
+      },
+    });
+    expect(mockVerifyPassword).not.toHaveBeenCalled();
+  });
+
+  it("returns a generic sign-in error when the user has no password hash", async () => {
+    mockFindUserByEmailDb.mockResolvedValueOnce(
+      makeUser({
+        id: TEST_USER_ID,
+        email: "ada@test.local",
+        passwordHash: null,
+      }),
+    );
+
+    const result = await signInAction(
+      null,
+      buildFormData({
+        email: "ada@test.local",
+        password: "abc12345",
+      }),
+    );
+
+    expect(result).toEqual({
+      error: "Invalid email or password",
+      fields: {
+        email: "ada@test.local",
+      },
+    });
+    expect(mockVerifyPassword).not.toHaveBeenCalled();
+  });
+
+  it("creates a session and redirects after successful sign-in", async () => {
+    const session = makeSession({ userId: TEST_USER_ID });
+    mockFindUserByEmailDb.mockResolvedValueOnce(
+      makeUser({
+        id: TEST_USER_ID,
+        email: "ada@test.local",
+        passwordHash: "stored-hash",
+      }),
+    );
+    mockCreateSession.mockResolvedValueOnce(session);
+
+    await expectRedirectTo(
+      signInAction(
+        null,
+        buildFormData({
+          email: "ada@test.local",
+          password: "abc12345",
+        }),
+      ),
+      routes.app,
+    );
+
+    expect(mockCreateSession).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(mockSetSessionCookie).toHaveBeenCalledWith(
+      session.token,
+      session.expiresAt,
+    );
+  });
+
+  it("returns a sign-in error and preserved fields when user lookup throws", async () => {
+    const error = new Error("lookup failed");
+    mockFindUserByEmailDb.mockRejectedValueOnce(error);
+
+    const result = await signInAction(
+      null,
+      buildFormData({
+        email: "ada@test.local",
+        password: "abc12345",
+      }),
+    );
+
+    expect(result).toEqual({
+      error: "An error occurred during sign in",
+      fields: {
+        email: "ada@test.local",
+      },
+    });
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Signin error:", error);
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+
   it("deletes the active session cookie, revalidates the app, and redirects on sign-out", async () => {
     mockGetSessionToken.mockResolvedValueOnce("session-token");
 
     await expectRedirectTo(signOutAction(), routes.landing);
 
     expect(mockDeleteSession).toHaveBeenCalledWith("session-token");
+    expect(mockDeleteSessionCookie).toHaveBeenCalledTimes(1);
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
+  });
+
+  it("deletes the cookie, revalidates, and redirects on sign-out without a session token", async () => {
+    mockGetSessionToken.mockResolvedValueOnce(null);
+
+    await expectRedirectTo(signOutAction(), routes.landing);
+
+    expect(mockDeleteSession).not.toHaveBeenCalled();
     expect(mockDeleteSessionCookie).toHaveBeenCalledTimes(1);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
   });
@@ -368,6 +611,59 @@ describe("auth actions", () => {
     );
   });
 
+  it("falls back to an anonymous current user when profile loading throws", async () => {
+    const session = makeSession({ userId: TEST_USER_ID });
+    const error = new Error("profile load failed");
+    mockGetSessionToken.mockResolvedValueOnce("session-token");
+    mockExtendSessionIfNeeded.mockResolvedValueOnce(session);
+    mockGetUserAction.mockRejectedValueOnce(error);
+
+    const result = await getCurrentUserWithProfileAction();
+
+    expect(result).toEqual({
+      userId: null,
+      redirectToSignIn: expect.any(Function),
+    });
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "getCurrentUserCached: session or user load failed:",
+      error,
+    );
+    await expectRedirectTo(
+      Promise.resolve().then(() => result.redirectToSignIn()),
+      routes.signIn,
+    );
+  });
+
+  it("returns undefined profile data when profile loading returns null", async () => {
+    const session = makeSession({ userId: TEST_USER_ID });
+    mockGetSessionToken.mockResolvedValueOnce("session-token");
+    mockExtendSessionIfNeeded.mockResolvedValueOnce(session);
+    mockGetUserAction.mockResolvedValueOnce(null);
+
+    const result = await getCurrentUserWithProfileAction();
+
+    expect(result).toEqual({
+      userId: TEST_USER_ID,
+      user: undefined,
+      redirectToSignIn: expect.any(Function),
+    });
+    expect(mockGetUserAction).toHaveBeenCalledWith(TEST_USER_ID);
+  });
+
+  it("returns a sign-in redirect helper for an authenticated current user", async () => {
+    const session = makeSession({ userId: TEST_USER_ID });
+    mockGetSessionToken.mockResolvedValueOnce("session-token");
+    mockExtendSessionIfNeeded.mockResolvedValueOnce(session);
+
+    const result = await getCurrentUserAction();
+
+    expect(result.userId).toBe(TEST_USER_ID);
+    await expectRedirectTo(
+      Promise.resolve().then(() => result.redirectToSignIn()),
+      routes.signIn,
+    );
+  });
+
   it("returns true when validateSessionAction finds a valid session", async () => {
     const session = makeSession({ userId: TEST_USER_ID });
     mockValidateSession.mockResolvedValueOnce(session);
@@ -397,5 +693,64 @@ describe("auth actions", () => {
       "Session validation error:",
       error,
     );
+  });
+
+  it("redirects sign-in OAuth to a default error path when the provider is unconfigured", async () => {
+    mockGetOAuthConfig.mockReturnValueOnce(null);
+
+    await expectRedirectTo(
+      signInWithOAuthAction("github"),
+      `${routes.signIn}?oauthError=oauth_not_configured`,
+    );
+
+    expect(mockClearOAuthErrorReturnCookie).toHaveBeenCalledTimes(1);
+    expect(mockSetOAuthErrorReturnForNextOAuth).not.toHaveBeenCalled();
+  });
+
+  it("redirects sign-up OAuth to a sign-up error path when the provider is unconfigured", async () => {
+    mockGetOAuthConfig.mockReturnValueOnce(null);
+
+    await expectRedirectTo(
+      signInWithOAuthAction("google", { errorReturn: "sign-up" }),
+      `${routes.signUp}?oauthError=oauth_not_configured`,
+    );
+
+    expect(mockClearOAuthErrorReturnCookie).toHaveBeenCalledTimes(1);
+    expect(mockSetOAuthErrorReturnForNextOAuth).not.toHaveBeenCalled();
+  });
+
+  it("starts configured OAuth with the sign-in error return by default", async () => {
+    const authUrl = "https://auth.test.local/authorize";
+    const { client, createAuthUrl } = createMockOAuthClient(authUrl);
+    mockGetOAuthConfig.mockReturnValueOnce({
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    mockGetOAuthClient.mockReturnValueOnce(client);
+    const cookieStore = await mockCookies();
+
+    await expectRedirectTo(signInWithOAuthAction("github"), authUrl);
+
+    expect(mockSetOAuthErrorReturnForNextOAuth).toHaveBeenCalledWith("sign-in");
+    expect(createAuthUrl).toHaveBeenCalledWith(cookieStore);
+  });
+
+  it("starts configured OAuth with the requested sign-up error return", async () => {
+    const authUrl = "https://auth.test.local/sign-up-authorize";
+    const { client, createAuthUrl } = createMockOAuthClient(authUrl);
+    mockGetOAuthConfig.mockReturnValueOnce({
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    mockGetOAuthClient.mockReturnValueOnce(client);
+    const cookieStore = await mockCookies();
+
+    await expectRedirectTo(
+      signInWithOAuthAction("google", { errorReturn: "sign-up" }),
+      authUrl,
+    );
+
+    expect(mockSetOAuthErrorReturnForNextOAuth).toHaveBeenCalledWith("sign-up");
+    expect(createAuthUrl).toHaveBeenCalledWith(cookieStore);
   });
 });
