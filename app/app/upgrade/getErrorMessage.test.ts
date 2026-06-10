@@ -45,13 +45,13 @@ describe("getErrorMessage", () => {
     expect(getErrorMessage(code)).toBe(errorMessage);
   });
 
-  it("returns a corresponding error message for the first entry in an input array that contains at least one valid item", () => {
+  it("uses the first array element when present", () => {
     expect(getErrorMessage(["checkout_failed"])).toBe(
       "Failed to start checkout. Please try again.",
     );
   });
 
-  it("returns a corresponding error message for the first entry in an input array and skips any other items in this array", () => {
+  it("ignores additional array elements", () => {
     expect(getErrorMessage(["portal_failed", "some_random_text"])).toBe(
       "Failed to open billing portal. Please try again.",
     );
