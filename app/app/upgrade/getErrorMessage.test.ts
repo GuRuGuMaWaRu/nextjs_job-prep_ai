@@ -2,39 +2,19 @@ import { getErrorMessage } from "./getErrorMessage";
 
 describe("getErrorMessage", () => {
   it("returns null when it receives undefined", () => {
-    const inputValue = undefined;
-    const expectedReturnValue = null;
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage(undefined)).toBeNull();
   });
 
   it("returns null when it receives an empty string", () => {
-    const inputValue = "";
-    const expectedReturnValue = null;
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage("")).toBeNull();
   });
 
   it("returns null when it receives an empty array", () => {
-    const inputValue: Array<string> = [];
-    const expectedReturnValue = null;
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage([])).toBeNull();
   });
 
   it("returns null when it receives an array with just one empty string element", () => {
-    const inputValue = [""];
-    const expectedReturnValue = null;
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage([""])).toBeNull();
   });
 
   it.each([
@@ -69,41 +49,26 @@ describe("getErrorMessage", () => {
   );
 
   it("returns a corresponding error message for the first entry in an input array that contains at least one valid item", () => {
-    const checkoutFailedErrorCode = "checkout_failed";
-    const inputValue = [checkoutFailedErrorCode];
-    const expectedReturnValue = "Failed to start checkout. Please try again.";
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage(["checkout_failed"])).toBe(
+      "Failed to start checkout. Please try again.",
+    );
   });
 
   it("returns a corresponding error message for the first entry in an input array and skips any other items in this array", () => {
-    const portalFailedErrorCode = "portal_failed";
-    const inputValue = [portalFailedErrorCode, "some_random_text"];
-    const expectedReturnValue =
-      "Failed to open billing portal. Please try again.";
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage(["portal_failed", "some_random_text"])).toBe(
+      "Failed to open billing portal. Please try again.",
+    );
   });
 
   it("returns the config fallback message when it receives a non-existing error code string", () => {
-    const inputValue = "some_random_text";
-    const expectedReturnValue = "Something went wrong. Please try again later.";
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage("some_random_text")).toBe(
+      "Something went wrong. Please try again later.",
+    );
   });
 
   it("returns the config fallback message when it receives an array with its first element being a non-existing error code string", () => {
-    const inputValue = ["some_random_text"];
-    const expectedReturnValue = "Something went wrong. Please try again later.";
-
-    const result = getErrorMessage(inputValue);
-
-    expect(result).toBe(expectedReturnValue);
+    expect(getErrorMessage(["some_random_text"])).toBe(
+      "Something went wrong. Please try again later.",
+    );
   });
 });
