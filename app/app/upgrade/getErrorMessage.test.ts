@@ -41,12 +41,9 @@ describe("getErrorMessage", () => {
     ["checkout_failed", "Failed to start checkout. Please try again."],
     ["no_customer", "No billing customer found. Upgrade to Pro first."],
     ["portal_failed", "Failed to open billing portal. Please try again."],
-  ])(
-    "returns a corresponding error message when it receives a standard code",
-    (code, errorMessage) => {
-      expect(getErrorMessage(code)).toBe(errorMessage);
-    },
-  );
+  ])("maps %s to the correct message", (code, errorMessage) => {
+    expect(getErrorMessage(code)).toBe(errorMessage);
+  });
 
   it("returns a corresponding error message for the first entry in an input array that contains at least one valid item", () => {
     expect(getErrorMessage(["checkout_failed"])).toBe(
