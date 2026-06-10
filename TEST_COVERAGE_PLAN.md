@@ -6,9 +6,22 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-08
+Date: 2026-06-10
 
 Latest full verification:
+
+- `npm.cmd test -- proxy.test.ts --runInBand` passed: 1 test suite, 16 tests,
+  0 snapshots.
+- Focused coverage probe passed with 100% statements, branches, functions, and
+  lines for:
+  - `proxy.ts`
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd run check:ci` passed: 285 files checked.
+- `npm.cmd test -- --runInBand` passed: 75 test suites, 586 tests, 0 snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 75 test suites, 586 tests,
+  0 snapshots.
+
+Previous full verification:
 
 - `npm.cmd test -- core/features/auth/actions.test.ts` passed: 1 test suite, 10
   tests, 0 snapshots.
@@ -20,7 +33,7 @@ Latest full verification:
 - `npx.cmd tsc --noEmit` passed.
 - `npm.cmd test` passed: 74 test suites, 554 tests, 0 snapshots.
 
-Previous full verification:
+Earlier full verification:
 
 - `npx jest core/components/ui/form.test.tsx --runInBand --watchman=false`
   passed: 1 test suite, 3 tests, 0 snapshots.
@@ -58,21 +71,36 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.29% |
-| Branches | 99.71% |
-| Functions | 93.92% |
-| Lines | 98.88% |
+| Statements | 97.53% |
+| Branches | 99.73% |
+| Functions | 94.24% |
+| Lines | 98.96% |
 
 Recent file-specific result:
 
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
-| `core/features/auth/actions.ts` | 74.03% | 60% | 76.92% | 73.78% |
+| `proxy.ts` | 100% | 100% | 100% | 100% |
+| `core/features/auth/actions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
 
 Latest slice notes:
+
+- Added focused tests:
+  - `proxy.test.ts`
+- Updated `TEST_COVERAGE_PLAN.md`.
+- Covered Next.js middleware routing for Arcjet API protection, Stripe webhook
+  and cron bypasses, public route redirects, protected route redirects, session
+  cookie handling, and matcher config.
+- Focused Jest passed for the proxy middleware test file (16 tests).
+- Focused coverage probe passed with 100% statements, branches, functions, and
+  lines for `proxy.ts`.
+- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
+- No production code was changed in this slice.
+
+Previous slice notes:
 
 - Added focused tests:
   - `core/features/auth/actions.test.ts`
@@ -89,7 +117,7 @@ Latest slice notes:
   import cleanup.
 - No production code was changed in this slice.
 
-Previous slice notes:
+Earlier slice notes:
 
 - Added focused tests:
   - `core/components/ui/form.test.tsx`
