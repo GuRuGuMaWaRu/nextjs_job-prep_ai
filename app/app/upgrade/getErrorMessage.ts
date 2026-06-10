@@ -1,5 +1,5 @@
 /** User-facing messages for Stripe form POST error redirects. */
-const STRIPE_ERROR_MESSAGES: Record<string, string> = {
+export const STRIPE_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "Please sign in to continue.",
   stripe_not_configured:
     "Billing is not available right now. Please try again later.",
