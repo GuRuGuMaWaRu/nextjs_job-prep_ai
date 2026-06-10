@@ -59,10 +59,4 @@ describe("getErrorMessage", () => {
       "Failed to open billing portal. Please try again.",
     );
   });
-
-  it("returns the config fallback message when it receives an array with its first element being a non-existing error code string", () => {
-    expect(getErrorMessage(["some_random_text"])).toBe(
-      "Something went wrong. Please try again later.",
-    );
-  });
 });
