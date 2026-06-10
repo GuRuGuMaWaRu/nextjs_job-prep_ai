@@ -1,26 +1,32 @@
-jest.mock("@arcjet/next", () => ({
-  __esModule: true,
-  default: jest.fn(() => ({ protect: jest.fn() })),
-  detectBot: jest.fn((config) => config),
-  shield: jest.fn((config) => config),
-  slidingWindow: jest.fn((config) => config),
-}));
+jest.mock("@arcjet/next", () => {
+  const mockProtect = jest.fn();
+
+  return {
+    __esModule: true,
+    default: jest.fn(() => ({ protect: mockProtect })),
+    detectBot: jest.fn((config) => config),
+    mockProtect,
+    shield: jest.fn((config) => config),
+    slidingWindow: jest.fn((config) => config),
+  };
+});
 
 jest.mock("@/core/data/env/server", () => ({
   env: { ARCJET_KEY: "test-arcjet-key" },
 }));
 
-import arcjet from "@arcjet/next";
 import { NextRequest } from "next/server";
 
 import { routes } from "@/core/data/routes";
 import { SESSION_COOKIE_NAME } from "@/core/features/auth/constants";
 import middleware, { config } from "./proxy";
 
-const mockArcjet = jest.mocked(arcjet);
-const mockProtect = jest.mocked(
-  mockArcjet.mock.results[0].value.protect as jest.Mock,
-);
+type ArcjetDecision = { isDenied: () => boolean };
+type ArcjetMockModule = {
+  mockProtect: jest.Mock<Promise<ArcjetDecision>, [NextRequest]>;
+};
+
+const { mockProtect } = jest.requireMock("@arcjet/next") as ArcjetMockModule;
 
 const allowDecision = { isDenied: () => false };
 const denyDecision = { isDenied: () => true };
