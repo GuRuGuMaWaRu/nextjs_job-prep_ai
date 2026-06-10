@@ -38,14 +38,14 @@ describe("getErrorMessage", () => {
   });
 
   describe("when code is unknown", () => {
-    it.each(["some_random_text", ["some_random_text"]])(
-      "falls back to the config message for %p",
-      (input) => {
-        expect(getErrorMessage(input)).toBe(
-          "Something went wrong. Please try again later.",
-        );
-      },
-    );
+    it.each([
+      "some_random_text",
+      ["some_random_text"],
+    ])("falls back to the config message for %p", (input) => {
+      expect(getErrorMessage(input)).toBe(
+        "Something went wrong. Please try again later.",
+      );
+    });
   });
 
   describe("when code is provided as an array", () => {
