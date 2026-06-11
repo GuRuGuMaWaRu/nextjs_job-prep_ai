@@ -62,7 +62,9 @@ describe("condenseChatMessages", () => {
         { isUser: false, content: ["assistant message 1"] },
       ]);
     });
+  });
 
+  describe("when message content is missing", () => {
     it("skips messages with null or undefined content", () => {
       expect(
         condenseChatMessages([
@@ -71,6 +73,7 @@ describe("condenseChatMessages", () => {
         ]),
       ).toEqual([]);
     });
+
     it("keeps valid messages after skipping empty content", () => {
       expect(
         condenseChatMessages([
