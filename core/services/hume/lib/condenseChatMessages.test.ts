@@ -62,5 +62,22 @@ describe("condenseChatMessages", () => {
         { isUser: false, content: ["assistant message 1"] },
       ]);
     });
+
+    it("skips messages with null or undefined content", () => {
+      expect(
+        condenseChatMessages([
+          { type: "user_message", message: { content: null } },
+          { type: "USER_MESSAGE", messageText: undefined },
+        ]),
+      ).toEqual([]);
+    });
+    it("keeps valid messages after skipping empty content", () => {
+      expect(
+        condenseChatMessages([
+          { type: "user_message", message: { content: null } },
+          { type: "user_message", message: { content: "kept" } },
+        ]),
+      ).toEqual([{ isUser: true, content: ["kept"] }]);
+    });
   });
 });
