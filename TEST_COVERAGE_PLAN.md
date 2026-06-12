@@ -6,9 +6,22 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-10
+Date: 2026-06-12
 
 Latest full verification:
+
+- `npm.cmd test -- app/app/_utils.test.ts --runInBand` passed: 1 test suite,
+  10 tests, 0 snapshots.
+- Focused coverage probe passed with 100% statements, branches, functions, and
+  lines for:
+  - `app/app/_utils.ts`
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd run check:ci` passed: 288 files checked.
+- `npm.cmd test -- --runInBand` passed: 78 test suites, 624 tests, 0 snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 78 test suites, 624 tests,
+  0 snapshots.
+
+Previous full verification:
 
 - `npm.cmd test -- proxy.test.ts --runInBand` passed: 1 test suite, 16 tests,
   0 snapshots.
@@ -21,7 +34,7 @@ Latest full verification:
 - `npm.cmd run test:coverage -- --runInBand` passed: 75 test suites, 586 tests,
   0 snapshots.
 
-Previous full verification:
+Earlier full verification:
 
 - `npm.cmd test -- core/features/auth/actions.test.ts` passed: 1 test suite, 10
   tests, 0 snapshots.
@@ -71,26 +84,45 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.53% |
-| Branches | 99.73% |
-| Functions | 94.24% |
-| Lines | 98.96% |
+| Statements | 97.45% |
+| Branches | 99.37% |
+| Functions | 94.34% |
+| Lines | 98.83% |
 
 Recent file-specific result:
 
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
+| `app/app/_utils.ts` | 100% | 100% | 100% | 100% |
 | `proxy.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/actions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
+| `core/services/hume/lib/condenseChatMessages.ts` | 86.95% | 86.36% | 100% | 86.95% |
 
 Latest slice notes:
 
 - Added focused tests:
+  - `app/app/_utils.test.ts`
+- Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
+- Covered early exits for free users, missing Stripe subscription ids, and
+  unavailable Stripe clients without retrieving a subscription.
+- Covered active subscriptions not scheduled to cancel, valid future
+  cancellation notices, invalid or missing `cancel_at` values, expired
+  cancellation times, and Stripe retrieval failures.
+- Fake system time is set relative to `cancel_at` by one second in each
+  direction instead of relying on fixed calendar years.
+- Focused Jest passed for the cancellation notice helper test file (10 tests).
+- Focused coverage probe passed with 100% statements, branches, functions, and
+  lines for `app/app/_utils.ts`.
+- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
+- No production code was changed in this slice.
+
+Previous slice notes:
+
+- Added focused tests:
   - `proxy.test.ts`
-- Updated `TEST_COVERAGE_PLAN.md`.
 - Covered Next.js middleware routing for Arcjet API protection, Stripe webhook
   and cron bypasses, public route redirects, protected route redirects, session
   cookie handling, and matcher config.
@@ -100,7 +132,7 @@ Latest slice notes:
 - Full Jest, full coverage, TypeScript, and Biome CI verification passed.
 - No production code was changed in this slice.
 
-Previous slice notes:
+Earlier slice notes:
 
 - Added focused tests:
   - `core/features/auth/actions.test.ts`
@@ -202,14 +234,17 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Behavior-oriented UI primitive gaps:
+1. Remaining Hume message-condensation branches:
+   - `core/services/hume/lib/condenseChatMessages.ts`
+2. Behavior-oriented UI primitive gaps:
    - `core/components/ui/alert-dialog.tsx` wrapper rendering and prop forwarding.
    - `core/components/ui/select.tsx` exported wrapper rendering where Radix
      behavior can be tested without brittle implementation assertions.
-2. Small residual helper gaps where behavior is meaningful:
+   - `core/components/ui/form.tsx` remaining fallback and message branches.
+3. Small residual helper gaps where behavior is meaningful:
    - `core/features/auth/constants.ts`
    - `core/test-utils/factories/index.ts`
-3. Avoid declaration-only schema tests unless they are backed by integration
+4. Avoid declaration-only schema tests unless they are backed by integration
    behavior, migration behavior, or a documented high-risk database contract.
 
 ## Completed Slices
@@ -260,6 +295,10 @@ Recommended next slice:
 | 2026-06-08 | Action button behavior | `core/components/ui/action-button.tsx` reached 100% coverage with user-visible success, error, click, and pending-dialog behavior. |
 | 2026-06-08 | Form accessibility behavior | Covered `core/components/ui/form.tsx` label, description, validation-message, invalid-state, and empty-message behavior. |
 | 2026-06-08 | Auth server actions | Added direct coverage for auth action validation, duplicate email, bad password, sign-out, current-user cache behavior, and session validation branches. |
+| 2026-06-10 | Proxy middleware | `proxy.ts` reached 100% coverage across Arcjet, auth, redirect, bypass, cookie, and matcher behavior. |
+| 2026-06-10 | Upgrade error messages | Covered Stripe upgrade error-code and fallback-message behavior. |
+| 2026-06-11 | Hume message condensation | Added success and unhappy-path coverage for condensed Hume chat messages. |
+| 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
 
 ## Archive
 

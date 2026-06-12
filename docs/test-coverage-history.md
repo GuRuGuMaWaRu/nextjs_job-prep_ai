@@ -1902,76 +1902,120 @@ helper branches in `core/features/auth/permissions.ts`,
 `core/features/interviews/permissions.ts`, and
 `core/features/questions/permissions.ts`.
 
+### Cumulative Coverage Catch-up and App Cancellation Notice - 2026-06-12
+
+Files added/updated in this slice:
+
+- `app/app/_utils.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- app/app/_utils.test.ts --runInBand`
+- `npx.cmd jest app/app/_utils.test.ts --coverage --collectCoverageFrom=app/app/_utils.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run check:ci`
+
+Result:
+
+- Focused cancellation notice Jest passed: 1 test suite, 10 tests, 0
+  snapshots.
+- Focused cancellation notice coverage passed with
+  `app/app/_utils.ts` at 100% statements, 100% branches, 100% functions, and
+  100% lines.
+- Full Jest passed: 78 test suites, 624 tests, 0 snapshots.
+- Full coverage passed: 78 test suites, 624 tests, 0 snapshots.
+- Updated coverage summary: 97.45% statements, 99.37% branches, 94.34%
+  functions, and 98.83% lines.
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd run check:ci` passed: 288 files checked.
+
+Coverage history catch-up:
+
+- The previous entry ended at 62 test suites and 478 tests. The current
+  snapshot incorporates the testing work merged since then, including UI
+  primitives and accessibility, AI and Stripe cron route branches, OAuth
+  validation, job-info form and card behavior, auth server actions, proxy
+  routing and Arcjet behavior, Stripe upgrade error messages, and Hume chat
+  message condensation, plus app cancellation-notice tests for banner
+  eligibility and Stripe failure handling.
+- Current full-coverage areas include the app cancellation notice and upgrade
+  helpers, API routes, auth OAuth modules, billing helpers, DAL helpers,
+  feature actions and services, permissions, and core utilities.
+
+Cancellation notice coverage:
+
+- Added early-return coverage for free users, Pro users without a Stripe
+  subscription id, and unavailable Stripe configuration, including assertions
+  that Stripe subscription retrieval is skipped.
+- Added coverage for active subscriptions not scheduled to cancel, valid
+  future cancellation notices, invalid or missing `cancel_at` values, expired
+  cancellation times, and Stripe retrieval failures.
+- Used synthetic Stripe ids and existing `@test.local` user factories only.
+- Fake system time is defined relative to `cancel_at` by one second in each
+  direction, so the tests express the boundary directly without depending on
+  fixed calendar years.
+- Made no production code changes.
+
+Recommendation:
+
+Prioritize the remaining partial coverage in `core/components/ui`, Drizzle
+schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
+
 ## Coverage Priorities
 
-1. Cover pure logic first.
+1. Close remaining UI primitive gaps.
 
-   Start with fast, stable units that do not need framework or service mocks:
+   Add focused behavior and accessibility tests for:
 
-   - `core/lib/*`
-   - `core/features/*/schemas.ts`
-   - `formatters.ts`
-   - Permission helpers such as:
-     - `core/features/questions/permissions.ts`
-     - `core/features/resumeAnalysis/permissions.ts`
-     - `core/features/interviews/permissions.ts`
+   - `core/components/ui/alert-dialog.tsx`
+   - `core/components/ui/form.tsx`
+   - `core/components/ui/select.tsx`
 
-2. Add service-layer tests.
+2. Finish Hume message-condensation branches.
 
-   Prioritize business logic and permission behavior in:
+   Cover the remaining defensive paths in:
 
-   - `core/features/jobInfos/service.ts`
-   - `core/features/interviews/service.ts`
-   - `core/features/questions/service.ts`
+   - `core/services/hume/lib/condenseChatMessages.ts`
 
-   Mock database and cache boundaries with the existing helpers in
-   `core/test-utils/mocks/db.ts`.
+3. Review Drizzle schema coverage separately.
 
-3. Add server action tests.
+   The remaining function gaps are primarily declarative schema modules:
 
-   Cover validation, authorization, redirects, and success paths for:
+   - `core/drizzle/schema/interview.ts`
+   - `core/drizzle/schema/jobInfo.ts`
+   - `core/drizzle/schema/question.ts`
+   - `core/drizzle/schema/session.ts`
+   - `core/drizzle/schema/token.ts`
+   - `core/drizzle/schema/user.ts`
+   - `core/drizzle/schema/userOAuthAccount.ts`
 
-   - `core/features/jobInfos/actions.ts`
-   - `core/features/interviews/actions.ts`
-   - `core/features/questions/actions.ts`
-   - `core/features/users/actions.ts`
+   Prefer meaningful schema constraint and relation tests over assertions added
+   only to increase coverage percentages.
 
-4. Add API route tests.
+4. Protect full-coverage areas when behavior changes.
 
-   The Stripe webhook route already has coverage. Expand next into:
+   Keep focused regression tests alongside changes to:
 
-   - Checkout route
-   - Billing portal route
-   - Cancel subscription route
-   - Auth validate-session route
-   - AI routes
-   - Cron routes
+   - API routes and proxy routing
+   - Auth actions, OAuth modules, and auth components
+   - Billing and Stripe synchronization
+   - Feature actions, services, permissions, and formatters
+   - App upgrade and subscription-notice helpers
 
-   Keep all external services mocked at the module boundary, including Stripe,
-   Google AI, Hume, Arcjet, and the database.
+5. Keep external systems mocked at module boundaries.
 
-5. Add focused component tests.
-
-   Prioritize user interaction and meaningful rendering behavior over broad
-   snapshot coverage:
-
-   - Auth forms
-   - Job info form, card, and list components
-   - Upgrade plan and billing action components
-   - Resume, question, and interview client pages where user interaction matters
-
-6. Add factories and mocks only when needed.
-
-   Grow `core/test-utils` incrementally with the first test that needs each
-   helper:
-
-   - `jobInfo`, `interview`, and `question` factories
-   - AI SDK mocks
-   - Hume mocks
-   - Arcjet mocks
+   Continue using the existing Stripe, database, Next.js, AI, Hume, and Arcjet
+   boundaries. Add factories or mock surfaces only with the first test that
+   requires them.
 
 ## Recommended Starting Point
 
-Start with a baseline `npm test` run and `npm run test:coverage`, then add
-coverage for `core/lib`, schemas, formatters, and permission helpers. That path
-should produce useful coverage quickly without fighting framework mocks.
+Start the next slice with the remaining
+`core/services/hume/lib/condenseChatMessages.ts` branches or one focused UI
+primitive. Run the full coverage report afterward, and treat Drizzle schema
+declarations as a separate quality decision rather than chasing their function
+percentage mechanically.
