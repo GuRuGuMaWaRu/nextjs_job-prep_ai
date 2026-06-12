@@ -1907,6 +1907,7 @@ helper branches in `core/features/auth/permissions.ts`,
 Files added/updated in this slice:
 
 - `app/app/_utils.test.ts`
+- `TEST_COVERAGE_PLAN.md`
 - `docs/test-coverage-history.md`
 
 Commands run:
@@ -1939,7 +1940,8 @@ Coverage history catch-up:
   primitives and accessibility, AI and Stripe cron route branches, OAuth
   validation, job-info form and card behavior, auth server actions, proxy
   routing and Arcjet behavior, Stripe upgrade error messages, and Hume chat
-  message condensation.
+  message condensation, plus app cancellation-notice tests for banner
+  eligibility and Stripe failure handling.
 - Current full-coverage areas include the app cancellation notice and upgrade
   helpers, API routes, auth OAuth modules, billing helpers, DAL helpers,
   feature actions and services, permissions, and core utilities.
