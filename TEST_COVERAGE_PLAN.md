@@ -10,6 +10,19 @@ Date: 2026-06-12
 
 Latest full verification:
 
+- `npm.cmd test -- core/services/hume/lib/condenseChatMessages.test.ts
+  --runInBand` passed: 1 test suite, 15 tests, 0 snapshots.
+- Focused coverage probe passed with 100% statements, branches, functions, and
+  lines for:
+  - `core/services/hume/lib/condenseChatMessages.ts`
+- `npm.cmd run check:ci` passed: 288 files checked.
+- `npm.cmd test -- --runInBand` passed: 78 test suites, 630 tests, 0 snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 78 test suites, 630 tests,
+  0 snapshots.
+- `npx.cmd tsc --noEmit` passed.
+
+Previous full verification:
+
 - `npm.cmd test -- app/app/_utils.test.ts --runInBand` passed: 1 test suite,
   10 tests, 0 snapshots.
 - Focused coverage probe passed with 100% statements, branches, functions, and
@@ -21,7 +34,7 @@ Latest full verification:
 - `npm.cmd run test:coverage -- --runInBand` passed: 78 test suites, 624 tests,
   0 snapshots.
 
-Previous full verification:
+Earlier full verification:
 
 - `npm.cmd test -- proxy.test.ts --runInBand` passed: 1 test suite, 16 tests,
   0 snapshots.
@@ -84,10 +97,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.45% |
-| Branches | 99.37% |
+| Statements | 97.59% |
+| Branches | 99.75% |
 | Functions | 94.34% |
-| Lines | 98.83% |
+| Lines | 98.99% |
 
 Recent file-specific result:
 
@@ -99,9 +112,22 @@ Recent file-specific result:
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
-| `core/services/hume/lib/condenseChatMessages.ts` | 86.95% | 86.36% | 100% | 86.95% |
+| `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
+
+- Updated focused tests:
+  - `core/services/hume/lib/condenseChatMessages.test.ts`
+- Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
+- Covered recognized JSON and return-event message types missing their content
+  property, unknown message types, and empty-string content retention.
+- Focused Jest passed for the Hume condensation test file (15 tests).
+- Focused coverage probe passed with 100% statements, branches, functions, and
+  lines for `core/services/hume/lib/condenseChatMessages.ts`.
+- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
+- No production code was changed in this slice.
+
+Previous slice notes:
 
 - Added focused tests:
   - `app/app/_utils.test.ts`
@@ -234,17 +260,15 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Remaining Hume message-condensation branches:
-   - `core/services/hume/lib/condenseChatMessages.ts`
-2. Behavior-oriented UI primitive gaps:
+1. Behavior-oriented UI primitive gaps:
    - `core/components/ui/alert-dialog.tsx` wrapper rendering and prop forwarding.
    - `core/components/ui/select.tsx` exported wrapper rendering where Radix
      behavior can be tested without brittle implementation assertions.
    - `core/components/ui/form.tsx` remaining fallback and message branches.
-3. Small residual helper gaps where behavior is meaningful:
+2. Small residual helper gaps where behavior is meaningful:
    - `core/features/auth/constants.ts`
    - `core/test-utils/factories/index.ts`
-4. Avoid declaration-only schema tests unless they are backed by integration
+3. Avoid declaration-only schema tests unless they are backed by integration
    behavior, migration behavior, or a documented high-risk database contract.
 
 ## Completed Slices
@@ -297,7 +321,7 @@ Recommended next slice:
 | 2026-06-08 | Auth server actions | Added direct coverage for auth action validation, duplicate email, bad password, sign-out, current-user cache behavior, and session validation branches. |
 | 2026-06-10 | Proxy middleware | `proxy.ts` reached 100% coverage across Arcjet, auth, redirect, bypass, cookie, and matcher behavior. |
 | 2026-06-10 | Upgrade error messages | Covered Stripe upgrade error-code and fallback-message behavior. |
-| 2026-06-11 | Hume message condensation | Added success and unhappy-path coverage for condensed Hume chat messages. |
+| 2026-06-12 | Hume message condensation | `core/services/hume/lib/condenseChatMessages.ts` reached 100% coverage across valid, malformed, unknown, missing-content, and empty-string inputs. |
 | 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
 
 ## Archive

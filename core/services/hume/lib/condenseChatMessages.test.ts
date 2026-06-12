@@ -82,5 +82,43 @@ describe("condenseChatMessages", () => {
         ]),
       ).toEqual([{ isUser: true, content: ["kept"] }]);
     });
+
+    it.each([
+      { type: "user_message" },
+      { type: "assistant_message" },
+      { type: "USER_MESSAGE" },
+      { type: "AGENT_MESSAGE" },
+    ])("skips a $type message without its content property", (message) => {
+      const result = condenseChatMessages([message]);
+
+      expect(result).toEqual([]);
+    });
+
+    it("keeps empty-string content", () => {
+      const messages = [
+        { type: "user_message", message: { content: "" } },
+        { type: "USER_MESSAGE", messageText: "after empty content" },
+      ];
+
+      const result = condenseChatMessages(messages);
+
+      expect(result).toEqual([
+        { isUser: true, content: ["", "after empty content"] },
+      ]);
+    });
+  });
+
+  describe("when a message type is unknown", () => {
+    it("skips it without affecting valid messages", () => {
+      const messages = [
+        { type: "system_message" },
+        { type: "USER_MESSAGE", messageText: "kept" },
+        { type: "tool_message" },
+      ];
+
+      const result = condenseChatMessages(messages);
+
+      expect(result).toEqual([{ isUser: true, content: ["kept"] }]);
+    });
   });
 });
