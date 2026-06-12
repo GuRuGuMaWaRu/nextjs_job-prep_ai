@@ -2001,6 +2001,44 @@ Notes:
   content retention.
 - Made no production code changes.
 
+### Hume Chat Event Retrieval Coverage - 2026-06-12
+
+Files added/updated:
+
+- `core/services/hume/lib/api.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/hume/lib/api.test.ts`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run check -- core/services/hume/lib/api.test.ts`
+- `npm.cmd run check:ci`
+- `npm.cmd test`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Focused Hume API Jest passed: 1 test suite, 5 tests, 0 snapshots.
+- `core/services/hume/lib/api.ts` reached 100% statements, branches, functions,
+  and lines in the full coverage report.
+- Scoped Biome passed: 289 files checked.
+- Biome CI passed: 289 files checked.
+- Full Jest and coverage passed: 79 test suites, 635 tests, 0 snapshots.
+- Updated coverage summary: 97.6% statements, 99.75% branches, 94.36%
+  functions, and 98.99% lines.
+- TypeScript passed.
+
+Notes:
+
+- Mocked the Hume SDK at the package boundary and used the shared synthetic
+  server environment helper.
+- Covered ordered and empty async event iteration, client API-key
+  configuration, pagination request arguments, SDK rejection, and mid-stream
+  iterator failure.
+- Made no production code changes.
+
 ## Coverage Priorities
 
 1. Close remaining UI primitive gaps.

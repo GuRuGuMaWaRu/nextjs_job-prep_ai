@@ -10,96 +10,24 @@ Date: 2026-06-12
 
 Latest full verification:
 
-- `npm.cmd test -- core/services/hume/lib/condenseChatMessages.test.ts
-  --runInBand` passed: 1 test suite, 15 tests, 0 snapshots.
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for:
-  - `core/services/hume/lib/condenseChatMessages.ts`
-- `npm.cmd run check:ci` passed: 288 files checked.
-- `npm.cmd test -- --runInBand` passed: 78 test suites, 630 tests, 0 snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 78 test suites, 630 tests,
-  0 snapshots.
-- `npx.cmd tsc --noEmit` passed.
-
-Previous full verification:
-
-- `npm.cmd test -- app/app/_utils.test.ts --runInBand` passed: 1 test suite,
-  10 tests, 0 snapshots.
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for:
-  - `app/app/_utils.ts`
-- `npx.cmd tsc --noEmit` passed.
-- `npm.cmd run check:ci` passed: 288 files checked.
-- `npm.cmd test -- --runInBand` passed: 78 test suites, 624 tests, 0 snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 78 test suites, 624 tests,
-  0 snapshots.
-
-Earlier full verification:
-
-- `npm.cmd test -- proxy.test.ts --runInBand` passed: 1 test suite, 16 tests,
-  0 snapshots.
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for:
-  - `proxy.ts`
-- `npx.cmd tsc --noEmit` passed.
-- `npm.cmd run check:ci` passed: 285 files checked.
-- `npm.cmd test -- --runInBand` passed: 75 test suites, 586 tests, 0 snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 75 test suites, 586 tests,
-  0 snapshots.
-
-Earlier full verification:
-
-- `npm.cmd test -- core/features/auth/actions.test.ts` passed: 1 test suite, 10
+- `npm.cmd test -- core/services/hume/lib/api.test.ts` passed: 1 test suite, 5
   tests, 0 snapshots.
-- Focused coverage probe passed with 74.03% statements, 60% branches, 76.92%
-  functions, and 73.78% lines for:
-  - `core/features/auth/actions.ts`
-- `npx.cmd biome ci core/features/auth/actions.test.ts` passed.
-- `npx.cmd biome ci .` passed: 284 files checked.
-- `npx.cmd tsc --noEmit` passed.
-- `npm.cmd test` passed: 74 test suites, 554 tests, 0 snapshots.
-
-Earlier full verification:
-
-- `npx jest core/components/ui/form.test.tsx --runInBand --watchman=false`
-  passed: 1 test suite, 3 tests, 0 snapshots.
-- Focused coverage probes passed with 94.28% statements, 80% branches, 100%
-  functions, and 94.28% lines for:
-  - `core/components/ui/form.tsx`
-- `npx biome format --write core/components/ui/form.test.tsx` passed.
-- `npx biome ci .` passed: 283 files checked.
-- `npx tsc --noEmit` passed.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 73 test
-  suites, 543 tests, 0 snapshots.
-
-Earlier full verification:
-
-- `npx jest core/components/ui/action-button.test.tsx --runInBand
-  --watchman=false` passed: 1 test suite, 4 tests, 0 snapshots.
-- Focused coverage probes passed with 100% statements, branches, functions, and
-  lines for:
-  - `core/components/ui/action-button.tsx`
-- `npx biome format --write core/components/ui/action-button.test.tsx` passed.
-- `npx tsc --noEmit` passed.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 72 test
-  suites, 540 tests, 0 snapshots.
-
-Earlier full verification:
-
-- `npm run check:ci` passed: 279 files checked.
-- `npm test -- --runInBand --watchman=false` passed: 69 test suites, 522 tests,
-  0 snapshots.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 69 test
-  suites, 522 tests, 0 snapshots.
+- Full coverage reported 100% statements, branches, functions, and lines for:
+  - `core/services/hume/lib/api.ts`
+- `npm.cmd run check -- core/services/hume/lib/api.test.ts` passed: 289 files
+  checked.
+- `npm.cmd run check:ci` passed: 289 files checked.
+- `npm.cmd test` passed: 79 test suites, 635 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 79 test suites, 635 tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.59% |
+| Statements | 97.6% |
 | Branches | 99.75% |
-| Functions | 94.34% |
+| Functions | 94.36% |
 | Lines | 98.99% |
 
 Recent file-specific result:
@@ -112,97 +40,21 @@ Recent file-specific result:
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
+| `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
-- Updated focused tests:
-  - `core/services/hume/lib/condenseChatMessages.test.ts`
+- Added focused tests:
+  - `core/services/hume/lib/api.test.ts`
 - Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
-- Covered recognized JSON and return-event message types missing their content
-  property, unknown message types, and empty-string content retention.
-- Focused Jest passed for the Hume condensation test file (15 tests).
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for `core/services/hume/lib/condenseChatMessages.ts`.
-- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
-- No production code was changed in this slice.
-
-Previous slice notes:
-
-- Added focused tests:
-  - `app/app/_utils.test.ts`
-- Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
-- Covered early exits for free users, missing Stripe subscription ids, and
-  unavailable Stripe clients without retrieving a subscription.
-- Covered active subscriptions not scheduled to cancel, valid future
-  cancellation notices, invalid or missing `cancel_at` values, expired
-  cancellation times, and Stripe retrieval failures.
-- Fake system time is set relative to `cancel_at` by one second in each
-  direction instead of relying on fixed calendar years.
-- Focused Jest passed for the cancellation notice helper test file (10 tests).
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for `app/app/_utils.ts`.
-- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
-- No production code was changed in this slice.
-
-Previous slice notes:
-
-- Added focused tests:
-  - `proxy.test.ts`
-- Covered Next.js middleware routing for Arcjet API protection, Stripe webhook
-  and cron bypasses, public route redirects, protected route redirects, session
-  cookie handling, and matcher config.
-- Focused Jest passed for the proxy middleware test file (16 tests).
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for `proxy.ts`.
-- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
-- No production code was changed in this slice.
-
-Earlier slice notes:
-
-- Added focused tests:
-  - `core/features/auth/actions.test.ts`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered sign-up and sign-in validation states, duplicate email handling, bad
-  password handling, sign-out session/cookie/revalidation/redirect behavior,
-  `getCurrentUserAction` and `getCurrentUserWithProfileAction` cache behavior,
-  anonymous redirect helper behavior, and `validateSessionAction` valid,
-  invalid, and thrown-error branches.
-- Focused Jest passed for the Auth actions test file (10 tests).
-- Focused coverage probe passed with 74.03% statements, 60% branches, 76.92%
-  functions, and 73.78% lines for `core/features/auth/actions.ts`.
-- Full Biome CI, TypeScript, and Jest verification passed after a formatter-only
-  import cleanup.
-- No production code was changed in this slice.
-
-Earlier slice notes:
-
-- Added focused tests:
-  - `core/components/ui/form.test.tsx`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered label-to-control accessibility wiring, description-only
-  `aria-describedby` behavior, validation error message replacement,
-  invalid-state attributes, and empty message suppression.
-- Focused Jest passed for the Form test file (3 tests).
-- Focused coverage probe passed with 94.28% statements, 80% branches, 100%
-  functions, and 94.28% lines for `core/components/ui/form.tsx`.
-- Full coverage remains 97.29% statements, 99.71% branches, 93.92% functions,
-  and 98.88% lines after rounding.
-- No production code was changed in this slice.
-
-Earlier slice notes:
-
-- Added focused tests:
-  - `core/components/ui/action-button.test.tsx`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered direct action execution, forwarded click handlers, success toasts,
-  explicit error toasts, generic fallback error toasts, and confirmation dialogs
-  that remain open while an async action is pending.
-- Focused Jest passed for the ActionButton test file (4 tests).
-- Focused coverage probe passed with 100% coverage for
-  `core/components/ui/action-button.tsx`.
-- Full coverage is now 97.29% statements, 99.71% branches, 93.92% functions,
-  and 98.88% lines.
+- Covered ordered and empty async event iteration, Hume client configuration,
+  pagination request arguments, SDK rejection, and mid-stream iterator errors.
+- Focused Jest passed for the Hume API test file (5 tests).
+- Full coverage reported 100% statements, branches, functions, and lines for
+  `core/services/hume/lib/api.ts`.
+- Full Jest, full coverage, TypeScript, scoped Biome, and Biome CI verification
+  passed.
 - No production code was changed in this slice.
 
 ## Working Rules
@@ -322,6 +174,7 @@ Recommended next slice:
 | 2026-06-10 | Proxy middleware | `proxy.ts` reached 100% coverage across Arcjet, auth, redirect, bypass, cookie, and matcher behavior. |
 | 2026-06-10 | Upgrade error messages | Covered Stripe upgrade error-code and fallback-message behavior. |
 | 2026-06-12 | Hume message condensation | `core/services/hume/lib/condenseChatMessages.ts` reached 100% coverage across valid, malformed, unknown, missing-content, and empty-string inputs. |
+| 2026-06-12 | Hume chat event retrieval | `core/services/hume/lib/api.ts` reached 100% coverage for ordered and empty event streams, SDK calls, and error propagation. |
 | 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
 
 ## Archive
