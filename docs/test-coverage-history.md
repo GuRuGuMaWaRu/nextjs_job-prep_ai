@@ -1965,6 +1965,42 @@ Recommendation:
 Prioritize the remaining partial coverage in `core/components/ui`, Drizzle
 schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
 
+### Hume Message Condensation Completion - 2026-06-12
+
+Files updated:
+
+- `core/services/hume/lib/condenseChatMessages.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/hume/lib/condenseChatMessages.test.ts --runInBand`
+- `npx.cmd jest core/services/hume/lib/condenseChatMessages.test.ts --coverage --collectCoverageFrom=core/services/hume/lib/condenseChatMessages.ts --runInBand`
+- `npx.cmd biome format --write core/services/hume/lib/condenseChatMessages.test.ts`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused Hume Jest passed: 1 test suite, 15 tests, 0 snapshots.
+- `core/services/hume/lib/condenseChatMessages.ts` reached 100% statements,
+  branches, functions, and lines.
+- Biome CI passed: 288 files checked.
+- Full Jest and coverage passed: 78 test suites, 630 tests, 0 snapshots.
+- Updated coverage summary: 97.59% statements, 99.75% branches, 94.34%
+  functions, and 98.99% lines.
+- TypeScript passed.
+
+Notes:
+
+- Covered recognized JSON and return-event message types without their
+  corresponding content property, unknown message types, and empty-string
+  content retention.
+- Made no production code changes.
+
 ## Coverage Priorities
 
 1. Close remaining UI primitive gaps.
@@ -1975,13 +2011,7 @@ schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
    - `core/components/ui/form.tsx`
    - `core/components/ui/select.tsx`
 
-2. Finish Hume message-condensation branches.
-
-   Cover the remaining defensive paths in:
-
-   - `core/services/hume/lib/condenseChatMessages.ts`
-
-3. Review Drizzle schema coverage separately.
+2. Review Drizzle schema coverage separately.
 
    The remaining function gaps are primarily declarative schema modules:
 
@@ -1996,7 +2026,7 @@ schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
    Prefer meaningful schema constraint and relation tests over assertions added
    only to increase coverage percentages.
 
-4. Protect full-coverage areas when behavior changes.
+3. Protect full-coverage areas when behavior changes.
 
    Keep focused regression tests alongside changes to:
 
@@ -2006,7 +2036,7 @@ schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
    - Feature actions, services, permissions, and formatters
    - App upgrade and subscription-notice helpers
 
-5. Keep external systems mocked at module boundaries.
+4. Keep external systems mocked at module boundaries.
 
    Continue using the existing Stripe, database, Next.js, AI, Hume, and Arcjet
    boundaries. Add factories or mock surfaces only with the first test that
@@ -2014,8 +2044,6 @@ schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
 
 ## Recommended Starting Point
 
-Start the next slice with the remaining
-`core/services/hume/lib/condenseChatMessages.ts` branches or one focused UI
-primitive. Run the full coverage report afterward, and treat Drizzle schema
-declarations as a separate quality decision rather than chasing their function
-percentage mechanically.
+Start the next slice with one focused UI primitive. Run the full coverage
+report afterward, and treat Drizzle schema declarations as a separate quality
+decision rather than chasing their function percentage mechanically.
