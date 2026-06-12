@@ -16,6 +16,7 @@ import {
 import { getCanceledSubscriptionNotice } from "./_utils";
 
 const mockGetStripe = jest.mocked(getStripe);
+const MILLISECONDS_PER_SECOND = 1_000;
 
 describe("_utils", () => {
   describe("getCanceledSubscriptionNotice", () => {
@@ -84,10 +85,10 @@ describe("_utils", () => {
     });
 
     it("returns a notice with a valid future cancellation time", async () => {
+      const cancelAt = 1_900_000_000;
       jest
         .useFakeTimers()
-        .setSystemTime(new Date("2026-01-01T00:00:00.000Z").getTime());
-      const cancelAt = 1_900_000_000;
+        .setSystemTime((cancelAt - 1) * MILLISECONDS_PER_SECOND);
       const user = makeProUser({
         stripeSubscriptionId: "sub_test_future",
       });
@@ -138,10 +139,10 @@ describe("_utils", () => {
     });
 
     it("returns null when the cancellation time is in the past", async () => {
+      const cancelAt = 1_900_000_000;
       jest
         .useFakeTimers()
-        .setSystemTime(new Date("2031-01-01T00:00:00.000Z").getTime());
-      const cancelAt = 1_900_000_000;
+        .setSystemTime((cancelAt + 1) * MILLISECONDS_PER_SECOND);
       const user = makeProUser({
         stripeSubscriptionId: "sub_test_past",
       });
