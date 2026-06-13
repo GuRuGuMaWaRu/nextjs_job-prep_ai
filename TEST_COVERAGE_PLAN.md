@@ -10,25 +10,28 @@ Date: 2026-06-12
 
 Latest full verification:
 
-- `npm.cmd test -- core/services/hume/lib/api.test.ts` passed: 1 test suite, 5
-  tests, 0 snapshots.
-- Full coverage reported 100% statements, branches, functions, and lines for:
-  - `core/services/hume/lib/api.ts`
-- `npm.cmd run check -- core/services/hume/lib/api.test.ts` passed: 289 files
-  checked.
-- `npm.cmd run check:ci` passed: 289 files checked.
-- `npm.cmd test` passed: 79 test suites, 635 tests, 0 snapshots.
-- `npm.cmd run test:coverage` passed: 79 test suites, 635 tests, 0 snapshots.
+- `npm.cmd test -- core/components/ui/alert-dialog.test.tsx --runInBand`
+  passed: 1 test suite, 6 tests, 0 snapshots.
+- Focused coverage reported 100% statements, branches, functions, and lines
+  for `core/components/ui/alert-dialog.tsx`.
+- `npm.cmd run check -- core/components/ui/alert-dialog.test.tsx` passed: 290
+  files checked and 1 file formatted.
+- `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
+  PowerShell execution-policy restriction.
+- `npm.cmd run check:ci` passed: 290 files checked.
+- `npm.cmd test -- --runInBand` passed: 80 test suites, 641 tests, 0 snapshots.
+- `npm.cmd run test:coverage -- --runInBand` passed: 80 test suites, 641 tests,
+  0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.6% |
+| Statements | 97.7% |
 | Branches | 99.75% |
 | Functions | 94.36% |
-| Lines | 98.99% |
+| Lines | 99.09% |
 
 Recent file-specific result:
 
@@ -38,24 +41,26 @@ Recent file-specific result:
 | `proxy.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/actions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/alert-dialog.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
-| `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
+| `core/components/ui` aggregate | 94.92% | 96.15% | 94% | 94.81% |
 | `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
 - Added focused tests:
-  - `core/services/hume/lib/api.test.ts`
+  - `core/components/ui/alert-dialog.test.tsx`
 - Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
-- Covered ordered and empty async event iteration, Hume client configuration,
-  pagination request arguments, SDK rejection, and mid-stream iterator errors.
-- Focused Jest passed for the Hume API test file (5 tests).
+- Covered public portal and overlay composition, slot and custom-class
+  forwarding, trigger-driven opening, cancel dismissal, confirm execution and
+  dismissal, and accessible name and description wiring.
+- Focused Jest passed for the alert dialog test file (6 tests).
 - Full coverage reported 100% statements, branches, functions, and lines for
-  `core/services/hume/lib/api.ts`.
+  `core/components/ui/alert-dialog.tsx`.
 - Full Jest, full coverage, TypeScript, scoped Biome, and Biome CI verification
-  passed.
-- No production code was changed in this slice.
+  passed through `npm.cmd`.
+- Made no production code changes.
 
 ## Working Rules
 
@@ -113,7 +118,6 @@ Known local quirks:
 Recommended next slice:
 
 1. Behavior-oriented UI primitive gaps:
-   - `core/components/ui/alert-dialog.tsx` wrapper rendering and prop forwarding.
    - `core/components/ui/select.tsx` exported wrapper rendering where Radix
      behavior can be tested without brittle implementation assertions.
    - `core/components/ui/form.tsx` remaining fallback and message branches.
@@ -176,6 +180,7 @@ Recommended next slice:
 | 2026-06-12 | Hume message condensation | `core/services/hume/lib/condenseChatMessages.ts` reached 100% coverage across valid, malformed, unknown, missing-content, and empty-string inputs. |
 | 2026-06-12 | Hume chat event retrieval | `core/services/hume/lib/api.ts` reached 100% coverage for ordered and empty event streams, SDK calls, and error propagation. |
 | 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
+| 2026-06-12 | Alert dialog UI primitive | `core/components/ui/alert-dialog.tsx` reached 100% coverage for composition, prop forwarding, interactions, and accessibility. |
 
 ## Archive
 

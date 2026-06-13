@@ -2039,13 +2039,54 @@ Notes:
   iterator failure.
 - Made no production code changes.
 
+### Alert Dialog UI Primitive Coverage - 2026-06-12
+
+Files added/updated:
+
+- `core/components/ui/alert-dialog.test.tsx`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/components/ui/alert-dialog.test.tsx --runInBand`
+- `npx.cmd jest core/components/ui/alert-dialog.test.tsx --coverage --collectCoverageFrom=core/components/ui/alert-dialog.tsx --runInBand`
+- `npm.cmd run check -- core/components/ui/alert-dialog.test.tsx`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused alert dialog Jest passed: 1 test suite, 6 tests, 0 snapshots.
+- `core/components/ui/alert-dialog.tsx` reached 100% statements, branches,
+  functions, and lines.
+- Scoped Biome passed: 290 files checked and 1 file formatted.
+- Raw `npm test` remains blocked by the local unsigned `npm.ps1` PowerShell
+  execution-policy restriction.
+- Biome CI passed: 290 files checked.
+- Full Jest and coverage passed: 80 test suites, 641 tests, 0 snapshots.
+- Updated coverage summary: 97.7% statements, 99.75% branches, 94.36%
+  functions, and 99.09% lines.
+- TypeScript passed.
+
+Notes:
+
+- Covered public portal and overlay composition, slot and custom-class
+  forwarding, trigger-driven opening, cancel dismissal, confirm execution and
+  dismissal, and accessible title and description wiring.
+- Used the real Radix primitives in jsdom through the shared render helper.
+- Made no production code changes and did not touch auth session or cookie
+  files.
+
 ## Coverage Priorities
 
 1. Close remaining UI primitive gaps.
 
    Add focused behavior and accessibility tests for:
 
-   - `core/components/ui/alert-dialog.tsx`
    - `core/components/ui/form.tsx`
    - `core/components/ui/select.tsx`
 
