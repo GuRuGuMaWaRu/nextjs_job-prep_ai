@@ -6,22 +6,20 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-12
+Date: 2026-06-13
 
 Latest full verification:
 
-- `npm.cmd test -- core/components/ui/alert-dialog.test.tsx --runInBand`
-  passed: 1 test suite, 6 tests, 0 snapshots.
-- Focused coverage reported 100% statements, branches, functions, and lines
-  for `core/components/ui/alert-dialog.tsx`.
-- `npm.cmd run check -- core/components/ui/alert-dialog.test.tsx` passed: 290
-  files checked and 1 file formatted.
+- `npm.cmd test -- core/features/billing/stripe.test.ts --runInBand` passed:
+  1 test suite, 25 tests, 0 snapshots.
+- Focused coverage reported 97.72% statements, 91.17% branches, 100%
+  functions, and 97.43% lines for `core/features/billing/stripe.ts`.
+- `npx.cmd biome format --write core/features/billing/stripe.test.ts` passed
+  with no fixes needed.
 - `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
   PowerShell execution-policy restriction.
-- `npm.cmd run check:ci` passed: 290 files checked.
-- `npm.cmd test -- --runInBand` passed: 80 test suites, 641 tests, 0 snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 80 test suites, 641 tests,
-  0 snapshots.
+- `npm.cmd run check:ci` passed: 291 files checked.
+- `npm.cmd test -- --runInBand` passed: 81 test suites, 666 tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
@@ -44,22 +42,26 @@ Recent file-specific result:
 | `core/components/ui/alert-dialog.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
 | `core/components/ui` aggregate | 94.92% | 96.15% | 94% | 94.81% |
+| `core/features/billing/stripe.ts` | 97.72% | 91.17% | 100% | 97.43% |
 | `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
 - Added focused tests:
-  - `core/components/ui/alert-dialog.test.tsx`
+  - `core/features/billing/stripe.test.ts`
 - Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
-- Covered public portal and overlay composition, slot and custom-class
-  forwarding, trigger-driven opening, cancel dismissal, confirm execution and
-  dismissal, and accessible name and description wiring.
-- Focused Jest passed for the alert dialog test file (6 tests).
-- Full coverage reported 100% statements, branches, functions, and lines for
-  `core/components/ui/alert-dialog.tsx`.
-- Full Jest, full coverage, TypeScript, scoped Biome, and Biome CI verification
-  passed through `npm.cmd`.
+- Covered fail-closed Stripe base URLs, configuration gating, encoded upgrade
+  redirects, JSON and form idempotency parsing and normalization, parse
+  failures, unsupported content types, and Stripe client construction.
+- The development localhost branch runs in a guarded child Jest process with
+  `NODE_ENV=development` because Next's Jest transform compile-folds
+  `NODE_ENV` in the parent test process.
+- Focused Jest passed for the Stripe helper test file (25 tests).
+- Focused coverage does not merge the guarded child process and therefore
+  reports the localhost return as uncovered in the parent report.
+- Full Jest, TypeScript, scoped Biome, and Biome CI verification passed through
+  `npm.cmd`.
 - Made no production code changes.
 
 ## Working Rules
@@ -181,6 +183,7 @@ Recommended next slice:
 | 2026-06-12 | Hume chat event retrieval | `core/services/hume/lib/api.ts` reached 100% coverage for ordered and empty event streams, SDK calls, and error propagation. |
 | 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
 | 2026-06-12 | Alert dialog UI primitive | `core/components/ui/alert-dialog.tsx` reached 100% coverage for composition, prop forwarding, interactions, and accessibility. |
+| 2026-06-13 | Billing Stripe helpers | Added 25 direct contract tests for Stripe configuration, redirect, idempotency, and client helpers. |
 
 ## Archive
 
