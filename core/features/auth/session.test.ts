@@ -49,6 +49,13 @@ const mockGenerateSecureToken = jest.mocked(generateSecureToken);
 describe("session helpers", () => {
   let consoleErrorSpy: jest.SpyInstance;
 
+  const testToken = "test-token-abc";
+  const testSession = makeSession({
+    userId: TEST_USER_ID,
+    token: testToken,
+    expiresAt: new Date("2026-05-31T12:00:00.000Z"),
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -60,20 +67,12 @@ describe("session helpers", () => {
   });
 
   describe("createSession", () => {
-    const testToken = "test-token-abc";
-
     mockGenerateSecureToken.mockReturnValue(testToken);
     jest
       .useFakeTimers()
       .setSystemTime(new Date("2026-05-01T12:00:00.000Z").getTime()); // should return "2026-05-31T12:00:00.000Z"
 
     it("creates a new session and persists it via the database", async () => {
-      const testSession = makeSession({
-        userId: TEST_USER_ID,
-        token: testToken,
-        expiresAt: new Date("2026-05-31T12:00:00.000Z"),
-      });
-
       mockCreateSessionDb.mockResolvedValue([testSession]);
 
       const result = await createSession(TEST_USER_ID);
@@ -96,6 +95,38 @@ describe("session helpers", () => {
       await expect(createSession(TEST_USER_ID)).rejects.toThrow(DatabaseError);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Database error creating session:",
+        error,
+      );
+    });
+  });
+
+  describe("validateSession", () => {
+    it("returns session object if session is valid", async () => {
+      mockValidateSessionDb.mockResolvedValue(testSession);
+
+      const result = await validateSession(testToken);
+
+      expect(mockValidateSessionDb).toHaveBeenCalledWith(testToken);
+      expect(result).toEqual(testSession);
+    });
+
+    it("returns null if session is not valid", async () => {
+      mockValidateSessionDb.mockResolvedValue(undefined);
+
+      const result = await validateSession(testToken);
+
+      expect(mockValidateSessionDb).toHaveBeenCalledWith(testToken);
+      expect(result).toBeNull();
+    });
+
+    it("throws DatabaseError in case of error", async () => {
+      const error = new Error("find failed");
+
+      mockValidateSessionDb.mockRejectedValueOnce(error);
+
+      await expect(validateSession(testToken)).rejects.toThrow(DatabaseError);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Database error validating session:",
         error,
       );
     });
