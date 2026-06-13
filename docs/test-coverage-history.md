@@ -2081,6 +2081,49 @@ Notes:
 - Made no production code changes and did not touch auth session or cookie
   files.
 
+### Billing Stripe Helper Contracts - 2026-06-13
+
+Files added/updated:
+
+- `core/features/billing/stripe.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/billing/stripe.test.ts --runInBand`
+- `npx.cmd jest core/features/billing/stripe.test.ts --coverage --collectCoverageFrom=core/features/billing/stripe.ts --runInBand`
+- `npx.cmd biome format --write core/features/billing/stripe.test.ts`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused Stripe helper Jest passed: 1 test suite, 25 tests, 0 snapshots.
+- Focused coverage reported 97.72% statements, 91.17% branches, 100%
+  functions, and 97.43% lines for `core/features/billing/stripe.ts`.
+- Biome CI passed: 291 files checked.
+- Full Jest passed: 81 test suites, 666 tests, 0 snapshots.
+- TypeScript passed.
+- Raw `npm test` remains blocked by the unsigned `npm.ps1` PowerShell shim.
+
+Notes:
+
+- Covered APP_URL and Vercel URL precedence, development-only localhost,
+  fail-closed non-development URLs, representative Stripe configuration gaps,
+  encoded upgrade redirects, JSON and form idempotency keys, normalization and
+  rejection limits, parse failures, unsupported content types, and Stripe
+  constructor options.
+- The localhost contract uses a guarded child Jest process with
+  `NODE_ENV=development` because the Next Jest transform compile-folds
+  `NODE_ENV` in the parent process. The focused parent coverage report cannot
+  merge that subprocess, so it lists the localhost return as uncovered even
+  though the behavior test passes.
+- Mocked the Stripe package constructor and server environment boundary.
+- Made no production changes and did not touch auth session or cookie work.
+
 ## Coverage Priorities
 
 1. Close remaining UI primitive gaps.
