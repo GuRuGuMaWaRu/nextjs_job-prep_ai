@@ -88,25 +88,28 @@ describe("RevalidateOnStripeReturn", () => {
     const consoleErrorSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => {});
-    mockRevalidateUpgradePage.mockRejectedValueOnce(error);
 
-    render(
-      <RevalidateOnStripeReturn
-        success
-        canceled={false}
-        canceledSubscription={false}
-      />,
-    );
+    try {
+      mockRevalidateUpgradePage.mockRejectedValueOnce(error);
 
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "revalidateUpgradePage failed:",
-        error,
+      render(
+        <RevalidateOnStripeReturn
+          success
+          canceled={false}
+          canceledSubscription={false}
+        />,
       );
-      expect(mockRefresh).toHaveBeenCalledTimes(1);
-    });
 
-    consoleErrorSpy.mockRestore();
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          "revalidateUpgradePage failed:",
+          error,
+        );
+        expect(mockRefresh).toHaveBeenCalledTimes(1);
+      });
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   it("runs revalidation only once across rerenders", async () => {
