@@ -50,11 +50,6 @@ describe("session helpers", () => {
   let consoleErrorSpy: jest.SpyInstance;
 
   const testToken = "test-token-abc";
-  const testSession = makeSession({
-    userId: TEST_USER_ID,
-    token: testToken,
-    expiresAt: new Date("2026-05-31T12:00:00.000Z"),
-  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,9 +63,13 @@ describe("session helpers", () => {
 
   describe("createSession", () => {
     mockGenerateSecureToken.mockReturnValue(testToken);
-    jest
-      .useFakeTimers()
-      .setSystemTime(new Date("2026-05-01T12:00:00.000Z").getTime()); // should return "2026-05-31T12:00:00.000Z"
+    jest.useFakeTimers().setSystemTime(new Date("2026-05-01").getTime());
+
+    const testSession = makeSession({
+      userId: TEST_USER_ID,
+      token: testToken,
+      expiresAt: new Date(), // "2026-05-01"
+    });
 
     it("creates a new session and persists it via the database", async () => {
       mockCreateSessionDb.mockResolvedValue([testSession]);
@@ -82,7 +81,7 @@ describe("session helpers", () => {
       expect(mockCreateSessionDb).toHaveBeenCalledWith({
         userId: TEST_USER_ID,
         token: testToken,
-        expiresAt: new Date("2026-05-31T12:00:00.000Z"),
+        expiresAt: new Date("2026-05-31"), // "2026-05-01" + 30 days
       });
       expect(result).toEqual(testSession);
     });
@@ -98,9 +97,29 @@ describe("session helpers", () => {
         error,
       );
     });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("insert failed");
+
+      mockCreateSessionDb.mockRejectedValueOnce(dbError);
+
+      const error = await createSession(TEST_USER_ID).catch((err) => err);
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to create session");
+      expect(error.cause).toBeDefined();
+    });
   });
 
   describe("validateSession", () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-05-01").getTime());
+
+    const testSession = makeSession({
+      userId: TEST_USER_ID,
+      token: testToken,
+      expiresAt: new Date(), // "2026-05-01"
+    });
+
     it("returns session object if session is valid", async () => {
       mockValidateSessionDb.mockResolvedValue(testSession);
 
@@ -130,5 +149,19 @@ describe("session helpers", () => {
         error,
       );
     });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("find failed");
+
+      mockValidateSessionDb.mockRejectedValueOnce(dbError);
+
+      const error = await validateSession(testToken).catch((err) => err);
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to validate session");
+      expect(error.cause).toBeDefined();
+    });
+  });
+
   });
 });
