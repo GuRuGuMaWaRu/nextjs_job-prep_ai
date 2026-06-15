@@ -254,4 +254,44 @@ describe("session helpers", () => {
       expect(error.cause).toBeDefined();
     });
   });
+
+  describe("deleteSession", () => {
+    it("deletes a session", async () => {
+      mockDeleteSessionDb.mockResolvedValueOnce({
+        rows: [],
+        rowCount: 0,
+        command: "",
+        oid: 1,
+        fields: [],
+      });
+
+      await expect(deleteSession(testToken)).resolves.toBe(undefined);
+      expect(deleteSessionDb).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws DatabaseError in case of error", async () => {
+      const dbError = new Error("delete failed");
+
+      mockDeleteSessionDb.mockRejectedValueOnce(dbError);
+
+      await expect(deleteSession(testToken)).rejects.toThrow(DatabaseError);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Database error deleting session:",
+        dbError,
+      );
+    });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("delete failed");
+
+      mockDeleteSessionDb.mockRejectedValueOnce(dbError);
+
+      const error = await deleteSession(testToken).catch((err) => err);
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to delete session");
+      expect(error.cause).toBeDefined();
+    });
+  });
 });
