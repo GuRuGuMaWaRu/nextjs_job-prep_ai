@@ -22,6 +22,7 @@ import {
   validateSessionDb,
 } from "@/core/features/auth/db";
 import { generateSecureToken } from "@/core/features/auth/tokens";
+import { SESSION_DURATION_MS } from "@/core/features/auth/constants";
 import { DatabaseError } from "@/core/dal/errors";
 
 import { TEST_USER_ID } from "@/core/test-utils/constants";
@@ -163,5 +164,94 @@ describe("session helpers", () => {
     });
   });
 
+  describe("extendSessionIfNeeded", () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-05-01").getTime());
+
+    it("extends session if it is close to expiring", async () => {
+      const testSession = makeSession({
+        userId: TEST_USER_ID,
+        token: testToken,
+        expiresAt: new Date("2026-05-10"), // expires in just 10 days, so session will be extended
+      });
+      const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+
+      mockValidateSessionDb.mockResolvedValueOnce(testSession);
+      mockExtendSessionDb.mockResolvedValueOnce([
+        {
+          ...testSession,
+          expiresAt: newExpiresAt,
+        },
+      ]);
+
+      const result = await extendSessionIfNeeded(testToken);
+
+      expect(mockExtendSessionDb).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        ...testSession,
+        expiresAt: newExpiresAt,
+      });
+    });
+
+    it("returns unchanged session if extension is not needed", async () => {
+      const testSession = makeSession({
+        userId: TEST_USER_ID,
+        token: testToken,
+        expiresAt: new Date("2026-06-31"),
+      });
+
+      mockValidateSessionDb.mockResolvedValueOnce(testSession);
+
+      const result = await extendSessionIfNeeded(testToken);
+
+      expect(mockExtendSessionDb).not.toHaveBeenCalled();
+      expect(result).toEqual(testSession);
+    });
+
+    it("returns null if session is invalid", async () => {
+      mockValidateSessionDb.mockResolvedValueOnce(undefined);
+
+      const result = await extendSessionIfNeeded(testToken);
+
+      expect(mockExtendSessionDb).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it("throws DatabaseError in case of error", async () => {
+      const error = new Error("update failed");
+      const testSession = makeSession({
+        userId: TEST_USER_ID,
+        token: testToken,
+        expiresAt: new Date(),
+      });
+
+      mockValidateSessionDb.mockResolvedValueOnce(testSession);
+      mockExtendSessionDb.mockRejectedValueOnce(error);
+
+      await expect(extendSessionIfNeeded(testToken)).rejects.toThrow(
+        DatabaseError,
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Database error extending session:",
+        error,
+      );
+    });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("update failed");
+      const testSession = makeSession({
+        userId: TEST_USER_ID,
+        token: testToken,
+        expiresAt: new Date(),
+      });
+
+      mockValidateSessionDb.mockResolvedValueOnce(testSession);
+      mockExtendSessionDb.mockRejectedValueOnce(dbError);
+
+      const error = await extendSessionIfNeeded(testToken).catch((err) => err);
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to extend session");
+      expect(error.cause).toBeDefined();
+    });
   });
 });
