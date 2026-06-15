@@ -378,4 +378,48 @@ describe("session helpers", () => {
       expect(error.cause).toBeDefined();
     });
   });
+
+  describe("getUserSessions", () => {
+    it("returns sessions", async () => {
+      const sessions = [
+        makeSession({ id: "abc_1" }),
+        makeSession({ id: "abc_2" }),
+      ];
+
+      mockGetUserSessionsDb.mockResolvedValueOnce(sessions);
+
+      const result = await getUserSessions(TEST_USER_ID);
+
+      expect(mockGetUserSessionsDb).toHaveBeenCalledTimes(1);
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe("abc_1");
+      expect(result[1].id).toBe("abc_2");
+    });
+
+    it("throws DatabaseError in case of error", async () => {
+      const dbError = new Error("select failed");
+
+      mockGetUserSessionsDb.mockRejectedValueOnce(dbError);
+
+      await expect(getUserSessions(TEST_USER_ID)).rejects.toThrow(
+        DatabaseError,
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Database error getting user sessions:",
+        dbError,
+      );
+    });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("select failed");
+
+      mockGetUserSessionsDb.mockRejectedValueOnce(dbError);
+
+      const error = await getUserSessions(TEST_USER_ID).catch((err) => err);
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to get user sessions");
+      expect(error.cause).toBeDefined();
+    });
+  });
 });
