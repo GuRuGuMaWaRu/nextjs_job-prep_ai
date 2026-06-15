@@ -2124,6 +2124,48 @@ Notes:
 - Mocked the Stripe package constructor and server environment boundary.
 - Made no production changes and did not touch auth session or cookie work.
 
+### Upgrade Return Revalidation - 2026-06-15
+
+Files added/updated:
+
+- `app/app/upgrade/actions.test.ts`
+- `app/app/upgrade/_RevalidateOnStripeReturn.test.tsx`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- app/app/upgrade/actions.test.ts --runInBand`
+- `npm.cmd test -- app/app/upgrade/_RevalidateOnStripeReturn.test.tsx --runInBand`
+- `npx.cmd jest app/app/upgrade/actions.test.ts --coverage --collectCoverageFrom=app/app/upgrade/actions.ts --runInBand`
+- `npx.cmd jest app/app/upgrade/_RevalidateOnStripeReturn.test.tsx --coverage --collectCoverageFrom=app/app/upgrade/_RevalidateOnStripeReturn.tsx --runInBand`
+- `npx.cmd biome format --write app/app/upgrade/actions.test.ts app/app/upgrade/_RevalidateOnStripeReturn.test.tsx`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused action Jest passed: 1 test suite, 2 tests, 0 snapshots.
+- Focused client-effect Jest passed: 1 test suite, 6 tests, 0 snapshots.
+- Both target modules reached 100% statements, branches, functions, and lines.
+- Raw `npm test` remains blocked by the unsigned `npm.ps1` PowerShell shim.
+- Biome CI passed: 293 files checked.
+- Full Jest passed: 83 test suites, 674 tests, 0 snapshots.
+- TypeScript passed.
+
+Notes:
+
+- Covered signed-in and anonymous server revalidation without real Next cache
+  or auth calls.
+- Covered each Stripe return flag, refresh ordering after the action settles,
+  rejection logging with the `.finally()` refresh, and the single-run ref
+  guard across a dependency-changing rerender.
+- Used shared synthetic current-user factories and `TEST_USER_ID`.
+- Made no production changes and did not touch auth session, cookie, or token
+  work.
+
 ## Coverage Priorities
 
 1. Close remaining UI primitive gaps.
