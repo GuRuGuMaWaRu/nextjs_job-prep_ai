@@ -88,14 +88,14 @@ describe("session helpers", () => {
     });
 
     it("throws DatabaseError in case of error", async () => {
-      const error = new Error("insert failed");
+      const dbError = new Error("insert failed");
 
-      mockCreateSessionDb.mockRejectedValueOnce(error);
+      mockCreateSessionDb.mockRejectedValueOnce(dbError);
 
       await expect(createSession(TEST_USER_ID)).rejects.toThrow(DatabaseError);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Database error creating session:",
-        error,
+        dbError,
       );
     });
 
@@ -140,14 +140,14 @@ describe("session helpers", () => {
     });
 
     it("throws DatabaseError in case of error", async () => {
-      const error = new Error("find failed");
+      const dbError = new Error("find failed");
 
-      mockValidateSessionDb.mockRejectedValueOnce(error);
+      mockValidateSessionDb.mockRejectedValueOnce(dbError);
 
       await expect(validateSession(testToken)).rejects.toThrow(DatabaseError);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Database error validating session:",
-        error,
+        dbError,
       );
     });
 
@@ -217,7 +217,7 @@ describe("session helpers", () => {
     });
 
     it("throws DatabaseError in case of error", async () => {
-      const error = new Error("update failed");
+      const dbError = new Error("update failed");
       const testSession = makeSession({
         userId: TEST_USER_ID,
         token: testToken,
@@ -225,14 +225,14 @@ describe("session helpers", () => {
       });
 
       mockValidateSessionDb.mockResolvedValueOnce(testSession);
-      mockExtendSessionDb.mockRejectedValueOnce(error);
+      mockExtendSessionDb.mockRejectedValueOnce(dbError);
 
       await expect(extendSessionIfNeeded(testToken)).rejects.toThrow(
         DatabaseError,
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Database error extending session:",
-        error,
+        dbError,
       );
     });
 
