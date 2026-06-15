@@ -6,20 +6,20 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-13
+Date: 2026-06-15
 
 Latest full verification:
 
-- `npm.cmd test -- core/features/billing/stripe.test.ts --runInBand` passed:
-  1 test suite, 25 tests, 0 snapshots.
-- Focused coverage reported 97.72% statements, 91.17% branches, 100%
-  functions, and 97.43% lines for `core/features/billing/stripe.ts`.
-- `npx.cmd biome format --write core/features/billing/stripe.test.ts` passed
-  with no fixes needed.
+- Focused upgrade action Jest passed: 1 test suite, 2 tests, 0 snapshots.
+- Focused Stripe-return client Jest passed: 1 test suite, 6 tests, 0
+  snapshots.
+- Focused coverage reported 100% statements, branches, functions, and lines
+  for both upgrade revalidation modules.
+- `npx.cmd biome format --write` formatted both new test files and fixed one.
 - `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
   PowerShell execution-policy restriction.
-- `npm.cmd run check:ci` passed: 291 files checked.
-- `npm.cmd test -- --runInBand` passed: 81 test suites, 666 tests, 0 snapshots.
+- `npm.cmd run check:ci` passed: 293 files checked.
+- `npm.cmd test -- --runInBand` passed: 83 test suites, 674 tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
@@ -36,6 +36,8 @@ Recent file-specific result:
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
 | `app/app/_utils.ts` | 100% | 100% | 100% | 100% |
+| `app/app/upgrade/actions.ts` | 100% | 100% | 100% | 100% |
+| `app/app/upgrade/_RevalidateOnStripeReturn.tsx` | 100% | 100% | 100% | 100% |
 | `proxy.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/actions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
@@ -49,20 +51,19 @@ Recent file-specific result:
 Latest slice notes:
 
 - Added focused tests:
-  - `core/features/billing/stripe.test.ts`
+  - `app/app/upgrade/actions.test.ts`
+  - `app/app/upgrade/_RevalidateOnStripeReturn.test.tsx`
 - Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
-- Covered fail-closed Stripe base URLs, configuration gating, encoded upgrade
-  redirects, JSON and form idempotency parsing and normalization, parse
-  failures, unsupported content types, and Stripe client construction.
-- The development localhost branch runs in a guarded child Jest process with
-  `NODE_ENV=development` because Next's Jest transform compile-folds
-  `NODE_ENV` in the parent test process.
-- Focused Jest passed for the Stripe helper test file (25 tests).
-- Focused coverage does not merge the guarded child process and therefore
-  reports the localhost return as uncovered in the parent report.
-- Full Jest, TypeScript, scoped Biome, and Biome CI verification passed through
-  `npm.cmd`.
+- Covered signed-in and anonymous upgrade revalidation, including the upgrade
+  path and current-user cache boundary.
+- Covered all Stripe return flags, refresh-after-settlement ordering, rejected
+  revalidation logging with refresh fallback, and the single-run ref guard.
+- Focused Jest passed for both upgrade revalidation test files (8 tests total).
+- Both target modules reached 100% focused coverage.
+- Full Jest, TypeScript, scoped Biome formatting, and Biome CI verification
+  passed.
 - Made no production code changes.
+- Did not touch auth session, cookie, or token work.
 
 ## Working Rules
 
@@ -184,6 +185,7 @@ Recommended next slice:
 | 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
 | 2026-06-12 | Alert dialog UI primitive | `core/components/ui/alert-dialog.tsx` reached 100% coverage for composition, prop forwarding, interactions, and accessibility. |
 | 2026-06-13 | Billing Stripe helpers | Added 25 direct contract tests for Stripe configuration, redirect, idempotency, and client helpers. |
+| 2026-06-15 | Upgrade return revalidation | Covered server revalidation and the Stripe-return client refresh flow at 100%. |
 
 ## Archive
 
