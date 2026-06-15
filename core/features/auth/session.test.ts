@@ -339,4 +339,43 @@ describe("session helpers", () => {
       expect(error.cause).toBeDefined();
     });
   });
+
+  describe("deleteExpiredSessions", () => {
+    it("deletes all expired sessions", async () => {
+      mockDeleteExpiredSessionsDb.mockResolvedValueOnce({
+        rows: [],
+        rowCount: 0,
+        command: "",
+        oid: 1,
+        fields: [],
+      });
+
+      await expect(deleteExpiredSessions()).resolves.toBeUndefined();
+      expect(mockDeleteExpiredSessionsDb).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws DatabaseError in case of error", async () => {
+      const dbError = new Error("delete failed");
+
+      mockDeleteExpiredSessionsDb.mockRejectedValueOnce(dbError);
+
+      await expect(deleteExpiredSessions()).rejects.toThrow(DatabaseError);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Database error deleting expired sessions:",
+        dbError,
+      );
+    });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("delete failed");
+
+      mockDeleteExpiredSessionsDb.mockRejectedValueOnce(dbError);
+
+      const error = await deleteExpiredSessions().catch((err) => err);
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to delete expired sessions");
+      expect(error.cause).toBeDefined();
+    });
+  });
 });
