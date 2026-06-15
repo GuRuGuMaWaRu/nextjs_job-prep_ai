@@ -265,7 +265,7 @@ describe("session helpers", () => {
         fields: [],
       });
 
-      await expect(deleteSession(testToken)).resolves.toBe(undefined);
+      await expect(deleteSession(testToken)).resolves.toBeUndefined();
       expect(deleteSessionDb).toHaveBeenCalledTimes(1);
     });
 
@@ -291,6 +291,51 @@ describe("session helpers", () => {
 
       expect(error).toBeInstanceOf(DatabaseError);
       expect(error.message).toBe("Failed to delete session");
+      expect(error.cause).toBeDefined();
+    });
+  });
+
+  describe("deleteAllUserSessions", () => {
+    it("deletes all sessions for a user", async () => {
+      mockDeleteAllUserSessionsDb.mockResolvedValueOnce({
+        rows: [],
+        rowCount: 0,
+        command: "",
+        oid: 1,
+        fields: [],
+      });
+
+      await expect(
+        deleteAllUserSessions(TEST_USER_ID),
+      ).resolves.toBeUndefined();
+      expect(mockDeleteAllUserSessionsDb).toHaveBeenCalledTimes(1);
+    });
+
+    it("throws DatabaseError in case of error", async () => {
+      const dbError = new Error("delete failed");
+
+      mockDeleteAllUserSessionsDb.mockRejectedValueOnce(dbError);
+
+      await expect(deleteAllUserSessions(TEST_USER_ID)).rejects.toThrow(
+        DatabaseError,
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Database error deleting user sessions:",
+        dbError,
+      );
+    });
+
+    it("throws DatabaseError with the defined message", async () => {
+      const dbError = new Error("delete failed");
+
+      mockDeleteAllUserSessionsDb.mockRejectedValueOnce(dbError);
+
+      const error = await deleteAllUserSessions(TEST_USER_ID).catch(
+        (err) => err,
+      );
+
+      expect(error).toBeInstanceOf(DatabaseError);
+      expect(error.message).toBe("Failed to delete user sessions");
       expect(error.cause).toBeDefined();
     });
   });
