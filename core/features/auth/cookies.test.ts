@@ -35,8 +35,8 @@ function mockCookieStore(rawValue?: string) {
 describe("cookie helpers", () => {
   const testToken = "test-token-abc";
 
-  afterEach(() => {
-    jest.resetAllMocks();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   describe("setSessionCookie", () => {
@@ -58,15 +58,24 @@ describe("cookie helpers", () => {
 
   describe("getSessionToken", () => {
     it("returns session token if present", async () => {
-      const store = mockCookieStore("session_token");
+      const store = mockCookieStore(testToken);
 
       const result = await getSessionToken();
 
       expect(store.get).toHaveBeenCalledWith(SESSION_COOKIE_NAME);
-      expect(result).toBe("session_token");
+      expect(result).toBe(testToken);
     });
 
-    it("return null is no session token is present", async () => {
+    it("returns session token even if it is an empty string", async () => {
+      const store = mockCookieStore("");
+
+      const result = await getSessionToken();
+
+      expect(store.get).toHaveBeenCalledWith(SESSION_COOKIE_NAME);
+      expect(result).toBe("");
+    });
+
+    it("returns null is no session token is present", async () => {
       const store = mockCookieStore();
 
       const result = await getSessionToken();
