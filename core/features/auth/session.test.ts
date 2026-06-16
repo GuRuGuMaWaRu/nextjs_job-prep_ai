@@ -213,7 +213,7 @@ describe("session helpers", () => {
       const testSession = makeSession({
         userId: TEST_USER_ID,
         token: testToken,
-        expiresAt: new Date("2026-06-15"), // not hitting extension path
+        expiresAt: new Date(), // need to hit extension path to test this error
       });
 
       mockValidateSessionDb.mockResolvedValueOnce(testSession);
