@@ -2219,15 +2219,62 @@ Notes:
 - Made no production changes and did not touch auth session, cookie, or token
   work.
 
+### Form UI Primitive Branch Coverage - 2026-06-16
+
+Files updated:
+
+- `core/components/ui/form.test.tsx`
+- `core/components/ui/form.tsx`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/components/ui/form.test.tsx`
+- `npx.cmd jest core/components/ui/form.test.tsx --coverage --collectCoverageFrom=core/components/ui/form.tsx --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run check -- core/components/ui/form.test.tsx`
+- `npm.cmd run check:ci`
+- `npm test`
+- `npm.cmd test`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Focused Form UI primitive Jest passed: 1 test suite, 10 tests, 0 snapshots.
+- Focused Form coverage reported 100% statements, branches, functions, and
+  lines for `core/components/ui/form.tsx`.
+- TypeScript passed.
+- Scoped Biome passed and formatted the touched test file.
+- Biome CI passed: 296 files checked.
+- Raw `npm test` remains blocked by the unsigned `C:\nvm4w\nodejs\npm.ps1`
+  PowerShell execution-policy restriction.
+- Full Jest passed: 86 test suites, 711 tests, 0 snapshots.
+- Full coverage passed: 86 test suites, 711 tests, 0 snapshots.
+- Updated coverage summary: 98.2% statements, 99.53% branches, 95.53%
+  functions, and 99.43% lines.
+- `core/components/ui/form.tsx` now reports 100% statements, 100% branches,
+  100% functions, and 100% lines.
+- `core/components/ui` aggregate now reports 100% statements, 100% branches,
+  100% functions, and 100% lines.
+
+Notes:
+
+- Added branch coverage for empty-string and undefined validation-error
+  messages rendering no `FormMessage`.
+- Added label valid/invalid `data-error` coverage and FormItem slot/custom
+  class forwarding coverage.
+- Added direct public-hook coverage for `useFormField`, including the
+  missing-`FormField` guard.
+- Fixed a real guard bug in `core/components/ui/form.tsx`: the context default
+  was a truthy object, making the defensive missing-`FormField` error
+  unreachable. The field context now defaults to `undefined`, and the guard
+  runs before deriving field state.
+- Did not touch auth session, cookie, or token work.
+
 ## Coverage Priorities
 
-1. Close remaining UI primitive gaps.
-
-   Add focused behavior and accessibility tests for:
-
-   - `core/components/ui/form.tsx`
-
-2. Review Drizzle schema coverage separately.
+1. Review Drizzle schema coverage separately.
 
    The remaining function gaps are primarily declarative schema modules:
 
@@ -2242,7 +2289,7 @@ Notes:
    Prefer meaningful schema constraint and relation tests over assertions added
    only to increase coverage percentages.
 
-3. Protect full-coverage areas when behavior changes.
+2. Protect full-coverage areas when behavior changes.
 
    Keep focused regression tests alongside changes to:
 
