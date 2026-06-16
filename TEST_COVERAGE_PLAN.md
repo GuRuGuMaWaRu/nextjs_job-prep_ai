@@ -6,146 +6,64 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-10
+Date: 2026-06-15
 
 Latest full verification:
 
-- `npm.cmd test -- proxy.test.ts --runInBand` passed: 1 test suite, 16 tests,
-  0 snapshots.
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for:
-  - `proxy.ts`
-- `npx.cmd tsc --noEmit` passed.
-- `npm.cmd run check:ci` passed: 285 files checked.
-- `npm.cmd test -- --runInBand` passed: 75 test suites, 586 tests, 0 snapshots.
-- `npm.cmd run test:coverage -- --runInBand` passed: 75 test suites, 586 tests,
-  0 snapshots.
-
-Previous full verification:
-
-- `npm.cmd test -- core/features/auth/actions.test.ts` passed: 1 test suite, 10
-  tests, 0 snapshots.
-- Focused coverage probe passed with 74.03% statements, 60% branches, 76.92%
-  functions, and 73.78% lines for:
-  - `core/features/auth/actions.ts`
-- `npx.cmd biome ci core/features/auth/actions.test.ts` passed.
-- `npx.cmd biome ci .` passed: 284 files checked.
-- `npx.cmd tsc --noEmit` passed.
-- `npm.cmd test` passed: 74 test suites, 554 tests, 0 snapshots.
-
-Earlier full verification:
-
-- `npx jest core/components/ui/form.test.tsx --runInBand --watchman=false`
-  passed: 1 test suite, 3 tests, 0 snapshots.
-- Focused coverage probes passed with 94.28% statements, 80% branches, 100%
-  functions, and 94.28% lines for:
-  - `core/components/ui/form.tsx`
-- `npx biome format --write core/components/ui/form.test.tsx` passed.
-- `npx biome ci .` passed: 283 files checked.
-- `npx tsc --noEmit` passed.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 73 test
-  suites, 543 tests, 0 snapshots.
-
-Earlier full verification:
-
-- `npx jest core/components/ui/action-button.test.tsx --runInBand
-  --watchman=false` passed: 1 test suite, 4 tests, 0 snapshots.
-- Focused coverage probes passed with 100% statements, branches, functions, and
-  lines for:
-  - `core/components/ui/action-button.tsx`
-- `npx biome format --write core/components/ui/action-button.test.tsx` passed.
-- `npx tsc --noEmit` passed.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 72 test
-  suites, 540 tests, 0 snapshots.
-
-Earlier full verification:
-
-- `npm run check:ci` passed: 279 files checked.
-- `npm test -- --runInBand --watchman=false` passed: 69 test suites, 522 tests,
-  0 snapshots.
-- `npm run test:coverage -- --runInBand --watchman=false` passed: 69 test
-  suites, 522 tests, 0 snapshots.
+- Focused upgrade action Jest passed: 1 test suite, 2 tests, 0 snapshots.
+- Focused Stripe-return client Jest passed: 1 test suite, 6 tests, 0
+  snapshots.
+- Focused coverage reported 100% statements, branches, functions, and lines
+  for both upgrade revalidation modules.
+- `npx.cmd biome format --write` formatted both new test files and fixed one.
+- `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
+  PowerShell execution-policy restriction.
+- `npm.cmd run check:ci` passed: 293 files checked.
+- `npm.cmd test -- --runInBand` passed: 83 test suites, 674 tests, 0 snapshots.
 - `npx.cmd tsc --noEmit` passed.
 
 Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 97.53% |
-| Branches | 99.73% |
-| Functions | 94.24% |
-| Lines | 98.96% |
+| Statements | 97.7% |
+| Branches | 99.75% |
+| Functions | 94.36% |
+| Lines | 99.09% |
 
 Recent file-specific result:
 
 | File | Statements | Branches | Functions | Lines |
 | --- | ---: | ---: | ---: | ---: |
+| `app/app/_utils.ts` | 100% | 100% | 100% | 100% |
+| `app/app/upgrade/actions.ts` | 100% | 100% | 100% | 100% |
+| `app/app/upgrade/_RevalidateOnStripeReturn.tsx` | 100% | 100% | 100% | 100% |
 | `proxy.ts` | 100% | 100% | 100% | 100% |
 | `core/features/auth/actions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
+| `core/components/ui/alert-dialog.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
-| `core/components/ui` aggregate | 93.47% | 96.15% | 94% | 93.33% |
+| `core/components/ui` aggregate | 94.92% | 96.15% | 94% | 94.81% |
+| `core/features/billing/stripe.ts` | 97.72% | 91.17% | 100% | 97.43% |
+| `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
+| `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
 - Added focused tests:
-  - `proxy.test.ts`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered Next.js middleware routing for Arcjet API protection, Stripe webhook
-  and cron bypasses, public route redirects, protected route redirects, session
-  cookie handling, and matcher config.
-- Focused Jest passed for the proxy middleware test file (16 tests).
-- Focused coverage probe passed with 100% statements, branches, functions, and
-  lines for `proxy.ts`.
-- Full Jest, full coverage, TypeScript, and Biome CI verification passed.
-- No production code was changed in this slice.
-
-Previous slice notes:
-
-- Added focused tests:
-  - `core/features/auth/actions.test.ts`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered sign-up and sign-in validation states, duplicate email handling, bad
-  password handling, sign-out session/cookie/revalidation/redirect behavior,
-  `getCurrentUserAction` and `getCurrentUserWithProfileAction` cache behavior,
-  anonymous redirect helper behavior, and `validateSessionAction` valid,
-  invalid, and thrown-error branches.
-- Focused Jest passed for the Auth actions test file (10 tests).
-- Focused coverage probe passed with 74.03% statements, 60% branches, 76.92%
-  functions, and 73.78% lines for `core/features/auth/actions.ts`.
-- Full Biome CI, TypeScript, and Jest verification passed after a formatter-only
-  import cleanup.
-- No production code was changed in this slice.
-
-Earlier slice notes:
-
-- Added focused tests:
-  - `core/components/ui/form.test.tsx`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered label-to-control accessibility wiring, description-only
-  `aria-describedby` behavior, validation error message replacement,
-  invalid-state attributes, and empty message suppression.
-- Focused Jest passed for the Form test file (3 tests).
-- Focused coverage probe passed with 94.28% statements, 80% branches, 100%
-  functions, and 94.28% lines for `core/components/ui/form.tsx`.
-- Full coverage remains 97.29% statements, 99.71% branches, 93.92% functions,
-  and 98.88% lines after rounding.
-- No production code was changed in this slice.
-
-Earlier slice notes:
-
-- Added focused tests:
-  - `core/components/ui/action-button.test.tsx`
-- Updated `TEST_COVERAGE_PLAN.md`.
-- Covered direct action execution, forwarded click handlers, success toasts,
-  explicit error toasts, generic fallback error toasts, and confirmation dialogs
-  that remain open while an async action is pending.
-- Focused Jest passed for the ActionButton test file (4 tests).
-- Focused coverage probe passed with 100% coverage for
-  `core/components/ui/action-button.tsx`.
-- Full coverage is now 97.29% statements, 99.71% branches, 93.92% functions,
-  and 98.88% lines.
-- No production code was changed in this slice.
+  - `app/app/upgrade/actions.test.ts`
+  - `app/app/upgrade/_RevalidateOnStripeReturn.test.tsx`
+- Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
+- Covered signed-in and anonymous upgrade revalidation, including the upgrade
+  path and current-user cache boundary.
+- Covered all Stripe return flags, refresh-after-settlement ordering, rejected
+  revalidation logging with refresh fallback, and the single-run ref guard.
+- Focused Jest passed for both upgrade revalidation test files (8 tests total).
+- Both target modules reached 100% focused coverage.
+- Full Jest, TypeScript, scoped Biome formatting, and Biome CI verification
+  passed.
+- Made no production code changes.
+- Did not touch auth session, cookie, or token work.
 
 ## Working Rules
 
@@ -203,9 +121,9 @@ Known local quirks:
 Recommended next slice:
 
 1. Behavior-oriented UI primitive gaps:
-   - `core/components/ui/alert-dialog.tsx` wrapper rendering and prop forwarding.
    - `core/components/ui/select.tsx` exported wrapper rendering where Radix
      behavior can be tested without brittle implementation assertions.
+   - `core/components/ui/form.tsx` remaining fallback and message branches.
 2. Small residual helper gaps where behavior is meaningful:
    - `core/features/auth/constants.ts`
    - `core/test-utils/factories/index.ts`
@@ -260,6 +178,14 @@ Recommended next slice:
 | 2026-06-08 | Action button behavior | `core/components/ui/action-button.tsx` reached 100% coverage with user-visible success, error, click, and pending-dialog behavior. |
 | 2026-06-08 | Form accessibility behavior | Covered `core/components/ui/form.tsx` label, description, validation-message, invalid-state, and empty-message behavior. |
 | 2026-06-08 | Auth server actions | Added direct coverage for auth action validation, duplicate email, bad password, sign-out, current-user cache behavior, and session validation branches. |
+| 2026-06-10 | Proxy middleware | `proxy.ts` reached 100% coverage across Arcjet, auth, redirect, bypass, cookie, and matcher behavior. |
+| 2026-06-10 | Upgrade error messages | Covered Stripe upgrade error-code and fallback-message behavior. |
+| 2026-06-12 | Hume message condensation | `core/services/hume/lib/condenseChatMessages.ts` reached 100% coverage across valid, malformed, unknown, missing-content, and empty-string inputs. |
+| 2026-06-12 | Hume chat event retrieval | `core/services/hume/lib/api.ts` reached 100% coverage for ordered and empty event streams, SDK calls, and error propagation. |
+| 2026-06-12 | App cancellation notice | `app/app/_utils.ts` reached 100% coverage for Pro cancellation-banner eligibility and Stripe failure handling. |
+| 2026-06-12 | Alert dialog UI primitive | `core/components/ui/alert-dialog.tsx` reached 100% coverage for composition, prop forwarding, interactions, and accessibility. |
+| 2026-06-13 | Billing Stripe helpers | Added 25 direct contract tests for Stripe configuration, redirect, idempotency, and client helpers. |
+| 2026-06-15 | Upgrade return revalidation | Covered server revalidation and the Stripe-return client refresh flow at 100%. |
 
 ## Archive
 

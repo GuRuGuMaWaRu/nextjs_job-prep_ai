@@ -1902,76 +1902,312 @@ helper branches in `core/features/auth/permissions.ts`,
 `core/features/interviews/permissions.ts`, and
 `core/features/questions/permissions.ts`.
 
+### Cumulative Coverage Catch-up and App Cancellation Notice - 2026-06-12
+
+Files added/updated in this slice:
+
+- `app/app/_utils.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- app/app/_utils.test.ts --runInBand`
+- `npx.cmd jest app/app/_utils.test.ts --coverage --collectCoverageFrom=app/app/_utils.ts --runInBand`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run check:ci`
+
+Result:
+
+- Focused cancellation notice Jest passed: 1 test suite, 10 tests, 0
+  snapshots.
+- Focused cancellation notice coverage passed with
+  `app/app/_utils.ts` at 100% statements, 100% branches, 100% functions, and
+  100% lines.
+- Full Jest passed: 78 test suites, 624 tests, 0 snapshots.
+- Full coverage passed: 78 test suites, 624 tests, 0 snapshots.
+- Updated coverage summary: 97.45% statements, 99.37% branches, 94.34%
+  functions, and 98.83% lines.
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd run check:ci` passed: 288 files checked.
+
+Coverage history catch-up:
+
+- The previous entry ended at 62 test suites and 478 tests. The current
+  snapshot incorporates the testing work merged since then, including UI
+  primitives and accessibility, AI and Stripe cron route branches, OAuth
+  validation, job-info form and card behavior, auth server actions, proxy
+  routing and Arcjet behavior, Stripe upgrade error messages, and Hume chat
+  message condensation, plus app cancellation-notice tests for banner
+  eligibility and Stripe failure handling.
+- Current full-coverage areas include the app cancellation notice and upgrade
+  helpers, API routes, auth OAuth modules, billing helpers, DAL helpers,
+  feature actions and services, permissions, and core utilities.
+
+Cancellation notice coverage:
+
+- Added early-return coverage for free users, Pro users without a Stripe
+  subscription id, and unavailable Stripe configuration, including assertions
+  that Stripe subscription retrieval is skipped.
+- Added coverage for active subscriptions not scheduled to cancel, valid
+  future cancellation notices, invalid or missing `cancel_at` values, expired
+  cancellation times, and Stripe retrieval failures.
+- Used synthetic Stripe ids and existing `@test.local` user factories only.
+- Fake system time is defined relative to `cancel_at` by one second in each
+  direction, so the tests express the boundary directly without depending on
+  fixed calendar years.
+- Made no production code changes.
+
+Recommendation:
+
+Prioritize the remaining partial coverage in `core/components/ui`, Drizzle
+schema declarations, and `core/services/hume/lib/condenseChatMessages.ts`.
+
+### Hume Message Condensation Completion - 2026-06-12
+
+Files updated:
+
+- `core/services/hume/lib/condenseChatMessages.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/hume/lib/condenseChatMessages.test.ts --runInBand`
+- `npx.cmd jest core/services/hume/lib/condenseChatMessages.test.ts --coverage --collectCoverageFrom=core/services/hume/lib/condenseChatMessages.ts --runInBand`
+- `npx.cmd biome format --write core/services/hume/lib/condenseChatMessages.test.ts`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused Hume Jest passed: 1 test suite, 15 tests, 0 snapshots.
+- `core/services/hume/lib/condenseChatMessages.ts` reached 100% statements,
+  branches, functions, and lines.
+- Biome CI passed: 288 files checked.
+- Full Jest and coverage passed: 78 test suites, 630 tests, 0 snapshots.
+- Updated coverage summary: 97.59% statements, 99.75% branches, 94.34%
+  functions, and 98.99% lines.
+- TypeScript passed.
+
+Notes:
+
+- Covered recognized JSON and return-event message types without their
+  corresponding content property, unknown message types, and empty-string
+  content retention.
+- Made no production code changes.
+
+### Hume Chat Event Retrieval Coverage - 2026-06-12
+
+Files added/updated:
+
+- `core/services/hume/lib/api.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/hume/lib/api.test.ts`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run check -- core/services/hume/lib/api.test.ts`
+- `npm.cmd run check:ci`
+- `npm.cmd test`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Focused Hume API Jest passed: 1 test suite, 5 tests, 0 snapshots.
+- `core/services/hume/lib/api.ts` reached 100% statements, branches, functions,
+  and lines in the full coverage report.
+- Scoped Biome passed: 289 files checked.
+- Biome CI passed: 289 files checked.
+- Full Jest and coverage passed: 79 test suites, 635 tests, 0 snapshots.
+- Updated coverage summary: 97.6% statements, 99.75% branches, 94.36%
+  functions, and 98.99% lines.
+- TypeScript passed.
+
+Notes:
+
+- Mocked the Hume SDK at the package boundary and used the shared synthetic
+  server environment helper.
+- Covered ordered and empty async event iteration, client API-key
+  configuration, pagination request arguments, SDK rejection, and mid-stream
+  iterator failure.
+- Made no production code changes.
+
+### Alert Dialog UI Primitive Coverage - 2026-06-12
+
+Files added/updated:
+
+- `core/components/ui/alert-dialog.test.tsx`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/components/ui/alert-dialog.test.tsx --runInBand`
+- `npx.cmd jest core/components/ui/alert-dialog.test.tsx --coverage --collectCoverageFrom=core/components/ui/alert-dialog.tsx --runInBand`
+- `npm.cmd run check -- core/components/ui/alert-dialog.test.tsx`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npm.cmd run test:coverage -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused alert dialog Jest passed: 1 test suite, 6 tests, 0 snapshots.
+- `core/components/ui/alert-dialog.tsx` reached 100% statements, branches,
+  functions, and lines.
+- Scoped Biome passed: 290 files checked and 1 file formatted.
+- Raw `npm test` remains blocked by the local unsigned `npm.ps1` PowerShell
+  execution-policy restriction.
+- Biome CI passed: 290 files checked.
+- Full Jest and coverage passed: 80 test suites, 641 tests, 0 snapshots.
+- Updated coverage summary: 97.7% statements, 99.75% branches, 94.36%
+  functions, and 99.09% lines.
+- TypeScript passed.
+
+Notes:
+
+- Covered public portal and overlay composition, slot and custom-class
+  forwarding, trigger-driven opening, cancel dismissal, confirm execution and
+  dismissal, and accessible title and description wiring.
+- Used the real Radix primitives in jsdom through the shared render helper.
+- Made no production code changes and did not touch auth session or cookie
+  files.
+
+### Billing Stripe Helper Contracts - 2026-06-13
+
+Files added/updated:
+
+- `core/features/billing/stripe.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/features/billing/stripe.test.ts --runInBand`
+- `npx.cmd jest core/features/billing/stripe.test.ts --coverage --collectCoverageFrom=core/features/billing/stripe.ts --runInBand`
+- `npx.cmd biome format --write core/features/billing/stripe.test.ts`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused Stripe helper Jest passed: 1 test suite, 25 tests, 0 snapshots.
+- Focused coverage reported 97.72% statements, 91.17% branches, 100%
+  functions, and 97.43% lines for `core/features/billing/stripe.ts`.
+- Biome CI passed: 291 files checked.
+- Full Jest passed: 81 test suites, 666 tests, 0 snapshots.
+- TypeScript passed.
+- Raw `npm test` remains blocked by the unsigned `npm.ps1` PowerShell shim.
+
+Notes:
+
+- Covered APP_URL and Vercel URL precedence, development-only localhost,
+  fail-closed non-development URLs, representative Stripe configuration gaps,
+  encoded upgrade redirects, JSON and form idempotency keys, normalization and
+  rejection limits, parse failures, unsupported content types, and Stripe
+  constructor options.
+- The localhost contract uses a guarded child Jest process with
+  `NODE_ENV=development` because the Next Jest transform compile-folds
+  `NODE_ENV` in the parent process. The focused parent coverage report cannot
+  merge that subprocess, so it lists the localhost return as uncovered even
+  though the behavior test passes.
+- Mocked the Stripe package constructor and server environment boundary.
+- Made no production changes and did not touch auth session or cookie work.
+
+### Upgrade Return Revalidation - 2026-06-15
+
+Files added/updated:
+
+- `app/app/upgrade/actions.test.ts`
+- `app/app/upgrade/_RevalidateOnStripeReturn.test.tsx`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- app/app/upgrade/actions.test.ts --runInBand`
+- `npm.cmd test -- app/app/upgrade/_RevalidateOnStripeReturn.test.tsx --runInBand`
+- `npx.cmd jest app/app/upgrade/actions.test.ts --coverage --collectCoverageFrom=app/app/upgrade/actions.ts --runInBand`
+- `npx.cmd jest app/app/upgrade/_RevalidateOnStripeReturn.test.tsx --coverage --collectCoverageFrom=app/app/upgrade/_RevalidateOnStripeReturn.tsx --runInBand`
+- `npx.cmd biome format --write app/app/upgrade/actions.test.ts app/app/upgrade/_RevalidateOnStripeReturn.test.tsx`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test -- --runInBand`
+- `npx.cmd tsc --noEmit`
+
+Result:
+
+- Focused action Jest passed: 1 test suite, 2 tests, 0 snapshots.
+- Focused client-effect Jest passed: 1 test suite, 6 tests, 0 snapshots.
+- Both target modules reached 100% statements, branches, functions, and lines.
+- Raw `npm test` remains blocked by the unsigned `npm.ps1` PowerShell shim.
+- Biome CI passed: 293 files checked.
+- Full Jest passed: 83 test suites, 674 tests, 0 snapshots.
+- TypeScript passed.
+
+Notes:
+
+- Covered signed-in and anonymous server revalidation without real Next cache
+  or auth calls.
+- Covered each Stripe return flag, refresh ordering after the action settles,
+  rejection logging with the `.finally()` refresh, and the single-run ref
+  guard across a dependency-changing rerender.
+- Used shared synthetic current-user factories and `TEST_USER_ID`.
+- Made no production changes and did not touch auth session, cookie, or token
+  work.
+
 ## Coverage Priorities
 
-1. Cover pure logic first.
+1. Close remaining UI primitive gaps.
 
-   Start with fast, stable units that do not need framework or service mocks:
+   Add focused behavior and accessibility tests for:
 
-   - `core/lib/*`
-   - `core/features/*/schemas.ts`
-   - `formatters.ts`
-   - Permission helpers such as:
-     - `core/features/questions/permissions.ts`
-     - `core/features/resumeAnalysis/permissions.ts`
-     - `core/features/interviews/permissions.ts`
+   - `core/components/ui/form.tsx`
+   - `core/components/ui/select.tsx`
 
-2. Add service-layer tests.
+2. Review Drizzle schema coverage separately.
 
-   Prioritize business logic and permission behavior in:
+   The remaining function gaps are primarily declarative schema modules:
 
-   - `core/features/jobInfos/service.ts`
-   - `core/features/interviews/service.ts`
-   - `core/features/questions/service.ts`
+   - `core/drizzle/schema/interview.ts`
+   - `core/drizzle/schema/jobInfo.ts`
+   - `core/drizzle/schema/question.ts`
+   - `core/drizzle/schema/session.ts`
+   - `core/drizzle/schema/token.ts`
+   - `core/drizzle/schema/user.ts`
+   - `core/drizzle/schema/userOAuthAccount.ts`
 
-   Mock database and cache boundaries with the existing helpers in
-   `core/test-utils/mocks/db.ts`.
+   Prefer meaningful schema constraint and relation tests over assertions added
+   only to increase coverage percentages.
 
-3. Add server action tests.
+3. Protect full-coverage areas when behavior changes.
 
-   Cover validation, authorization, redirects, and success paths for:
+   Keep focused regression tests alongside changes to:
 
-   - `core/features/jobInfos/actions.ts`
-   - `core/features/interviews/actions.ts`
-   - `core/features/questions/actions.ts`
-   - `core/features/users/actions.ts`
+   - API routes and proxy routing
+   - Auth actions, OAuth modules, and auth components
+   - Billing and Stripe synchronization
+   - Feature actions, services, permissions, and formatters
+   - App upgrade and subscription-notice helpers
 
-4. Add API route tests.
+4. Keep external systems mocked at module boundaries.
 
-   The Stripe webhook route already has coverage. Expand next into:
-
-   - Checkout route
-   - Billing portal route
-   - Cancel subscription route
-   - Auth validate-session route
-   - AI routes
-   - Cron routes
-
-   Keep all external services mocked at the module boundary, including Stripe,
-   Google AI, Hume, Arcjet, and the database.
-
-5. Add focused component tests.
-
-   Prioritize user interaction and meaningful rendering behavior over broad
-   snapshot coverage:
-
-   - Auth forms
-   - Job info form, card, and list components
-   - Upgrade plan and billing action components
-   - Resume, question, and interview client pages where user interaction matters
-
-6. Add factories and mocks only when needed.
-
-   Grow `core/test-utils` incrementally with the first test that needs each
-   helper:
-
-   - `jobInfo`, `interview`, and `question` factories
-   - AI SDK mocks
-   - Hume mocks
-   - Arcjet mocks
+   Continue using the existing Stripe, database, Next.js, AI, Hume, and Arcjet
+   boundaries. Add factories or mock surfaces only with the first test that
+   requires them.
 
 ## Recommended Starting Point
 
-Start with a baseline `npm test` run and `npm run test:coverage`, then add
-coverage for `core/lib`, schemas, formatters, and permission helpers. That path
-should produce useful coverage quickly without fighting framework mocks.
+Start the next slice with one focused UI primitive. Run the full coverage
+report afterward, and treat Drizzle schema declarations as a separate quality
+decision rather than chasing their function percentage mechanically.
