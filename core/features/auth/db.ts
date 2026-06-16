@@ -31,12 +31,14 @@ export async function createSessionDb(sessionData: {
 }
 
 export async function validateSessionDb(token: string) {
-  return await db.query.SessionTable.findFirst({
-    where: and(
-      eq(SessionTable.token, token),
-      gt(SessionTable.expiresAt, new Date()),
-    ),
-  });
+  return (
+    (await db.query.SessionTable.findFirst({
+      where: and(
+        eq(SessionTable.token, token),
+        gt(SessionTable.expiresAt, new Date()),
+      ),
+    })) ?? null
+  );
 }
 
 export async function extendSessionDb(sessionId: string, expiresAt: Date) {
