@@ -2166,6 +2166,59 @@ Notes:
 - Made no production changes and did not touch auth session, cookie, or token
   work.
 
+### Select UI Primitive Coverage - 2026-06-16
+
+Files added/updated:
+
+- `core/components/ui/select.test.tsx`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/components/ui/select.test.tsx`
+- `npx.cmd jest core/components/ui/select.test.tsx --coverage --collectCoverageFrom=core/components/ui/select.tsx --runInBand`
+- `npm.cmd run check -- core/components/ui/select.test.tsx`
+- `npx.cmd tsc --noEmit`
+- `npm test`
+- `npm.cmd run check:ci`
+- `npm.cmd test`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Focused Select UI primitive Jest passed: 1 test suite, 7 tests, 0 snapshots.
+- Focused Select coverage reported 100% statements, branches, functions, and
+  lines for `core/components/ui/select.tsx`.
+- Scoped Biome passed and formatted the new test file.
+- TypeScript passed.
+- Raw `npm test` remains blocked by the unsigned `C:\nvm4w\nodejs\npm.ps1`
+  PowerShell execution-policy restriction.
+- Biome CI passed: 296 files checked.
+- Full Jest passed: 86 test suites, 704 tests, 0 snapshots.
+- Full coverage passed: 86 test suites, 704 tests, 0 snapshots.
+- Updated coverage summary: 98.11% statements, 99.29% branches, 95.53%
+  functions, and 99.33% lines.
+- `core/components/ui/select.tsx` now reports 100% statements, 100% branches,
+  100% functions, and 100% lines.
+- `core/components/ui` aggregate now reports 98.55% statements, 96.15%
+  branches, 100% functions, and 98.51% lines.
+
+Notes:
+
+- Added a local `ExperienceLevelSelect` fixture using the real shadcn/Radix
+  wrappers in jsdom.
+- Covered wrapper slot attributes and custom class forwarding for trigger,
+  value, content, group, label, item, and separator.
+- Covered default and `sm` trigger sizing through `data-size`, and both popper
+  and item-aligned content positioning paths.
+- Covered trigger-driven opening, option roles, accessible trigger naming, and
+  selecting the "Senior" option.
+- Covered public scroll-button exports only to close the wrapper export line
+  coverage gap; no Radix internals were mocked.
+- Made no production changes and did not touch auth session, cookie, or token
+  work.
+
 ## Coverage Priorities
 
 1. Close remaining UI primitive gaps.
@@ -2173,7 +2226,6 @@ Notes:
    Add focused behavior and accessibility tests for:
 
    - `core/components/ui/form.tsx`
-   - `core/components/ui/select.tsx`
 
 2. Review Drizzle schema coverage separately.
 
