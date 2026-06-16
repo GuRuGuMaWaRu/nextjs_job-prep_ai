@@ -75,7 +75,7 @@ describe("cookie helpers", () => {
       expect(result).toBe("");
     });
 
-    it("returns null is no session token is present", async () => {
+    it("returns null if no session token is present", async () => {
       const store = mockCookieStore();
 
       const result = await getSessionToken();
