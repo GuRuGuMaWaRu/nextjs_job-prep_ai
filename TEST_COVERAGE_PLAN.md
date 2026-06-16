@@ -10,15 +10,17 @@ Date: 2026-06-16
 
 Latest full verification:
 
-- Focused Select UI primitive Jest passed: 1 test suite, 7 tests, 0 snapshots.
-- Focused Select coverage reported 100% statements, branches, functions, and
-  lines for `core/components/ui/select.tsx`.
+- Focused Form UI primitive Jest passed: 1 test suite, 10 tests, 0 snapshots.
+- Focused Form coverage reported 100% statements, branches, functions, and
+  lines for `core/components/ui/form.tsx`.
 - `npx.cmd tsc --noEmit` passed.
-- `npm.cmd run check -- core/components/ui/select.test.tsx` passed and
-  formatted the new test file.
+- `npm.cmd run check -- core/components/ui/form.test.tsx` passed and
+  formatted the touched test file.
 - `npm.cmd run check:ci` passed: 296 files checked.
-- `npm.cmd test` passed: 86 test suites, 704 tests, 0 snapshots.
-- `npm.cmd run test:coverage` passed: 86 test suites, 704 tests, 0 snapshots.
+- `npm.cmd test -- core/components/ui/form.test.tsx` passed: 1 test suite,
+  10 tests, 0 snapshots.
+- `npm.cmd test` passed: 86 test suites, 711 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 86 test suites, 711 tests, 0 snapshots.
 - `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
   PowerShell execution-policy restriction.
 - Focused upgrade action Jest passed: 1 test suite, 2 tests, 0 snapshots.
@@ -37,10 +39,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 98.11% |
-| Branches | 99.29% |
+| Statements | 98.2% |
+| Branches | 99.53% |
 | Functions | 95.53% |
-| Lines | 99.33% |
+| Lines | 99.43% |
 
 Recent file-specific result:
 
@@ -53,9 +55,9 @@ Recent file-specific result:
 | `core/features/auth/actions.ts` | 100% | 100% | 100% | 100% |
 | `core/components/ui/action-button.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/alert-dialog.tsx` | 100% | 100% | 100% | 100% |
-| `core/components/ui/form.tsx` | 94.28% | 80% | 100% | 94.28% |
+| `core/components/ui/form.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui/select.tsx` | 100% | 100% | 100% | 100% |
-| `core/components/ui` aggregate | 98.55% | 96.15% | 100% | 98.51% |
+| `core/components/ui` aggregate | 100% | 100% | 100% | 100% |
 | `core/features/billing/stripe.ts` | 97.72% | 91.17% | 100% | 97.43% |
 | `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
@@ -63,16 +65,17 @@ Recent file-specific result:
 Latest slice notes:
 
 - Added focused tests:
-  - `core/components/ui/select.test.tsx`
-- Covered Select slot and custom-class forwarding, default and small trigger
-  sizing, popper and item-aligned content paths, opened option roles, and a
-  trigger-driven selection flow using the real Radix primitives in jsdom.
-- Covered public scroll-button exports only to close the wrapper export line
-  coverage gap; no Radix internals were mocked.
-- `core/components/ui/select.tsx` reached 100% statements, branches, functions,
-  and lines.
+  - `core/components/ui/form.test.tsx`
+- Covered FormMessage empty-string and undefined validation-error messages,
+  FormLabel `data-error` states, FormItem slot/custom-class forwarding, and the
+  exported `useFormField` hook behavior.
+- Fixed the unreachable `useFormField` missing-`FormField` guard by making the
+  field context default `undefined` and checking it before deriving field state.
+- `core/components/ui/form.tsx` and the `core/components/ui` aggregate reached
+  100% statements, branches, functions, and lines.
 - Updated `TEST_COVERAGE_PLAN.md` and `docs/test-coverage-history.md`.
-- Made no production code changes.
+- Made one narrow production fix in `core/components/ui/form.tsx` for a real
+  unreachable guard bug.
 - Did not touch auth session, cookie, or token work.
 - Added focused tests:
   - `app/app/upgrade/actions.test.ts`
@@ -144,12 +147,10 @@ Known local quirks:
 
 Recommended next slice:
 
-1. Behavior-oriented UI primitive gaps:
-   - `core/components/ui/form.tsx` remaining fallback and message branches.
-2. Small residual helper gaps where behavior is meaningful:
+1. Small residual helper gaps where behavior is meaningful:
    - `core/features/auth/constants.ts`
    - `core/test-utils/factories/index.ts`
-3. Avoid declaration-only schema tests unless they are backed by integration
+2. Avoid declaration-only schema tests unless they are backed by integration
    behavior, migration behavior, or a documented high-risk database contract.
 
 ## Completed Slices
@@ -209,6 +210,7 @@ Recommended next slice:
 | 2026-06-13 | Billing Stripe helpers | Added 25 direct contract tests for Stripe configuration, redirect, idempotency, and client helpers. |
 | 2026-06-15 | Upgrade return revalidation | Covered server revalidation and the Stripe-return client refresh flow at 100%. |
 | 2026-06-16 | Select UI primitive | `core/components/ui/select.tsx` reached 100% coverage for wrapper composition, sizing, content positioning, option roles, and selection flow. |
+| 2026-06-16 | Form UI primitive | `core/components/ui/form.tsx` and the `core/components/ui` aggregate reached 100% coverage for message, label, item, control, and hook guard behavior. |
 
 ## Archive
 
