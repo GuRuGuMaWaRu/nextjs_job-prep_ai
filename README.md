@@ -1,10 +1,10 @@
-# Landr - AI-Powered Job Preparation Platform
+# OfferPilot - AI-Powered Job Preparation Platform
 
 This project is a full-stack Next.js application for structured interview preparation. It combines AI-assisted practice flows (questions, interview feedback, resume analysis), user authentication, and subscription-gated limits using Stripe.
 
 ## Purpose
 
-Landr helps users prepare for job interviews through three core workflows:
+OfferPilot helps users prepare for job interviews through three core workflows:
 
 - **AI mock interviews** with post-session feedback.
 - **Technical question practice** with generated questions and AI review.
