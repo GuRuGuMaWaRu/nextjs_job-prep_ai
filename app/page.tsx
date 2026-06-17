@@ -286,8 +286,8 @@ function TestimonialsSection() {
           Hear From Our <span className="text-primary">Success Stories</span>
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-          Real people, real results. See how OfferPilot helped professionals land
-          their dream jobs.
+          Real people, real results. See how OfferPilot helped professionals
+          land their dream jobs.
         </p>
       </div>
 
