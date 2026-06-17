@@ -10,6 +10,18 @@ Date: 2026-06-16
 
 Latest full verification:
 
+- Focused AI interview feedback Jest passed: 1 test suite, 6 tests, 0
+  snapshots.
+- Focused AI interview feedback coverage reported 100% statements, branches,
+  functions, and lines for `core/services/ai/interviews.ts`.
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd test -- core/services/ai/interviews.test.ts` passed: 1 test suite,
+  6 tests, 0 snapshots.
+- `npm.cmd test` passed: 87 test suites, 717 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 87 test suites, 717 tests, 0 snapshots.
+- `npm.cmd run check:ci` passed: 297 files checked.
+- `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
+  PowerShell execution-policy restriction.
 - Focused Form UI primitive Jest passed: 1 test suite, 10 tests, 0 snapshots.
 - Focused Form coverage reported 100% statements, branches, functions, and
   lines for `core/components/ui/form.tsx`.
@@ -39,9 +51,9 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 98.2% |
+| Statements | 98.21% |
 | Branches | 99.53% |
-| Functions | 95.53% |
+| Functions | 95.56% |
 | Lines | 99.43% |
 
 Recent file-specific result:
@@ -59,11 +71,22 @@ Recent file-specific result:
 | `core/components/ui/select.tsx` | 100% | 100% | 100% | 100% |
 | `core/components/ui` aggregate | 100% | 100% | 100% | 100% |
 | `core/features/billing/stripe.ts` | 97.72% | 91.17% | 100% | 97.43% |
+| `core/services/ai/interviews.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
+- Added focused tests:
+  - `core/services/ai/interviews.test.ts`
+- Covered Hume chat-event formatting into transcript JSON, system prompt
+  dynamic inserts, Gemini model and stop condition wiring, empty transcripts,
+  interview-event filtering, user-only emotion features, and Hume/AI error
+  propagation.
+- `core/services/ai/interviews.ts` reached 100% statements, branches,
+  functions, and lines.
+- Made no production code changes and did not touch auth session, cookie, or
+  token work.
 - Added focused tests:
   - `core/components/ui/form.test.tsx`
 - Covered FormMessage empty-string and undefined validation-error messages,
@@ -211,6 +234,7 @@ Recommended next slice:
 | 2026-06-15 | Upgrade return revalidation | Covered server revalidation and the Stripe-return client refresh flow at 100%. |
 | 2026-06-16 | Select UI primitive | `core/components/ui/select.tsx` reached 100% coverage for wrapper composition, sizing, content positioning, option roles, and selection flow. |
 | 2026-06-16 | Form UI primitive | `core/components/ui/form.tsx` and the `core/components/ui` aggregate reached 100% coverage for message, label, item, control, and hook guard behavior. |
+| 2026-06-16 | AI interview feedback service | `core/services/ai/interviews.ts` reached 100% coverage for Hume transcript formatting, AI SDK call wiring, pass-through text, and dependency error propagation. |
 
 ## Archive
 

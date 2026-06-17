@@ -2272,6 +2272,54 @@ Notes:
   runs before deriving field state.
 - Did not touch auth session, cookie, or token work.
 
+### AI Interview Feedback Service Coverage - 2026-06-16
+
+Files added/updated:
+
+- `core/services/ai/interviews.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/ai/interviews.test.ts`
+- `npx.cmd jest core/services/ai/interviews.test.ts --coverage --collectCoverageFrom=core/services/ai/interviews.ts --runInBand`
+- `npx.cmd biome format --write core/services/ai/interviews.test.ts`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd test -- core/services/ai/interviews.test.ts`
+- `npm.cmd test`
+- `npm.cmd run test:coverage`
+- `npm.cmd run check:ci`
+- `npm test`
+
+Result:
+
+- Focused AI interview feedback Jest passed: 1 test suite, 6 tests, 0
+  snapshots.
+- Focused AI interview feedback coverage reported 100% statements, branches,
+  functions, and lines for `core/services/ai/interviews.ts`.
+- TypeScript passed.
+- Full Jest passed: 87 test suites, 717 tests, 0 snapshots.
+- Full coverage passed: 87 test suites, 717 tests, 0 snapshots.
+- Updated coverage summary: 98.21% statements, 99.53% branches, 95.56%
+  functions, and 99.43% lines.
+- Biome CI passed: 297 files checked.
+- Raw `npm test` remains blocked by the unsigned `C:\nvm4w\nodejs\npm.ps1`
+  PowerShell execution-policy restriction.
+
+Notes:
+
+- Mocked Hume chat retrieval, the AI SDK, and the Google model factory at
+  module boundaries so no real Hume, Gemini, or network calls are made.
+- Covered transcript JSON formatting for user and agent messages, skipping
+  non-interview and empty-content events, user-role-only emotion features,
+  empty transcripts, returned text pass-through, dynamic system prompt inserts,
+  Gemini model selection, stop condition wiring, and Hume/AI error propagation.
+- Used `makeJobInfo` fixtures and the fixed synthetic user name
+  `Alex Candidate`.
+- Made no production code changes and did not touch auth session, cookie, or
+  token work.
+
 ## Coverage Priorities
 
 1. Review Drizzle schema coverage separately.
