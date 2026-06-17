@@ -34,6 +34,7 @@ describe("token helpers", () => {
       const result = generateSecureToken();
 
       expect(mockRandomBytes).toHaveBeenCalledWith(32);
+      expect(mockToString).toHaveBeenCalledWith("hex");
       expect(result).toBe(returnValue);
     });
 
@@ -45,7 +46,7 @@ describe("token helpers", () => {
       const result = generateSecureToken(16);
 
       expect(mockRandomBytes).toHaveBeenCalledWith(16);
-      expect(mockToString).toHaveBeenCalledTimes(1);
+      expect(mockToString).toHaveBeenCalledWith("hex");
       expect(result).toBe(returnValue);
     });
   });
