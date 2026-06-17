@@ -204,7 +204,7 @@ function EnterpriseBlock() {
           className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise"
           asChild
         >
-          <a href="mailto:enterprise@landr.example.com">Contact us</a>
+          <a href="mailto:enterprise@offerpilot.example.com">Contact us</a>
         </Button>
       </CardFooter>
     </Card>

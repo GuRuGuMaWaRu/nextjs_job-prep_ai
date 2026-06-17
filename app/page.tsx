@@ -45,7 +45,7 @@ function Navbar() {
   return (
     <nav className="border-b border-border bg-card/80 backdrop-blur-md sticky top-0 z-50">
       <div className="px-6 py-4 flex items-center justify-between">
-        <p className="text-2xl font-bold tracking-tight">Landr</p>
+        <p className="text-2xl font-bold tracking-tight">OfferPilot</p>
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
@@ -147,21 +147,21 @@ function StatsComparisonSection() {
   const stats = [
     {
       title: "Time to Job Offer",
-      landrUsers: "3.2 weeks",
+      offerPilotUsers: "3.2 weeks",
       average: "8.5 weeks",
       improvement: "62% faster",
       icon: <Clock className="w-6 h-6 text-primary" />,
     },
     {
       title: "Interviews Needed",
-      landrUsers: "4.3 interviews",
+      offerPilotUsers: "4.3 interviews",
       average: "12.7 interviews",
       improvement: "66% fewer",
       icon: <Target className="w-6 h-6 text-primary" />,
     },
     {
       title: "Success Rate",
-      landrUsers: "78%",
+      offerPilotUsers: "78%",
       average: "32%",
       improvement: "2.4x higher",
       icon: <TrendingUp className="w-6 h-6 text-primary" />,
@@ -195,10 +195,10 @@ function StatsComparisonSection() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Landr Users
+                    OfferPilot Users
                   </span>
                   <span className="text-lg font-bold text-primary">
-                    {stat.landrUsers}
+                    {stat.offerPilotUsers}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
@@ -221,7 +221,7 @@ function StatsComparisonSection() {
       <div className="text-center mt-12">
         <p className="text-sm text-muted-foreground mb-6 text-pretty">
           Join thousands of successful job seekers who landed their dream roles
-          with Landr
+          with OfferPilot
         </p>
         <Button size="lg" className="text-base h-12" asChild>
           <Link href={routes.signUp}>Start Your Success Story</Link>
@@ -242,7 +242,7 @@ function TestimonialsSection() {
       company: "Tech Innovations Inc",
       result: "Hired in 3 weeks",
       quote:
-        "Landr transformed my interview prep. The AI mock interviews helped me identify weak spots I never knew I had. I landed my dream job after just 3 interviews!",
+        "OfferPilot transformed my interview prep. The AI mock interviews helped me identify weak spots I never knew I had. I landed my dream job after just 3 interviews!",
     },
     {
       user: {
@@ -264,7 +264,7 @@ function TestimonialsSection() {
       company: "Analytics Pro",
       result: "Hired in 4 weeks",
       quote:
-        "I was struggling with technical interviews until I found Landr. The practice questions were spot-on, and the instant feedback helped me improve rapidly. Got an offer in 4 weeks!",
+        "I was struggling with technical interviews until I found OfferPilot. The practice questions were spot-on, and the instant feedback helped me improve rapidly. Got an offer in 4 weeks!",
     },
     {
       user: {
@@ -286,7 +286,7 @@ function TestimonialsSection() {
           Hear From Our <span className="text-primary">Success Stories</span>
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-          Real people, real results. See how Landr helped professionals land
+          Real people, real results. See how OfferPilot helped professionals land
           their dream jobs.
         </p>
       </div>
@@ -442,7 +442,7 @@ function Footer() {
   return (
     <footer className="border-t mt-20 container mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
       <p className="text-sm text-muted-foreground">
-        © 2025 Landr. All rights reserved.
+        &copy; 2025 OfferPilot. All rights reserved.
       </p>
       <div className="flex gap-6 text-sm text-muted-foreground">
         <Link href="#" className="hover:text-foreground transition-colors">
@@ -452,7 +452,7 @@ function Footer() {
           Terms of Service
         </Link>
         <Link
-          href="mailto:contact@landr.example.com"
+          href="mailto:contact@offerpilot.example.com"
           className="hover:text-foreground transition-colors"
         >
           Contact us

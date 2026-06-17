@@ -42,8 +42,8 @@ export function Navbar({
     <nav className="h-header border-b flex items-center justify-between container">
       {/* Left side - Logo and App Name */}
       <Link href={routes.app} className="flex items-center gap-2">
-        <span className="landr-logo-mark" aria-hidden />
-        <span className="text-xl font-bold">Landr</span>
+        <span className="offerpilot-logo-mark" aria-hidden />
+        <span className="text-xl font-bold">OfferPilot</span>
       </Link>
 
       {/* Right side - Theme Toggle and User Menu */}

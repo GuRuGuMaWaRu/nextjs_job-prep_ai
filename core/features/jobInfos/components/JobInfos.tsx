@@ -64,7 +64,7 @@ function NoJobInfos({ currentPlan }: { currentPlan: "free" | "pro" }) {
   return (
     <div className="container my-8 max-w-5xl">
       <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4">
-        Welcome to Landr
+        Welcome to OfferPilot
       </h1>
       <p className="text-muted-foreground mb-8">
         To get started, enter information about the type of job you want to
