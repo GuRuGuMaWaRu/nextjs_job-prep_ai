@@ -2320,6 +2320,55 @@ Notes:
 - Made no production code changes and did not touch auth session, cookie, or
   token work.
 
+### AI Questions Service Coverage - 2026-06-17
+
+Files added/updated:
+
+- `core/services/ai/questions.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/ai/questions.test.ts`
+- `npx.cmd jest core/services/ai/questions.test.ts --coverage --collectCoverageFrom=core/services/ai/questions.ts --runInBand`
+- `npm.cmd run check -- core/services/ai/questions.test.ts`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd test`
+- `npm.cmd run check:ci`
+- `npm test`
+- `npm.cmd run test:coverage`
+
+Result:
+
+- Focused AI questions service Jest passed: 1 test suite, 4 tests, 0
+  snapshots.
+- Focused AI questions service coverage reported 100% statements, branches,
+  functions, and lines for `core/services/ai/questions.ts`.
+- Scoped Biome passed: 299 files checked.
+- TypeScript passed.
+- Biome CI passed: 299 files checked.
+- Full Jest passed: 89 test suites, 725 tests, 0 snapshots.
+- Full coverage passed: 89 test suites, 725 tests, 0 snapshots.
+- Updated coverage summary: 98.22% statements, 99.53% branches, 95.65%
+  functions, and 99.44% lines.
+- Raw `npm test` remains blocked by the unsigned `C:\nvm4w\nodejs\npm.ps1`
+  PowerShell execution-policy restriction.
+
+Notes:
+
+- Mocked the AI SDK `streamText`, AI SDK `stepCountIs`, and the Google model
+  factory at module boundaries so no real Gemini or network calls are made.
+- Covered previous-question history mapping into alternating user/assistant
+  messages, title-present and title-empty system prompt branches, new
+  difficulty message appending, Gemini model selection, stop condition wiring,
+  returned stream pass-through, `onFinish` streamed text forwarding, feedback
+  answer prompt wiring, and original-question system prompt embedding.
+- Used `makeJobInfo` and `makeQuestion` fixtures with synthetic question text
+  only.
+- Made no production code changes and did not touch route tests, auth session,
+  cookie, token, or interview service files.
+
 ## Coverage Priorities
 
 1. Review Drizzle schema coverage separately.

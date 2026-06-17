@@ -6,10 +6,24 @@ for practical handoff use.
 
 ## Current Status
 
-Date: 2026-06-16
+Date: 2026-06-17
 
 Latest full verification:
 
+- Focused AI questions service Jest passed: 1 test suite, 4 tests, 0
+  snapshots.
+- Focused AI questions service coverage reported 100% statements, branches,
+  functions, and lines for `core/services/ai/questions.ts`.
+- `npx.cmd tsc --noEmit` passed.
+- `npm.cmd run check -- core/services/ai/questions.test.ts` passed: 299 files
+  checked.
+- `npm.cmd run check:ci` passed: 299 files checked.
+- `npm.cmd test -- core/services/ai/questions.test.ts` passed: 1 test suite,
+  4 tests, 0 snapshots.
+- `npm.cmd test` passed: 89 test suites, 725 tests, 0 snapshots.
+- `npm.cmd run test:coverage` passed: 89 test suites, 725 tests, 0 snapshots.
+- `npm test` was attempted but remains blocked by the unsigned `npm.ps1`
+  PowerShell execution-policy restriction.
 - Focused AI interview feedback Jest passed: 1 test suite, 6 tests, 0
   snapshots.
 - Focused AI interview feedback coverage reported 100% statements, branches,
@@ -51,10 +65,10 @@ Latest coverage:
 
 | Metric | Coverage |
 | --- | ---: |
-| Statements | 98.21% |
+| Statements | 98.22% |
 | Branches | 99.53% |
-| Functions | 95.56% |
-| Lines | 99.43% |
+| Functions | 95.65% |
+| Lines | 99.44% |
 
 Recent file-specific result:
 
@@ -72,11 +86,22 @@ Recent file-specific result:
 | `core/components/ui` aggregate | 100% | 100% | 100% | 100% |
 | `core/features/billing/stripe.ts` | 97.72% | 91.17% | 100% | 97.43% |
 | `core/services/ai/interviews.ts` | 100% | 100% | 100% | 100% |
+| `core/services/ai/questions.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/api.ts` | 100% | 100% | 100% | 100% |
 | `core/services/hume/lib/condenseChatMessages.ts` | 100% | 100% | 100% | 100% |
 
 Latest slice notes:
 
+- Added focused tests:
+  - `core/services/ai/questions.test.ts`
+- Covered question-generation message history, title-present and title-empty
+  system prompt branches, Gemini model and stop condition wiring,
+  stream-result pass-through, `onFinish` text forwarding, and feedback prompt
+  wiring.
+- `core/services/ai/questions.ts` reached 100% statements, branches, functions,
+  and lines.
+- Made no production code changes and did not touch route tests, auth session,
+  cookie, token, or interview service files.
 - Added focused tests:
   - `core/services/ai/interviews.test.ts`
 - Covered Hume chat-event formatting into transcript JSON, system prompt
@@ -235,6 +260,7 @@ Recommended next slice:
 | 2026-06-16 | Select UI primitive | `core/components/ui/select.tsx` reached 100% coverage for wrapper composition, sizing, content positioning, option roles, and selection flow. |
 | 2026-06-16 | Form UI primitive | `core/components/ui/form.tsx` and the `core/components/ui` aggregate reached 100% coverage for message, label, item, control, and hook guard behavior. |
 | 2026-06-16 | AI interview feedback service | `core/services/ai/interviews.ts` reached 100% coverage for Hume transcript formatting, AI SDK call wiring, pass-through text, and dependency error propagation. |
+| 2026-06-17 | AI questions service | `core/services/ai/questions.ts` reached 100% coverage for AI SDK stream wiring, prompt inserts, history mapping, and finish callbacks. |
 
 ## Archive
 
