@@ -2369,6 +2369,55 @@ Notes:
 - Made no production code changes and did not touch route tests, auth session,
   cookie, token, or interview service files.
 
+### AI Resume Analysis Service Coverage - 2026-06-17
+
+Files added/updated:
+
+- `core/services/ai/resumes/ai.test.ts`
+- `TEST_COVERAGE_PLAN.md`
+- `docs/test-coverage-history.md`
+
+Commands run:
+
+- `npm.cmd test -- core/services/ai/resumes/ai.test.ts`
+- `npx.cmd tsc --noEmit`
+- `npm.cmd run check -- core/services/ai/resumes/ai.test.ts`
+- `npx.cmd jest core/services/ai/resumes/ai.test.ts --coverage --collectCoverageFrom=core/services/ai/resumes/ai.ts --runInBand`
+- `npm.cmd run check:ci`
+- `npm.cmd test`
+- `npm.cmd run test:coverage`
+- `npm test`
+
+Result:
+
+- Focused AI resume analysis service Jest passed: 1 test suite, 2 tests, 0
+  snapshots.
+- Focused AI resume analysis service coverage reported 100% statements,
+  branches, functions, and lines for `core/services/ai/resumes/ai.ts`.
+- TypeScript passed.
+- Scoped Biome passed: 300 files checked.
+- Biome CI passed: 300 files checked.
+- Full Jest passed: 90 test suites, 727 tests, 0 snapshots.
+- Full coverage passed: 90 test suites, 727 tests, 0 snapshots.
+- Updated coverage summary: 98.23% statements, 99.53% branches, 95.66%
+  functions, and 99.44% lines.
+- Raw `npm test` remains blocked by the unsigned `C:\nvm4w\nodejs\npm.ps1`
+  PowerShell execution-policy restriction.
+
+Notes:
+
+- Mocked the AI SDK `streamObject` and the Google model factory at module
+  boundaries so no real Gemini or network calls are made.
+- Imported the real resume analysis schema and verified it is passed through to
+  `streamObject`.
+- Covered resume file byte forwarding, uploaded media type forwarding, Gemini
+  model selection, returned stream pass-through, dynamic job description and
+  experience-level prompt inserts, and title-present/title-empty system prompt
+  branches.
+- Used `makeJobInfo` fixtures and synthetic resume file content only.
+- Made no production code changes and did not touch route tests, auth session,
+  cookie, token, interview service, or questions service files.
+
 ## Coverage Priorities
 
 1. Review Drizzle schema coverage separately.
