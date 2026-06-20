@@ -57,8 +57,7 @@ export function Navbar({
                   variant={pathName === hrefPath ? "secondary" : "ghost"}
                   key={name}
                   asChild
-                  className="cursor-pointer max-sm:hidden"
-                >
+                  className="cursor-pointer max-sm:hidden">
                   <Link href={hrefPath}>
                     <Icon />
                     {name}
@@ -71,7 +70,7 @@ export function Navbar({
         <ThemeToggle />
 
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger data-testid="navbar-user-menu">
             <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

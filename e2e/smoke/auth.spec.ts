@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 
-import { createAuthenticatedUser } from "../helpers/createUser";
+import {
+  createAuthenticatedUser,
+  applySessionCookie,
+} from "../helpers/createUser";
 
 test.describe("Auth", () => {
   test("a new user creates an account on Sign Up page and is forwarded to the main page", async ({
@@ -44,6 +47,26 @@ test.describe("Auth", () => {
   test("when trying to access App page a signed out user is redirected to Sign In page ", async ({
     page,
   }) => {
+    await page.goto("/app");
+
+    await expect(page).toHaveURL("/sign-in");
+  });
+
+  test("when a signed in user logs out and tries to access App pages he is redirected to Sgn In page", async ({
+    page,
+  }) => {
+    const session = await createAuthenticatedUser("auth-main-");
+    await applySessionCookie(page, session);
+
+    await page.goto("/app");
+
+    await expect(page).toHaveURL("/app");
+
+    await page.getByTestId("navbar-user-menu").click();
+    await page.getByRole("button", { name: /logout/i }).click();
+
+    await expect(page).toHaveURL("/");
+
     await page.goto("/app");
 
     await expect(page).toHaveURL("/sign-in");
