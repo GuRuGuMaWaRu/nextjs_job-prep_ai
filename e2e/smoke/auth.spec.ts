@@ -4,6 +4,7 @@ import {
   createAuthenticatedUser,
   applySessionCookie,
 } from "../helpers/createUser";
+import { signInViaUI, signUpViaUI } from "../helpers/authViaUi";
 
 test.describe("Auth", () => {
   test("a new user creates an account on Sign Up page and is forwarded to the main page", async ({
@@ -11,12 +12,11 @@ test.describe("Auth", () => {
   }) => {
     const email = `e2e-${Date.now()}@test.local`;
 
-    await page.goto("/sign-up");
-    await page.getByRole("textbox", { name: /name/i }).fill("Test User");
-    await page.getByRole("textbox", { name: /email/i }).fill(email);
-    await page.getByRole("textbox", { name: /password/i }).fill("password1");
-
-    await page.getByRole("button", { name: /create account/i }).click();
+    await signUpViaUI(page, {
+      email,
+      password: "password1",
+      name: "Test User",
+    });
 
     await expect(page).toHaveURL("/app");
     await expect(
@@ -31,11 +31,11 @@ test.describe("Auth", () => {
     const password = "password1";
 
     // Sign up
-    await page.goto("/sign-up");
-    await page.getByRole("textbox", { name: /name/i }).fill("Test User");
-    await page.getByRole("textbox", { name: /email/i }).fill(email);
-    await page.getByRole("textbox", { name: /password/i }).fill(password);
-    await page.getByRole("button", { name: /create account/i }).click();
+    await signUpViaUI(page, {
+      email,
+      password,
+      name: "Test User",
+    });
 
     await expect(page).toHaveURL("/app");
     await expect(
@@ -49,10 +49,7 @@ test.describe("Auth", () => {
     await expect(page).toHaveURL("/");
 
     // Sign in
-    await page.goto("/sign-in");
-    await page.getByRole("textbox", { name: /email/i }).fill(email);
-    await page.getByRole("textbox", { name: /password/i }).fill(password);
-    await page.getByRole("button", { name: /sign in/i }).click();
+    await signInViaUI(page, { email, password });
 
     // Get sent to App
     await expect(page).toHaveURL("/app");
@@ -66,14 +63,10 @@ test.describe("Auth", () => {
   }) => {
     const session = await createAuthenticatedUser("auth-main-");
 
-    await page.goto("/sign-in");
-
-    await page.getByRole("textbox", { name: /email/i }).fill(session.email);
-    await page
-      .getByRole("textbox", { name: /password/i })
-      .fill(session.password);
-
-    await page.getByRole("button", { name: /sign in/i }).click();
+    await signInViaUI(page, {
+      email: session.email,
+      password: session.password,
+    });
 
     await expect(page).toHaveURL("/app");
     await expect(
