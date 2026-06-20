@@ -24,6 +24,43 @@ test.describe("Auth", () => {
     ).toBeVisible();
   });
 
+  test("a user can sign up, log out, and then sign in with the same credentials", async ({
+    page,
+  }) => {
+    const email = `e2e-${Date.now()}@test.local`;
+    const password = "password1";
+
+    // Sign up
+    await page.goto("/sign-up");
+    await page.getByRole("textbox", { name: /name/i }).fill("Test User");
+    await page.getByRole("textbox", { name: /email/i }).fill(email);
+    await page.getByRole("textbox", { name: /password/i }).fill(password);
+    await page.getByRole("button", { name: /create account/i }).click();
+
+    await expect(page).toHaveURL("/app");
+    await expect(
+      page.getByRole("button", { name: /save job information/i }),
+    ).toBeVisible();
+
+    // Log out
+    await page.getByTestId("navbar-user-menu").click();
+    await page.getByRole("button", { name: /logout/i }).click();
+
+    await expect(page).toHaveURL("/");
+
+    // Sign in
+    await page.goto("/sign-in");
+    await page.getByRole("textbox", { name: /email/i }).fill(email);
+    await page.getByRole("textbox", { name: /password/i }).fill(password);
+    await page.getByRole("button", { name: /sign in/i }).click();
+
+    // Get sent to App
+    await expect(page).toHaveURL("/app");
+    await expect(
+      page.getByRole("button", { name: /save job information/i }),
+    ).toBeVisible();
+  });
+
   test("a signed out user signs in via Sign In page and is forwarded to the main page", async ({
     page,
   }) => {
