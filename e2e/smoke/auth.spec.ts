@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Sign-up page", () => {
-  test("creates an account and forwards a new user to welcome page", async ({
+test.describe("Auth", () => {
+  test("a new user creates an account on Sign Up page and is forwarded to welcome page", async ({
     page,
   }) => {
     const email = `e2e-${Date.now()}@test.local`;

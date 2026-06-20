@@ -18,6 +18,7 @@ function assertTestDatabase(url: string) {
   const dbName = new URL(url).hostname;
 
   if (!dbName.includes("square-cloud")) {
+    // square-cloud is a string that appears in the test database name
     throw new Error(`Refusing to reset non-test database ${dbName}`);
   }
 }
