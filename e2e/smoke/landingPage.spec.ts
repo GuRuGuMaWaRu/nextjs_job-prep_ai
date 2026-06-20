@@ -69,12 +69,4 @@ test.describe("Landing Page", () => {
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
   });
-
-  test("should redirect a user to Sign In page if he is logged out and tries to access App pages", async ({
-    page,
-  }) => {
-    await page.goto("/app");
-
-    await expect(page).toHaveURL("/sign-in");
-  });
 });

@@ -40,4 +40,12 @@ test.describe("Auth", () => {
       page.getByRole("button", { name: /save job information/i }),
     ).toBeVisible();
   });
+
+  test("when trying to access App page a signed out user is redirected to Sign In page ", async ({
+    page,
+  }) => {
+    await page.goto("/app");
+
+    await expect(page).toHaveURL("/sign-in");
+  });
 });
