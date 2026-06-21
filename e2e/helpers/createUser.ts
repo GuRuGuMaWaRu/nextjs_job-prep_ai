@@ -19,7 +19,7 @@ type UserSession = {
 export async function createAuthenticatedUser(
   emailIdentifier = "",
 ): Promise<UserSession> {
-  const email = `e2e-${emailIdentifier}${Date.now()}@test.local`;
+  const email = `e2e-${emailIdentifier}${Date.now()}${Math.random()}@test.local`;
   const password = "password1";
   const name = "Test User";
   const userId = generateUserId();
