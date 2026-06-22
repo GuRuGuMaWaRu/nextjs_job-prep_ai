@@ -17,8 +17,14 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      - name: Create .env.test
+        env:
+          E2E_ENV_FILE: ${{ secrets.E2E_ENV_FILE }}
+        run: printf '%s\n' "$E2E_ENV_FILE" > .env.test
+      - name: Verify .env.test keys (debug)
+        run: grep -E '^[A-Z_]+=' .env.test | cut -d= -f1 | sort
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
