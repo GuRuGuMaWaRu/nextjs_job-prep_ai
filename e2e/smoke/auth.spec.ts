@@ -124,18 +124,30 @@ test.describe("Auth", () => {
     ).toBeVisible();
 
     // Submit a new job description
-    await page.getByLabel("Name").fill(jobInfoInput.name);
-    await page.getByLabel("Job Title").fill(jobInfoInput.title);
-    await page.getByLabel("Description").fill(jobInfoInput.description);
+    const nameInput = page.getByRole("textbox", { name: "Name" });
+    const titleInput = page.getByRole("textbox", { name: "Job Title" });
+    const descriptionInput = page.getByRole("textbox", { name: "Description" });
+
+    await nameInput.click();
+    await nameInput.fill(jobInfoInput.name);
+    await titleInput.fill(jobInfoInput.title);
+    await descriptionInput.fill(jobInfoInput.description);
 
     await page.getByRole("combobox", { name: "Experience Level" }).click();
     await page
       .getByRole("option", { name: jobInfoInput.experienceLevel })
       .click();
-    await page.getByRole("button", { name: /save job information/i }).click();
+
+    await expect(nameInput).toHaveValue(jobInfoInput.name);
+    await expect(titleInput).toHaveValue(jobInfoInput.title);
+    await expect(descriptionInput).toHaveValue(jobInfoInput.description);
 
     // Check if we are redirected to a newly created job description
-    await expect(page).toHaveURL(/\/app\/jobInfo\/[0-9a-f-]+$/);
+    await Promise.all([
+      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
+      page.getByRole("button", { name: /save job information/i }).click(),
+    ]);
+
     await expect(
       page.getByRole("heading", { name: jobInfoInput.name }),
     ).toBeVisible();
