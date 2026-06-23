@@ -7,6 +7,8 @@ import {
 import { signInViaUI, signUpViaUI } from "../helpers/authViaUi";
 
 test.describe("Auth", () => {
+  test.describe.configure({ mode: "serial" });
+
   test("a new user creates an account on Sign Up page and is forwarded to the main page", async ({
     page,
   }) => {
