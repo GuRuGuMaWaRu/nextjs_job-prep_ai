@@ -4,7 +4,7 @@ import {
   createAuthenticatedUser,
   applySessionCookie,
 } from "../helpers/createUser";
-import { signInViaUI, signUpViaUI } from "../helpers/authViaUi";
+import { signInViaUI, signUpViaUI, logOutViaUI } from "../helpers/authViaUi";
 
 test.describe("Auth", () => {
   test.describe.configure({ mode: "serial" });
@@ -45,9 +45,7 @@ test.describe("Auth", () => {
     ).toBeVisible();
 
     // Log out
-    await page.getByTestId("navbar-user-menu").click();
-    await page.getByRole("button", { name: /logout/i }).click();
-
+    await logOutViaUI(page);
     await expect(page).toHaveURL("/");
 
     // Sign in
@@ -87,20 +85,20 @@ test.describe("Auth", () => {
   test("when a signed in user logs out and tries to access App pages he is redirected to Sgn In page", async ({
     page,
   }) => {
+    // Log in
     const session = await createAuthenticatedUser(
       "auth-signin-signout-signin-",
     );
     await applySessionCookie(page, session);
-
     await page.goto("/app");
 
     await expect(page).toHaveURL("/app");
 
-    await page.getByTestId("navbar-user-menu").click();
-    await page.getByRole("button", { name: /logout/i }).click();
-
+    // Logout
+    await logOutViaUI(page);
     await expect(page).toHaveURL("/");
 
+    // Try visiting app again
     await page.goto("/app");
 
     await expect(page).toHaveURL("/sign-in");

@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 type SignInCredentials = {
@@ -30,4 +31,10 @@ export async function signUpViaUI(
   await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByRole("textbox", { name: /password/i }).fill(password);
   await page.getByRole("button", { name: /create account/i }).click();
+}
+
+export async function logOutViaUI(page: Page) {
+  await page.getByTestId("navbar-user-menu").click();
+  await expect(page.getByRole("button", { name: /logout/i })).toBeVisible();
+  await page.getByRole("button", { name: /logout/i }).click();
 }
