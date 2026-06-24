@@ -3,8 +3,11 @@ import { test, expect } from "@playwright/test";
 import {
   createAuthenticatedUser,
   applySessionCookie,
-} from "../helpers/createUser";
-import { signInViaUI, signUpViaUI, logOutViaUI } from "../helpers/authViaUi";
+  signInViaUI,
+  signUpViaUI,
+  logOutViaUI,
+  expectAppHome,
+} from "../helpers";
 
 test.describe("Auth", () => {
   test.describe.configure({ mode: "serial" });
@@ -20,10 +23,7 @@ test.describe("Auth", () => {
       name: "Test User",
     });
 
-    await expect(page).toHaveURL("/app");
-    await expect(
-      page.getByRole("button", { name: /save job information/i }),
-    ).toBeVisible();
+    await expectAppHome(page);
   });
 
   test("a user can sign up, log out, and then sign in with the same credentials", async ({
@@ -39,10 +39,7 @@ test.describe("Auth", () => {
       name: "Test User",
     });
 
-    await expect(page).toHaveURL("/app");
-    await expect(
-      page.getByRole("button", { name: /save job information/i }),
-    ).toBeVisible();
+    await expectAppHome(page);
 
     // Log out
     await logOutViaUI(page);
@@ -52,10 +49,7 @@ test.describe("Auth", () => {
     await signInViaUI(page, { email, password });
 
     // Get sent to App
-    await expect(page).toHaveURL("/app");
-    await expect(
-      page.getByRole("button", { name: /save job information/i }),
-    ).toBeVisible();
+    await expectAppHome(page);
   });
 
   test("a signed out user signs in via Sign In page and is forwarded to the main page", async ({
@@ -68,10 +62,7 @@ test.describe("Auth", () => {
       password: session.password,
     });
 
-    await expect(page).toHaveURL("/app");
-    await expect(
-      page.getByRole("button", { name: /save job information/i }),
-    ).toBeVisible();
+    await expectAppHome(page);
   });
 
   test("when trying to access App page a signed out user is redirected to Sign In page ", async ({
@@ -92,7 +83,7 @@ test.describe("Auth", () => {
     await applySessionCookie(page, session);
     await page.goto("/app");
 
-    await expect(page).toHaveURL("/app");
+    await expectAppHome(page);
 
     // Logout
     await logOutViaUI(page);
