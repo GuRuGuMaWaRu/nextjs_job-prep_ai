@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb } from "@/core/features/auth/db";
 import { hashPassword } from "@/core/features/auth/password";
@@ -19,7 +21,7 @@ type UserSession = {
 export async function createAuthenticatedUser(
   emailIdentifier = "",
 ): Promise<UserSession> {
-  const email = `e2e-${emailIdentifier}${Date.now()}${Math.random()}@test.local`;
+  const email = `e2e-${emailIdentifier}${randomUUID()}${Math.random()}@test.local`;
   const password = "password1";
   const name = "Test User";
   const userId = generateUserId();

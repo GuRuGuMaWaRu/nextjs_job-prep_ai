@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -15,7 +16,7 @@ test.describe("Auth", () => {
   test("a new user creates an account on Sign Up page and is forwarded to the main page", async ({
     page,
   }) => {
-    const email = `e2e-${Date.now()}@test.local`;
+    const email = `e2e-${randomUUID()}@test.local`;
 
     await signUpViaUI(page, {
       email,
@@ -29,7 +30,7 @@ test.describe("Auth", () => {
   test("a user can sign up, log out, and then sign in with the same credentials", async ({
     page,
   }) => {
-    const email = `e2e-${Date.now()}@test.local`;
+    const email = `e2e-${randomUUID()}@test.local`;
     const password = "password1";
 
     // Sign up
