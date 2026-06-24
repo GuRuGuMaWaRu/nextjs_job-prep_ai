@@ -71,7 +71,7 @@ export function Navbar({
         <ThemeToggle />
 
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger data-testid="navbar-user-menu">
             <UserAvatar user={user} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
