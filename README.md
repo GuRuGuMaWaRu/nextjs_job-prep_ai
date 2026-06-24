@@ -229,12 +229,45 @@ npm test
 
 ### Continuous integration
 
-Every pull request and push to `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+CI is split across two workflows:
 
-- Biome lint and format checks (`npm run check:ci`)
-- Jest tests (`npm test`)
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) - Biome lint and format checks (`npm run check:ci`) and Jest tests (`npm test`)
+- [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) - Playwright smoke tests (`npm run test:e2e`)
 
 After the workflow has run at least once on `main`, enable **Require status checks to pass before merging** in GitHub branch protection and select the **Lint and test** check.
+
+### End-to-end tests (Playwright)
+
+Playwright tests require a dedicated test database. Copy `.env.test.example` to `.env.test`, point it at that database, and apply the schema once against that same environment:
+
+```bash
+npx dotenv -e .env.test -- npm run db:push
+```
+
+For local Docker Postgres, run `docker compose up -d`, use `DB_HOST=localhost`, and omit `DB_SSLMODE`. For Neon, use a separate branch/database and set `DB_SSLMODE=require`.
+
+Run the E2E suite with:
+
+```bash
+npm run test:e2e
+npm run test:e2e:ui
+npm run test:e2e:headed
+```
+
+The smoke specs live in `e2e/smoke/` and cover the landing page plus auth/job creation flows. Shared setup helpers live in `e2e/helpers/`.
+
+`e2e/globalSetup.ts` resets the database before each run by truncating test data. Keep this pointed at a separate test database: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
+
+CI runs Playwright from [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) on pull requests and pushes to `main`/`master`. It expects a GitHub secret named `E2E_ENV_FILE` containing the full `.env.test` contents. Failed runs upload the `playwright-report` artifact, and traces are collected on the first retry.
+
+Out of scope for E2E for now:
+
+- Stripe checkout and webhooks
+- AI generation
+- Hume voice
+- Resume upload
+
+Keep those covered by Jest or integration tests until the E2E scope expands.
 
 ### Database tasks
 
