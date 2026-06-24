@@ -10,6 +10,8 @@ import {
 } from "@/core/features/auth/constants";
 import type { Page } from "@playwright/test";
 
+import { E2E_BASE_URL } from "../constants";
+
 type UserSession = {
   email: string;
   password: string;
@@ -49,10 +51,11 @@ export async function createAuthenticatedUser(
 export async function applySessionCookie(page: Page, session: UserSession) {
   await page.context().addCookies([
     {
-      ...COOKIE_OPTIONS,
       name: SESSION_COOKIE_NAME,
       value: session.sessionToken,
-      domain: "localhost",
+      url: E2E_BASE_URL,
+      httpOnly: COOKIE_OPTIONS.httpOnly,
+      secure: COOKIE_OPTIONS.secure,
       sameSite: "Lax",
       expires: Math.floor(session.sessionExpiresAt.getTime() / 1000),
     },
