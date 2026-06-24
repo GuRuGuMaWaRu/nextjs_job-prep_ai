@@ -16,6 +16,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - Public landing page with marketing content and pricing.
 - Email/password authentication with database-backed sessions.
+- OAuth sign-in via Google, GitHub, and Discord (optional per provider).
 - Job info management (create, edit, delete, view).
 - Interview flows per job info, including generated feedback.
 - Technical question generation and answer feedback.
@@ -70,6 +71,7 @@ Key tables include:
 
 - `users` (plan + Stripe identifiers)
 - `sessions`
+- `user_oauth_accounts` (linked OAuth provider accounts)
 - `job_info`
 - `interviews`
 - `questions`
@@ -80,7 +82,7 @@ Key tables include:
 
 ### 1) Prerequisites
 
-- Node.js 20+
+- Node.js 21.7+ (see `engines` in `package.json`)
 - npm
 - Neon Postgres project (recommended)
 - (Optional for billing work) Stripe CLI
@@ -106,6 +108,8 @@ DB_SSLMODE=require
 
 # Security / infra
 ARCJET_KEY=your_arcjet_key
+CRON_SECRET=123456789012345
+OAUTH_REDIRECT_URL_BASE=http://localhost:3000/api/oauth/
 
 # AI providers
 GEMINI_API_KEY=your_gemini_key
@@ -124,6 +128,8 @@ APP_URL=http://localhost:3000
 Notes:
 
 - The app builds `DATABASE_URL` internally from `DB_*` vars.
+- `CRON_SECRET` must be exactly 15 characters.
+- `OAUTH_REDIRECT_URL_BASE` is required even when OAuth providers are not configured.
 - Stripe helpers prefer `APP_URL`, then `VERCEL_URL`, then localhost in development.
 - Some Stripe vars are optional at schema level, but required for fully functional checkout/webhooks.
 
@@ -180,6 +186,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - `STRIPE_WEBHOOK_SECRET` - webhook signature validation
 - `STRIPE_PRO_PRICE_ID` / `STRIPE_PRO_PRODUCT_ID` - subscription product mapping
 - `APP_URL` - canonical base URL for redirects
+- `CRON_SECRET` - exactly 15 characters; authorizes `/api/cron/*` routes (Vercel Cron sends it as a Bearer token)
 - `OAUTH_REDIRECT_URL_BASE` - must be a URL in the form of `http://localhost:3000/api/oauth/` (with a trailing slash)
 - `DISCORD_CLIENT_ID` - Discord OAuth client ID
 - `DISCORD_CLIENT_SECRET` - Discord OAuth client secret
@@ -199,7 +206,7 @@ Open [http://localhost:3000](http://localhost:3000).
   - `SESSION_REFRESH_THRESHOLD_MS` (7 days)
   - session cookie name/options (`session_token`, `httpOnly`, etc.)
 - `core/features/auth/permissions.ts`
-  - free-plan limits (currently interviews/questions/resume analyses)
+  - free-plan limits: 1 interview and 10 questions per month (resume analyses are unlimited on all plans)
   - plan-to-permission mapping for `free` and `pro`
 - `next.config.ts`
   - `cacheComponents: true`
@@ -214,10 +221,11 @@ npm run build
 npm run start
 ```
 
-### Lint
+### Lint and typecheck
 
 ```bash
 npm run lint
+npm run typecheck
 ```
 
 Use `npm run check` to auto-fix lint and format issues locally. CI uses the read-only equivalent:
@@ -234,7 +242,7 @@ CI is split across two workflows:
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) - Biome lint and format checks (`npm run check:ci`) and Jest tests (`npm test`)
 - [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) - Playwright smoke tests (`npm run test:e2e`)
 
-After the workflow has run at least once on `main`, enable **Require status checks to pass before merging** in GitHub branch protection and select the **Lint and test** check.
+After the workflows have run at least once on `main`, enable **Require status checks to pass before merging** in GitHub branch protection and select the **Lint and test** and **Playwright Tests** checks.
 
 ### End-to-end tests (Playwright)
 
@@ -263,6 +271,7 @@ CI runs Playwright from [`.github/workflows/playwright.yml`](.github/workflows/p
 Out of scope for E2E for now:
 
 - Stripe checkout and webhooks
+- OAuth provider sign-in flows
 - AI generation
 - Hume voice
 - Resume upload
@@ -291,14 +300,18 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - `app/api/ai/resumes/analyze/route.ts`
 - `app/api/ai/questions/generate-question/route.ts`
 - `app/api/ai/questions/generate-feedback/route.ts`
+- `app/api/auth/validate-session/route.ts`
+- `app/api/oauth/[provider]/route.ts`
 - `app/api/stripe/create-checkout-session/route.ts`
 - `app/api/stripe/create-portal-session/route.ts`
 - `app/api/stripe/cancel-subscription/route.ts`
 - `app/api/stripe/webhooks/route.ts`
+- `app/api/cron/sync-stripe-subscriptions/route.ts`
 
 ## Development Notes
 
-- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts` file per source file).
+- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
-- The middleware intentionally skips Arcjet checks for Stripe routes and applies Arcjet mainly to `/api/**`.
+- A Vercel Cron job (`vercel.json`) calls `/api/cron/sync-stripe-subscriptions` daily to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
+- The middleware intentionally skips Arcjet checks for Stripe and cron routes and applies Arcjet mainly to `/api/**`.
 - Neon is a strong fit for Vercel deployments because it provides managed Postgres with straightforward hosted connection management (no containerized DB required in production).
