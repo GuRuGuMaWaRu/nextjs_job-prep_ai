@@ -15,10 +15,11 @@ export async function resetDatabase(connectionString: string) {
 }
 
 function assertTestDatabase(url: string) {
-  const dbName = new URL(url).hostname;
+  const parsed = new URL(url);
 
-  if (!dbName.includes("square-cloud")) {
-    // square-cloud is a string that appears in the test database name
-    throw new Error(`Refusing to reset non-test database ${dbName}`);
+  const allowedHost = process.env.E2E_DB_HOST ?? process.env.DB_HOST;
+
+  if (parsed.hostname !== allowedHost) {
+    throw new Error(`Refusing to reset database at host ${parsed.hostname}`);
   }
 }
