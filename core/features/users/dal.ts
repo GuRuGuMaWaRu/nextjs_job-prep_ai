@@ -24,21 +24,23 @@ type UpdateUserPlanAndStripeIdsPayload = {
 export async function upsertUserDal(user: typeof UserTable.$inferInsert) {
   try {
     await upsertUserDb(user);
-    revalidateUserCache(user.id);
   } catch (error) {
     console.error("Database error upserting user:", error);
     throw new DatabaseError("Failed to upsert user in database", error);
   }
+
+  revalidateUserCache(user.id);
 }
 
 export async function deleteUserDal(id: string) {
   try {
     await deleteUserDb(id);
-    revalidateUserCache(id);
   } catch (error) {
     console.error("Database error deleting user:", error);
     throw new DatabaseError("Failed to delete user from database", error);
   }
+
+  revalidateUserCache(id);
 }
 
 export async function updateUserPlanAndStripeIdsDal(
@@ -47,11 +49,12 @@ export async function updateUserPlanAndStripeIdsDal(
 ) {
   try {
     await updateUserPlanAndStripeIdsDb(userId, payload);
-    revalidateUserCache(userId);
   } catch (error) {
     console.error("Database error updating user plan:", error);
     throw new DatabaseError("Failed to update user plan in database", error);
   }
+
+  revalidateUserCache(userId);
 }
 
 export async function updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
@@ -59,20 +62,22 @@ export async function updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
   expectedStripeSubscriptionId: string | null,
   payload: UpdateUserPlanAndStripeIdsPayload,
 ) {
+  let updated: boolean;
+
   try {
-    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+    updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
       userId,
       expectedStripeSubscriptionId,
       payload,
     );
-
-    if (updated) {
-      revalidateUserCache(userId);
-    }
-
-    return updated;
   } catch (error) {
     console.error("Database error updating user plan:", error);
     throw new DatabaseError("Failed to update user plan in database", error);
   }
+
+  if (updated) {
+    revalidateUserCache(userId);
+  }
+
+  return updated;
 }
