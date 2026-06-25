@@ -45,11 +45,13 @@ export default defineConfig({
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },
+      testIgnore: process.env.CI ? undefined : "**/*",
     },
 
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
+      testIgnore: process.env.CI ? undefined : "**/*",
     },
 
     /* Test against mobile viewports. */
