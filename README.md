@@ -128,6 +128,7 @@ APP_URL=http://localhost:3000
 Notes:
 
 - The app builds `DATABASE_URL` internally from `DB_*` vars.
+- `DB_SSLMODE` is optional; omit it for local Docker Postgres.
 - `CRON_SECRET` must be exactly 15 characters.
 - `OAUTH_REDIRECT_URL_BASE` is required even when OAuth providers are not configured.
 - Stripe helpers prefer `APP_URL`, then `VERCEL_URL`, then localhost in development.
@@ -206,7 +207,7 @@ Open [http://localhost:3000](http://localhost:3000).
   - `SESSION_REFRESH_THRESHOLD_MS` (7 days)
   - session cookie name/options (`session_token`, `httpOnly`, etc.)
 - `core/features/auth/permissions.ts`
-  - free-plan limits: 1 interview and 10 questions per month (resume analyses are unlimited on all plans)
+  - free-plan limits: 1 completed voice interview (rows with a Hume chat id) and 10 generated questions lifetime (total row counts, not reset monthly); resume analyses are unlimited on all plans
   - plan-to-permission mapping for `free` and `pro`
 - `next.config.ts`
   - `cacheComponents: true`
@@ -237,12 +238,13 @@ npm test
 
 ### Continuous integration
 
-CI is split across two workflows:
+CI is split across three workflows:
 
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) - Biome lint and format checks (`npm run check:ci`) and Jest tests (`npm test`)
 - [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) - Playwright smoke tests (`npm run test:e2e`)
+- [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml) - validates PR titles match Conventional Commit style (`type(scope): summary`)
 
-After the workflows have run at least once on `main`, enable **Require status checks to pass before merging** in GitHub branch protection and select the **Lint and test** and **Playwright Tests** checks.
+After the workflows have run at least once on `main`, enable **Require status checks to pass before merging** in GitHub branch protection and select the **Lint and test**, **Playwright Tests**, and **Validate PR title** checks.
 
 ### End-to-end tests (Playwright)
 
@@ -262,7 +264,7 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 ```
 
-The smoke specs live in `e2e/smoke/` and cover the landing page plus auth/job creation flows. Shared setup helpers live in `e2e/helpers/`.
+The smoke specs live in `e2e/smoke/` and cover the landing page plus auth/job creation flows. Shared setup helpers live in `e2e/helpers/`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
 
 `e2e/globalSetup.ts` resets the database before each run by truncating test data. Keep this pointed at a separate test database: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
 
@@ -312,6 +314,6 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 - Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
-- A Vercel Cron job (`vercel.json`) calls `/api/cron/sync-stripe-subscriptions` daily to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
-- The middleware intentionally skips Arcjet checks for Stripe and cron routes and applies Arcjet mainly to `/api/**`.
+- A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
+- The middleware skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
 - Neon is a strong fit for Vercel deployments because it provides managed Postgres with straightforward hosted connection management (no containerized DB required in production).
