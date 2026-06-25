@@ -1,12 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 import { db } from "@/core/drizzle/db";
 import { JobInfoTable } from "@/core/drizzle/schema";
-import {
-  revalidateJobInfoAndRelatedItemsCache,
-  revalidateJobInfoCache,
-} from "@/core/features/jobInfos/dbCache";
 
 export async function createJobInfoDb(
   jobInfo: typeof JobInfoTable.$inferInsert,
@@ -15,9 +10,6 @@ export async function createJobInfoDb(
     id: JobInfoTable.id,
     userId: JobInfoTable.userId,
   });
-
-  revalidateJobInfoCache(newJobInfo);
-  revalidatePath("/app");
 
   return newJobInfo;
 }
@@ -34,8 +26,6 @@ export async function updateJobInfoDb(
       id: JobInfoTable.id,
       userId: JobInfoTable.userId,
     });
-
-  revalidateJobInfoCache(updatedJobInfo);
 
   return updatedJobInfo;
 }
@@ -64,12 +54,6 @@ export async function removeJobInfoDb(id: string) {
     .delete(JobInfoTable)
     .where(eq(JobInfoTable.id, id))
     .returning();
-
-  revalidateJobInfoAndRelatedItemsCache({
-    id: deletedJobInfo.id,
-    userId: deletedJobInfo.userId,
-  });
-  revalidatePath("/app");
 
   return deletedJobInfo;
 }

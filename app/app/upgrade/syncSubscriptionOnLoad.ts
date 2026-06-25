@@ -35,6 +35,6 @@ export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
     await reconcileUserStripeSubscription(stripe, userId);
   } catch (error) {
     console.error("Error syncing subscription:", error);
-    // DB updates already revalidate user tags when reconcile succeeds; keep page usable on failure.
+    // Revalidation runs in RevalidateOnStripeReturn after redirect, not during render.
   }
 }

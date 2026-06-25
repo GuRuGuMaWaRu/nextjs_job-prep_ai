@@ -132,12 +132,13 @@ async function getSubscriptionForSync(
  * @param subscriptionId - Subscription id to retrieve corresponding subscription state.
  * @param customerId - Stripe customer id.
  * @throws Error when no user exists for `customerId`.
+ * @returns User id when the database row was updated (for cache revalidation at the caller).
  */
 export async function syncSubscriptionFromStripe(
   stripe: Stripe,
   subscriptionId: string,
   customerId: string,
-): Promise<void> {
+): Promise<string | null> {
   const user = await getUserByStripeCustomerIdDb(customerId);
   if (!user) {
     throw new Error(
@@ -155,7 +156,7 @@ export async function syncSubscriptionFromStripe(
   );
 
   if (!subscriptionForSync) {
-    return;
+    return null;
   }
 
   const subscriptionState = getSubscriptionState(subscriptionForSync);
@@ -175,7 +176,10 @@ export async function syncSubscriptionFromStripe(
         eventStripeSubscriptionId: subscriptionForSync.id,
       },
     );
+    return null;
   }
+
+  return user.id;
 }
 
 function isStripeSubscriptionMissingError(err: unknown): boolean {

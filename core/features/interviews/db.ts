@@ -2,7 +2,6 @@ import { and, count, desc, eq, isNotNull } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
 import { InterviewTable, JobInfoTable } from "@/core/drizzle/schema";
-import { revalidateInterviewCache } from "@/core/features/interviews/dbCache";
 
 export async function getInterviewByIdDb(id: string) {
   const interview = await db.query.InterviewTable.findFirst({
@@ -31,11 +30,6 @@ export async function insertInterviewDb(
     .values(interview)
     .returning({ id: InterviewTable.id, jobInfoId: InterviewTable.jobInfoId });
 
-  revalidateInterviewCache({
-    id: newInterview.id,
-    jobInfoId: newInterview.jobInfoId,
-  });
-
   return newInterview;
 }
 
@@ -48,11 +42,6 @@ export async function updateInterviewDb(
     .set(interview)
     .where(eq(InterviewTable.id, id))
     .returning({ id: InterviewTable.id, jobInfoId: InterviewTable.jobInfoId });
-
-  revalidateInterviewCache({
-    id: updatedInterview.id,
-    jobInfoId: updatedInterview.jobInfoId,
-  });
 
   return updatedInterview;
 }

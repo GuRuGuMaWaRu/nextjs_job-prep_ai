@@ -9,7 +9,6 @@ import {
 jest.mock("./db", () => ({
   getUserByIdDb: jest.fn(),
   getUserByStripeCustomerIdDb: jest.fn(),
-  updateUserPlanAndStripeIdsDb: jest.fn(),
   updateUserPlanAndStripeIdsIfSubscriptionMatchesDb: jest.fn(),
 }));
 

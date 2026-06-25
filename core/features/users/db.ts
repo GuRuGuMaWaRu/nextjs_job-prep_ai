@@ -3,7 +3,6 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { UserTable } from "@/core/drizzle/schema";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { db } from "@/core/drizzle/db";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
 
 type UpdateUserPlanAndStripeIdsPayload = {
   plan: UserPlan;
@@ -33,13 +32,10 @@ export async function upsertUserDb(user: typeof UserTable.$inferInsert) {
       target: [UserTable.id],
       set: user,
     });
-
-  revalidateUserCache(user.id);
 }
 
 export async function deleteUserDb(id: string) {
   await db.delete(UserTable).where(eq(UserTable.id, id));
-  revalidateUserCache(id);
 }
 
 export async function getUserByIdDb(id: string) {
@@ -86,8 +82,6 @@ export async function updateUserPlanAndStripeIdsDb(
     .update(UserTable)
     .set(toUserPlanAndStripeIdsUpdate(payload))
     .where(eq(UserTable.id, userId));
-
-  revalidateUserCache(userId);
 }
 
 /**
@@ -112,11 +106,5 @@ export async function updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
     )
     .returning({ id: UserTable.id });
 
-  const updated = rows.length > 0;
-
-  if (updated) {
-    revalidateUserCache(userId);
-  }
-
-  return updated;
+  return rows.length > 0;
 }

@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
+import { routes } from "@/core/data/routes";
 import { jobInfoSchema } from "@/core/features/jobInfos/schemas";
 import {
   createJobInfoService,
@@ -11,6 +14,7 @@ import {
 } from "@/core/features/jobInfos/service";
 import { JOB_INFO_ACTION_MESSAGES } from "@/core/features/jobInfos/actionMessages";
 import { ActionResult } from "@/core/dal/helpers";
+import { JobInfoTable } from "@/core/drizzle/schema";
 import {
   DatabaseError,
   NotFoundError,
@@ -43,6 +47,8 @@ export async function createJobInfoAction(
   try {
     // 2. Call service (handles business logic and permissions)
     const jobInfo = await createJobInfoService(validation.data);
+
+    revalidatePath(routes.app);
 
     // 3. Return success with data for client-side redirect
     return {
@@ -163,6 +169,51 @@ export async function getJobInfosAction() {
  * Remove a job info by ID
  * Used in pages to remove a job info + all related interviews and questions
  */
-export async function removeJobInfoAction(id: string) {
-  return await removeJobInfoService(id);
+export async function removeJobInfoAction(
+  id: string,
+): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
+  try {
+    const result = await removeJobInfoService(id);
+
+    if (result.success) {
+      revalidatePath(routes.app);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Failed to remove job info:", error);
+
+    if (error instanceof UnauthorizedError) {
+      return {
+        success: false,
+        message: JOB_INFO_ACTION_MESSAGES.removeUnauthorized,
+      };
+    }
+
+    if (error instanceof NotFoundError) {
+      return {
+        success: false,
+        message: JOB_INFO_ACTION_MESSAGES.removeNotFound,
+      };
+    }
+
+    if (error instanceof PermissionError) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    if (error instanceof DatabaseError) {
+      return {
+        success: false,
+        message: JOB_INFO_ACTION_MESSAGES.removeDatabaseError,
+      };
+    }
+
+    return {
+      success: false,
+      message: JOB_INFO_ACTION_MESSAGES.unexpectedError,
+    };
+  }
 }
