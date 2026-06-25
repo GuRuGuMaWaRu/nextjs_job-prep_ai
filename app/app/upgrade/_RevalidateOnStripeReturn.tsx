@@ -28,7 +28,12 @@ export function RevalidateOnStripeReturn({
   const didRun = useRef(false);
 
   useEffect(() => {
-    if (!success && !canceled && !canceledSubscription && !subscriptionChanged) {
+    if (
+      !success &&
+      !canceled &&
+      !canceledSubscription &&
+      !subscriptionChanged
+    ) {
       return;
     }
 

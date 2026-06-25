@@ -70,9 +70,7 @@ describe("RevalidateOnStripeReturn", () => {
       }),
     );
 
-    render(
-      <RevalidateOnStripeReturn {...props} subscriptionChanged={false} />,
-    );
+    render(<RevalidateOnStripeReturn {...props} subscriptionChanged={false} />);
 
     await waitFor(() => {
       expect(mockRevalidateUpgradePage).toHaveBeenCalledTimes(1);
