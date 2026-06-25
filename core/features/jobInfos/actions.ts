@@ -14,6 +14,7 @@ import {
 } from "@/core/features/jobInfos/service";
 import { JOB_INFO_ACTION_MESSAGES } from "@/core/features/jobInfos/actionMessages";
 import { ActionResult } from "@/core/dal/helpers";
+import { JobInfoTable } from "@/core/drizzle/schema";
 import {
   DatabaseError,
   NotFoundError,
@@ -168,12 +169,51 @@ export async function getJobInfosAction() {
  * Remove a job info by ID
  * Used in pages to remove a job info + all related interviews and questions
  */
-export async function removeJobInfoAction(id: string) {
-  const result = await removeJobInfoService(id);
+export async function removeJobInfoAction(
+  id: string,
+): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
+  try {
+    const result = await removeJobInfoService(id);
 
-  if (result.success) {
-    revalidatePath(routes.app);
+    if (result.success) {
+      revalidatePath(routes.app);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Failed to remove job info:", error);
+
+    if (error instanceof UnauthorizedError) {
+      return {
+        success: false,
+        message: JOB_INFO_ACTION_MESSAGES.removeUnauthorized,
+      };
+    }
+
+    if (error instanceof NotFoundError) {
+      return {
+        success: false,
+        message: JOB_INFO_ACTION_MESSAGES.removeNotFound,
+      };
+    }
+
+    if (error instanceof PermissionError) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    if (error instanceof DatabaseError) {
+      return {
+        success: false,
+        message: JOB_INFO_ACTION_MESSAGES.removeDatabaseError,
+      };
+    }
+
+    return {
+      success: false,
+      message: JOB_INFO_ACTION_MESSAGES.unexpectedError,
+    };
   }
-
-  return result;
 }

@@ -258,4 +258,38 @@ describe("job info actions", () => {
     expect(mockRemoveJobInfoService).toHaveBeenCalledWith(jobInfo.id);
     expect(mockRevalidatePath).toHaveBeenCalledWith(routes.app);
   });
+
+  it("does not revalidate when removeJobInfoService returns failure", async () => {
+    const result = {
+      success: false as const,
+      message: "Failed to remove job information from database",
+    };
+    mockRemoveJobInfoService.mockResolvedValue(result);
+
+    await expect(removeJobInfoAction("job-info-id")).resolves.toBe(result);
+
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("maps unauthorized remove errors to a login message", async () => {
+    mockRemoveJobInfoService.mockRejectedValue(new UnauthorizedError());
+
+    await expect(removeJobInfoAction("job-info-id")).resolves.toEqual({
+      success: false,
+      message: JOB_INFO_ACTION_MESSAGES.removeUnauthorized,
+    });
+
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("maps not-found remove errors to a user-facing message", async () => {
+    mockRemoveJobInfoService.mockRejectedValue(new NotFoundError("missing"));
+
+    await expect(removeJobInfoAction("job-info-id")).resolves.toEqual({
+      success: false,
+      message: JOB_INFO_ACTION_MESSAGES.removeNotFound,
+    });
+
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
 });
