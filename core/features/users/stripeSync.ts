@@ -5,8 +5,8 @@ import type { UserPlan } from "@/core/drizzle/schema/user";
 import {
   getUserByIdDb,
   getUserByStripeCustomerIdDb,
+  updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
 } from "./db";
-import { updateUserPlanAndStripeIdsIfSubscriptionMatchesDal } from "./dal";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 const CUSTOMER_SUBSCRIPTION_LIST_LIMIT = 100;
@@ -132,12 +132,13 @@ async function getSubscriptionForSync(
  * @param subscriptionId - Subscription id to retrieve corresponding subscription state.
  * @param customerId - Stripe customer id.
  * @throws Error when no user exists for `customerId`.
+ * @returns User id when the database row was updated (for cache revalidation at the caller).
  */
 export async function syncSubscriptionFromStripe(
   stripe: Stripe,
   subscriptionId: string,
   customerId: string,
-): Promise<void> {
+): Promise<string | null> {
   const user = await getUserByStripeCustomerIdDb(customerId);
   if (!user) {
     throw new Error(
@@ -155,12 +156,12 @@ export async function syncSubscriptionFromStripe(
   );
 
   if (!subscriptionForSync) {
-    return;
+    return null;
   }
 
   const subscriptionState = getSubscriptionState(subscriptionForSync);
 
-  const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
+  const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
     user.id,
     user.stripeSubscriptionId,
     subscriptionState,
@@ -175,7 +176,10 @@ export async function syncSubscriptionFromStripe(
         eventStripeSubscriptionId: subscriptionForSync.id,
       },
     );
+    return null;
   }
+
+  return user.id;
 }
 
 function isStripeSubscriptionMissingError(err: unknown): boolean {
@@ -242,7 +246,7 @@ export async function reconcileUserStripeSubscription(
       return { kind: "ok", updated: false };
     }
 
-    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
+    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
       user.id,
       user.stripeSubscriptionId,
       subscriptionState,
@@ -293,7 +297,7 @@ export async function reconcileUserStripeSubscription(
         if (activeSubscription) {
           const subscriptionState = getSubscriptionState(activeSubscription);
           const updated =
-            await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
+            await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
               userId,
               user.stripeSubscriptionId,
               subscriptionState,
@@ -322,7 +326,7 @@ export async function reconcileUserStripeSubscription(
         },
       );
 
-      const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
+      const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
         userId,
         user.stripeSubscriptionId,
         {

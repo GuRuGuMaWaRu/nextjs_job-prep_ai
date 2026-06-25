@@ -11,15 +11,15 @@ jest.mock("@/core/drizzle/db", () => ({
   },
 }));
 
-jest.mock("@/core/features/users/dal", () => ({
-  updateUserPlanAndStripeIdsDal: jest.fn(),
+jest.mock("@/core/features/users/db", () => ({
+  updateUserPlanAndStripeIdsDb: jest.fn(),
 }));
 
 import type Stripe from "stripe";
 
 import { db } from "@/core/drizzle/db";
 import { getStripe } from "@/core/features/billing/stripe";
-import { updateUserPlanAndStripeIdsDal } from "@/core/features/users/dal";
+import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 import {
   makeStripeCheckoutSession,
   makeStripeSubscription,
@@ -53,8 +53,8 @@ const stripe = {
 } as unknown as Stripe;
 
 const mockGetStripe = jest.mocked(getStripe);
-const mockUpdateUserPlanAndStripeIdsDal = jest.mocked(
-  updateUserPlanAndStripeIdsDal,
+const mockUpdateUserPlanAndStripeIdsDb = jest.mocked(
+  updateUserPlanAndStripeIdsDb,
 );
 const mockDb = db as unknown as MockWebhookDb;
 
@@ -89,7 +89,7 @@ describe("fulfillCheckoutSession", () => {
 
   beforeEach(() => {
     mockGetStripe.mockReturnValue(stripe);
-    mockUpdateUserPlanAndStripeIdsDal.mockResolvedValue(undefined);
+    mockUpdateUserPlanAndStripeIdsDb.mockResolvedValue(undefined);
     consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
   });
 
@@ -114,7 +114,7 @@ describe("fulfillCheckoutSession", () => {
     await expect(fulfillCheckoutSession(session)).resolves.toBe(true);
 
     expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_active");
-    expect(mockUpdateUserPlanAndStripeIdsDal).toHaveBeenCalledWith("user-test", {
+    expect(mockUpdateUserPlanAndStripeIdsDb).toHaveBeenCalledWith("user-test", {
       plan: "pro",
       stripeCustomerId: "cus_test_active",
       stripeSubscriptionId: "sub_test_active",
@@ -138,7 +138,7 @@ describe("fulfillCheckoutSession", () => {
     await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
 
     expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_canceled");
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
 
   it("skips unpaid checkout sessions without retrieving the subscription", async () => {
@@ -149,7 +149,7 @@ describe("fulfillCheckoutSession", () => {
     await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
 
     expect(retrieveSubscription).not.toHaveBeenCalled();
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 
@@ -166,7 +166,7 @@ describe("fulfillCheckoutSession", () => {
       "cs_test_missing_user",
     );
     expect(retrieveSubscription).not.toHaveBeenCalled();
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -191,7 +191,7 @@ describe("fulfillCheckoutSession", () => {
       "cs_test_incomplete",
     );
     expect(retrieveSubscription).not.toHaveBeenCalled();
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
 
   it("skips paid checkout sessions when the Stripe client is unavailable", async () => {
@@ -206,7 +206,7 @@ describe("fulfillCheckoutSession", () => {
 
     expect(mockGetStripe).toHaveBeenCalledTimes(1);
     expect(retrieveSubscription).not.toHaveBeenCalled();
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 
@@ -235,7 +235,7 @@ describe("fulfillCheckoutSession", () => {
     await expect(fulfillCheckoutSession(session)).resolves.toBe(true);
 
     expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_expanded");
-    expect(mockUpdateUserPlanAndStripeIdsDal).toHaveBeenCalledWith("user-test", {
+    expect(mockUpdateUserPlanAndStripeIdsDb).toHaveBeenCalledWith("user-test", {
       plan: "pro",
       stripeCustomerId: "cus_test_expanded",
       stripeSubscriptionId: "sub_test_expanded",
@@ -265,7 +265,7 @@ describe("fulfillCheckoutSession", () => {
       ),
       "cs_test_customer_mismatch",
     );
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
 
   it("skips sessions whose retrieved expanded subscription has no customer id", async () => {
@@ -291,7 +291,7 @@ describe("fulfillCheckoutSession", () => {
       ),
       "cs_test_subscription_customer_missing",
     );
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
+    expect(mockUpdateUserPlanAndStripeIdsDb).not.toHaveBeenCalled();
   });
 });
 

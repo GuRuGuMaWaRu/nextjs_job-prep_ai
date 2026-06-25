@@ -7,7 +7,7 @@ import type Stripe from "stripe";
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
 import { getStripe } from "@/core/features/billing/stripe";
-import { updateUserPlanAndStripeIdsDal } from "@/core/features/users/dal";
+import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
 
 const REMEDIATION_DETAIL_MAX_LEN = 512;
 const POSTGRES_UNDEFINED_COLUMN = "42703";
@@ -146,7 +146,7 @@ export async function unclaimEvent(eventId: string): Promise<void> {
  *
  * @param session — Stripe Checkout session (must include `metadata.userId` and resolved customer/subscription).
  * @returns True when the user row was updated, or false if the session is unpaid or missing required data.
- * @sideEffects Writes to the application database via `updateUserPlanAndStripeIdsDal`; may log non-sensitive warnings.
+ * @sideEffects Writes to the application database via `updateUserPlanAndStripeIdsDb`; may log non-sensitive warnings.
  */
 export async function fulfillCheckoutSession(
   session: Stripe.Checkout.Session,
@@ -204,7 +204,7 @@ export async function fulfillCheckoutSession(
     return false;
   }
 
-  await updateUserPlanAndStripeIdsDal(userId, {
+  await updateUserPlanAndStripeIdsDb(userId, {
     plan: "pro",
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscriptionId,
