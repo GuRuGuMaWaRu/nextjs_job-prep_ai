@@ -1,3 +1,11 @@
+jest.mock("next/cache", () => {
+  const { createNextCacheMock } = jest.requireActual<
+    typeof import("@core/test-utils/mocks/next")
+  >("@core/test-utils/mocks/next");
+
+  return createNextCacheMock();
+});
+
 jest.mock("@/core/features/jobInfos/service", () => ({
   createJobInfoService: jest.fn(),
   getJobInfoByIdService: jest.fn(),
@@ -12,6 +20,9 @@ jest.mock("@/core/features/auth/actions", () => ({
   getCurrentUserWithProfileAction: jest.fn(),
 }));
 
+import { revalidatePath } from "next/cache";
+
+import { routes } from "@/core/data/routes";
 import {
   DatabaseError,
   NotFoundError,
@@ -43,6 +54,7 @@ const mockGetJobInfoService = jest.mocked(getJobInfoService);
 const mockGetJobInfosService = jest.mocked(getJobInfosService);
 const mockRemoveJobInfoService = jest.mocked(removeJobInfoService);
 const mockUpdateJobInfoService = jest.mocked(updateJobInfoService);
+const mockRevalidatePath = jest.mocked(revalidatePath);
 
 const validJobInfoInput = {
   name: "Example Co",
@@ -85,6 +97,7 @@ describe("job info actions", () => {
       });
 
       expect(mockCreateJobInfoService).toHaveBeenCalledWith(validJobInfoInput);
+      expect(mockRevalidatePath).toHaveBeenCalledWith(routes.app);
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
@@ -243,5 +256,6 @@ describe("job info actions", () => {
     await expect(removeJobInfoAction(jobInfo.id)).resolves.toBe(result);
 
     expect(mockRemoveJobInfoService).toHaveBeenCalledWith(jobInfo.id);
+    expect(mockRevalidatePath).toHaveBeenCalledWith(routes.app);
   });
 });

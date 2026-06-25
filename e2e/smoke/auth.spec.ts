@@ -115,7 +115,7 @@ test.describe("Auth", () => {
       page.getByRole("button", { name: /save job information/i }),
     ).toBeVisible();
 
-    // Submit a new job description
+    // Submit a new job info
     const nameInput = page.getByRole("textbox", { name: "Name" });
     const titleInput = page.getByRole("textbox", { name: "Job Title" });
     const descriptionInput = page.getByRole("textbox", { name: "Description" });

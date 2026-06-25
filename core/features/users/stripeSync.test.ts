@@ -9,15 +9,17 @@ import {
 jest.mock("./db", () => ({
   getUserByIdDb: jest.fn(),
   getUserByStripeCustomerIdDb: jest.fn(),
-  updateUserPlanAndStripeIdsDb: jest.fn(),
-  updateUserPlanAndStripeIdsIfSubscriptionMatchesDb: jest.fn(),
+}));
+
+jest.mock("./dal", () => ({
+  updateUserPlanAndStripeIdsIfSubscriptionMatchesDal: jest.fn(),
 }));
 
 import {
   getUserByIdDb,
   getUserByStripeCustomerIdDb,
-  updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
 } from "./db";
+import { updateUserPlanAndStripeIdsIfSubscriptionMatchesDal } from "./dal";
 import {
   reconcileUserStripeSubscription,
   syncSubscriptionFromStripe,
@@ -27,8 +29,8 @@ const mockGetUserByIdDb = jest.mocked(getUserByIdDb);
 const mockGetUserByStripeCustomerIdDb = jest.mocked(
   getUserByStripeCustomerIdDb,
 );
-const mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb = jest.mocked(
-  updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+const mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal = jest.mocked(
+  updateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
 );
 
 const missingUserById = null as unknown as Awaited<
@@ -86,7 +88,7 @@ describe("syncSubscriptionFromStripe", () => {
     } as unknown as Stripe;
 
     jest.clearAllMocks();
-    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb.mockResolvedValue(
+    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal.mockResolvedValue(
       true,
     );
     consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -130,7 +132,7 @@ describe("syncSubscriptionFromStripe", () => {
       limit: 100,
     });
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -163,7 +165,7 @@ describe("syncSubscriptionFromStripe", () => {
       },
     );
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -197,7 +199,7 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_old", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_new",
@@ -225,7 +227,7 @@ describe("syncSubscriptionFromStripe", () => {
 
     expect(mockList).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_current", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_current",
@@ -260,7 +262,7 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_old", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_active_after_first_page",
@@ -297,7 +299,7 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -329,7 +331,7 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_old", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_new",
@@ -382,7 +384,7 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_old", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_newest",
@@ -401,7 +403,7 @@ describe("syncSubscriptionFromStripe", () => {
     });
     mockGetUserByStripeCustomerIdDb.mockResolvedValue(user);
     mockRetrieve.mockResolvedValue(canceledSubscription);
-    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb.mockResolvedValue(
+    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal.mockResolvedValue(
       false,
     );
 
@@ -412,7 +414,7 @@ describe("syncSubscriptionFromStripe", () => {
     );
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, null, {
       plan: "free",
       stripeSubscriptionId: null,
@@ -436,7 +438,7 @@ describe("syncSubscriptionFromStripe", () => {
 
     expect(mockRetrieve).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 });
@@ -459,7 +461,7 @@ describe("reconcileUserStripeSubscription", () => {
     } as unknown as Stripe;
 
     jest.clearAllMocks();
-    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb.mockResolvedValue(
+    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal.mockResolvedValue(
       true,
     );
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
@@ -487,7 +489,7 @@ describe("reconcileUserStripeSubscription", () => {
 
     expect(mockRetrieve).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -512,7 +514,7 @@ describe("reconcileUserStripeSubscription", () => {
 
     expect(mockList).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -538,7 +540,7 @@ describe("reconcileUserStripeSubscription", () => {
 
     expect(mockList).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -565,7 +567,7 @@ describe("reconcileUserStripeSubscription", () => {
 
     expect(mockList).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -591,7 +593,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
   });
 
@@ -608,7 +610,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
     mockGetUserByIdDb.mockResolvedValue(user);
     mockRetrieve.mockResolvedValue(subscription);
-    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb.mockResolvedValue(
+    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal.mockResolvedValue(
       false,
     );
 
@@ -657,7 +659,7 @@ describe("reconcileUserStripeSubscription", () => {
       limit: 100,
     });
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_missing", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_active",
@@ -697,7 +699,7 @@ describe("reconcileUserStripeSubscription", () => {
       limit: 100,
     });
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_inactive", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_active",
@@ -727,7 +729,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_terminal", {
       plan: "free",
       stripeSubscriptionId: null,
@@ -772,7 +774,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_old", {
       plan: "pro",
       stripeSubscriptionId: "sub_test_newest_active",
@@ -797,7 +799,7 @@ describe("reconcileUserStripeSubscription", () => {
     });
 
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_missing", {
       plan: "free",
       stripeSubscriptionId: null,
@@ -829,7 +831,7 @@ describe("reconcileUserStripeSubscription", () => {
 
     expect(mockList).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).not.toHaveBeenCalled();
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "[stripeSync] Skipped downgrade after missing subscription: row changed concurrently",
@@ -894,7 +896,7 @@ describe("reconcileUserStripeSubscription", () => {
 
     expect(mockList).not.toHaveBeenCalled();
     expect(
-      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
+      mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal,
     ).toHaveBeenCalledWith(user.id, "sub_test_missing", {
       plan: "free",
       stripeSubscriptionId: null,
@@ -915,7 +917,7 @@ describe("reconcileUserStripeSubscription", () => {
     mockGetUserByIdDb.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
     mockRetrieve.mockRejectedValue(makeMissingSubscriptionError());
     mockList.mockReturnValue(makeStripeList([activeSubscription]));
-    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb.mockResolvedValue(
+    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal.mockResolvedValue(
       false,
     );
 
@@ -945,7 +947,7 @@ describe("reconcileUserStripeSubscription", () => {
     mockGetUserByIdDb.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
     mockRetrieve.mockRejectedValue(makeMissingSubscriptionError());
     mockList.mockReturnValue(makeStripeList([]));
-    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDb.mockResolvedValue(
+    mockUpdateUserPlanAndStripeIdsIfSubscriptionMatchesDal.mockResolvedValue(
       false,
     );
 

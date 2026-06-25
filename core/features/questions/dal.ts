@@ -9,6 +9,7 @@ import {
 import {
   getQuestionIdTag,
   getQuestionJobInfoTag,
+  revalidateQuestionCache,
 } from "@/core/features/questions/dbCache";
 import { QuestionTable } from "@/core/drizzle/schema";
 
@@ -55,7 +56,14 @@ export async function insertQuestionDal(
   question: typeof QuestionTable.$inferInsert,
 ) {
   try {
-    return await insertQuestionDb(question);
+    const newQuestion = await insertQuestionDb(question);
+
+    revalidateQuestionCache({
+      id: newQuestion.id,
+      jobInfoId: newQuestion.jobInfoId,
+    });
+
+    return newQuestion;
   } catch (error) {
     console.error("Database error inserting question:", error);
     throw new DatabaseError("Failed to save question to database", error);

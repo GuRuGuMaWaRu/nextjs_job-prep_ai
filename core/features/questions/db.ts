@@ -2,7 +2,6 @@ import { and, asc, count, eq } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
 import { QuestionTable, JobInfoTable } from "@/core/drizzle/schema";
-import { revalidateQuestionCache } from "@/core/features/questions/dbCache";
 
 export async function getQuestionCountDb(userId: string) {
   const [{ count: questionCount }] = await db
@@ -31,11 +30,6 @@ export async function insertQuestionDb(
       id: QuestionTable.id,
       jobInfoId: QuestionTable.jobInfoId,
     });
-
-  revalidateQuestionCache({
-    id: newQuestion.id,
-    jobInfoId: newQuestion.jobInfoId,
-  });
 
   return newQuestion;
 }

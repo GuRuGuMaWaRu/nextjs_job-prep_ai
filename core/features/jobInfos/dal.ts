@@ -11,6 +11,8 @@ import {
 import {
   getJobInfoIdTag,
   getJobInfoGlobalTag,
+  revalidateJobInfoAndRelatedItemsCache,
+  revalidateJobInfoCache,
 } from "@/core/features/jobInfos/dbCache";
 import { DatabaseError } from "@/core/dal/errors";
 import { ActionResult } from "@/core/dal/helpers";
@@ -28,7 +30,11 @@ import { JobInfoTable } from "@/core/drizzle/schema";
  */
 export async function createJobInfoDal(data: typeof JobInfoTable.$inferInsert) {
   try {
-    return await createJobInfoDb(data);
+    const newJobInfo = await createJobInfoDb(data);
+
+    revalidateJobInfoCache(newJobInfo);
+
+    return newJobInfo;
   } catch (error) {
     console.error("Database error creating job info:", error);
     throw new DatabaseError(
@@ -102,7 +108,11 @@ export async function updateJobInfoDal(
   data: Partial<typeof JobInfoTable.$inferInsert>,
 ) {
   try {
-    return await updateJobInfoDb(id, data);
+    const updatedJobInfo = await updateJobInfoDb(id, data);
+
+    revalidateJobInfoCache(updatedJobInfo);
+
+    return updatedJobInfo;
   } catch (error) {
     console.error("Database error updating job info:", error);
     throw new DatabaseError(
@@ -120,6 +130,12 @@ export async function removeJobInfoDal(
 ): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
   try {
     const deletedJobInfo = await removeJobInfoDb(id);
+
+    revalidateJobInfoAndRelatedItemsCache({
+      id: deletedJobInfo.id,
+      userId: deletedJobInfo.userId,
+    });
+
     return { success: true, data: deletedJobInfo };
   } catch (error) {
     console.error("Database error removing job info:", error);

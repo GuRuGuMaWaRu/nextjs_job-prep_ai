@@ -10,6 +10,7 @@ import {
 import {
   getInterviewIdTag,
   getInterviewJobInfoTag,
+  revalidateInterviewCache,
 } from "@/core/features/interviews/dbCache";
 import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
 import { InterviewTable } from "@/core/drizzle/schema";
@@ -67,7 +68,14 @@ export async function insertInterviewDal(
   interview: typeof InterviewTable.$inferInsert,
 ) {
   try {
-    return await insertInterviewDb(interview);
+    const newInterview = await insertInterviewDb(interview);
+
+    revalidateInterviewCache({
+      id: newInterview.id,
+      jobInfoId: newInterview.jobInfoId,
+    });
+
+    return newInterview;
   } catch (error) {
     console.error("Database error inserting interview:", error);
     throw new DatabaseError("Failed to create interview in database", error);
@@ -82,7 +90,14 @@ export async function updateInterviewDal(
   interview: Partial<typeof InterviewTable.$inferInsert>,
 ) {
   try {
-    return await updateInterviewDb(id, interview);
+    const updatedInterview = await updateInterviewDb(id, interview);
+
+    revalidateInterviewCache({
+      id: updatedInterview.id,
+      jobInfoId: updatedInterview.jobInfoId,
+    });
+
+    return updatedInterview;
   } catch (error) {
     console.error("Database error updating interview:", error);
     throw new DatabaseError("Failed to update interview in database", error);
