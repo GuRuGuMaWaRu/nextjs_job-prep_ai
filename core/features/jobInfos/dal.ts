@@ -29,12 +29,10 @@ import { JobInfoTable } from "@/core/drizzle/schema";
  * Create a new job info entry in the database
  */
 export async function createJobInfoDal(data: typeof JobInfoTable.$inferInsert) {
+  let newJobInfo: Awaited<ReturnType<typeof createJobInfoDb>>;
+
   try {
-    const newJobInfo = await createJobInfoDb(data);
-
-    revalidateJobInfoCache(newJobInfo);
-
-    return newJobInfo;
+    newJobInfo = await createJobInfoDb(data);
   } catch (error) {
     console.error("Database error creating job info:", error);
     throw new DatabaseError(
@@ -42,6 +40,10 @@ export async function createJobInfoDal(data: typeof JobInfoTable.$inferInsert) {
       error,
     );
   }
+
+  revalidateJobInfoCache(newJobInfo);
+
+  return newJobInfo;
 }
 
 /**
@@ -107,12 +109,10 @@ export async function updateJobInfoDal(
   id: string,
   data: Partial<typeof JobInfoTable.$inferInsert>,
 ) {
+  let updatedJobInfo: Awaited<ReturnType<typeof updateJobInfoDb>>;
+
   try {
-    const updatedJobInfo = await updateJobInfoDb(id, data);
-
-    revalidateJobInfoCache(updatedJobInfo);
-
-    return updatedJobInfo;
+    updatedJobInfo = await updateJobInfoDb(id, data);
   } catch (error) {
     console.error("Database error updating job info:", error);
     throw new DatabaseError(
@@ -120,6 +120,10 @@ export async function updateJobInfoDal(
       error,
     );
   }
+
+  revalidateJobInfoCache(updatedJobInfo);
+
+  return updatedJobInfo;
 }
 
 /**
@@ -128,15 +132,10 @@ export async function updateJobInfoDal(
 export async function removeJobInfoDal(
   id: string,
 ): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
+  let deletedJobInfo: Awaited<ReturnType<typeof removeJobInfoDb>>;
+
   try {
-    const deletedJobInfo = await removeJobInfoDb(id);
-
-    revalidateJobInfoAndRelatedItemsCache({
-      id: deletedJobInfo.id,
-      userId: deletedJobInfo.userId,
-    });
-
-    return { success: true, data: deletedJobInfo };
+    deletedJobInfo = await removeJobInfoDb(id);
   } catch (error) {
     console.error("Database error removing job info:", error);
     return {
@@ -144,4 +143,11 @@ export async function removeJobInfoDal(
       message: "Failed to remove job information from database",
     };
   }
+
+  revalidateJobInfoAndRelatedItemsCache({
+    id: deletedJobInfo.id,
+    userId: deletedJobInfo.userId,
+  });
+
+  return { success: true, data: deletedJobInfo };
 }
