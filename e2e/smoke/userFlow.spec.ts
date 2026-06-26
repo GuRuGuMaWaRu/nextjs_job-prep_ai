@@ -55,9 +55,7 @@ test.describe("User Flow ->", () => {
     // Create job info
     const session = await createAuthenticatedUser("create-and-edit-job-info-");
     await applySessionCookie(page, session);
-    const jobInfo = await createTestJobInfo(session.userId, {
-      name: "Super duper test test job",
-    });
+    const jobInfo = await createTestJobInfo(session.userId);
 
     // Go to job info page
     await page.goto("/app");
