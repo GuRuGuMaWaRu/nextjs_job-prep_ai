@@ -22,7 +22,7 @@ export function JobInfoCard({
   jobInfo: typeof JobInfoTable.$inferSelect;
 }) {
   return (
-    <div className="job-info-card" key={jobInfo.id}>
+    <div className="job-info-card" data-testid={jobInfo.id}>
       <Card className="p-0 h-[200px] transition-[opacity_colors] has-[.delete-button:hover]:outline-destructive/70! has-[.delete-button:hover]:outline-4! has-[.link-button:hover]:outline-primary/70! has-[.link-button:hover]:outline-4! has-[.delete-button:hover]:bg-destructive/10! has-[.link-button:hover]:bg-primary/10! ">
         <div className="flex justify-between h-full">
           <div className="flex flex-col h-full py-4">
