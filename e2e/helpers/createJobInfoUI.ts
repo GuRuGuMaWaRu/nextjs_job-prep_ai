@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 
 import { jobInfoSchema } from "@/core/features/jobInfos/schemas";
 
-export async function createJobInfoUI(
+export async function createTestJobInfoUI(
   page: Page,
   overrides: Partial<typeof jobInfoSchema> = {},
 ) {

@@ -5,7 +5,7 @@ import {
   applySessionCookie,
   expectAppHome,
   createTestJobInfo,
-  createJobInfoUI,
+  createTestJobInfoUI,
 } from "../helpers";
 
 test.describe("User Flow ->", () => {
@@ -33,7 +33,7 @@ test.describe("User Flow ->", () => {
       name: "Frontend prep",
       description: "React and Next.js interview preparation.",
     };
-    await createJobInfoUI(page, jobInfoInput);
+    await createTestJobInfoUI(page, jobInfoInput);
 
     // Ensure job info exists
     await expect(
@@ -123,7 +123,7 @@ test.describe("User Flow ->", () => {
       name: "Frontend prep",
       description: "React and Next.js interview preparation.",
     };
-    await createJobInfoUI(page, jobInfoInput);
+    await createTestJobInfoUI(page, jobInfoInput);
 
     // Delete job info
     await page.goto("/app");
@@ -149,7 +149,7 @@ test.describe("User Flow ->", () => {
     await applySessionCookie(page, session);
 
     // Create job info
-    await createJobInfoUI(page);
+    await createTestJobInfoUI(page);
 
     // Go to Interviews section
     await expect(
@@ -178,7 +178,7 @@ test.describe("User Flow ->", () => {
     await applySessionCookie(page, session);
 
     // Create job info
-    await createJobInfoUI(page);
+    await createTestJobInfoUI(page);
 
     // Go to Questions section
     await expect(
@@ -207,7 +207,7 @@ test.describe("User Flow ->", () => {
     await applySessionCookie(page, session);
 
     // Create job info
-    await createJobInfoUI(page);
+    await createTestJobInfoUI(page);
 
     // Go to Resume section
     await expect(
