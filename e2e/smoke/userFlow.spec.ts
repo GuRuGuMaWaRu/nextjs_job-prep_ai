@@ -121,7 +121,15 @@ test.describe("User Flow ->", () => {
       name: "Frontend prep",
       description: "React and Next.js interview preparation.",
     };
-    await createTestJobInfoUI(page, jobInfoInput);
+    const jobInfo = await createTestJobInfo(session.userId, jobInfoInput);
+
+    // Go to job info page
+    await page.goto("/app");
+    const jobInfoCard = page.getByTestId(jobInfo.id);
+    await Promise.all([
+      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
+      jobInfoCard.getByRole("link").click(),
+    ]);
 
     // Delete job info
     await page.goto("/app");
@@ -147,7 +155,15 @@ test.describe("User Flow ->", () => {
     await applySessionCookie(page, session);
 
     // Create job info
-    await createTestJobInfoUI(page);
+    const jobInfo = await createTestJobInfo(session.userId);
+
+    // Go to job info page
+    await page.goto("/app");
+    const jobInfoCard = page.getByTestId(jobInfo.id);
+    await Promise.all([
+      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
+      jobInfoCard.getByRole("link").click(),
+    ]);
 
     // Go to Interviews section
     await expect(
@@ -176,7 +192,15 @@ test.describe("User Flow ->", () => {
     await applySessionCookie(page, session);
 
     // Create job info
-    await createTestJobInfoUI(page);
+    const jobInfo = await createTestJobInfo(session.userId);
+
+    // Go to job info page
+    await page.goto("/app");
+    const jobInfoCard = page.getByTestId(jobInfo.id);
+    await Promise.all([
+      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
+      jobInfoCard.getByRole("link").click(),
+    ]);
 
     // Go to Questions section
     await expect(
@@ -205,7 +229,15 @@ test.describe("User Flow ->", () => {
     await applySessionCookie(page, session);
 
     // Create job info
-    await createTestJobInfoUI(page);
+    const jobInfo = await createTestJobInfo(session.userId);
+
+    // Go to job info page
+    await page.goto("/app");
+    const jobInfoCard = page.getByTestId(jobInfo.id);
+    await Promise.all([
+      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
+      jobInfoCard.getByRole("link").click(),
+    ]);
 
     // Go to Resume section
     await expect(
