@@ -168,7 +168,8 @@ export function JobInfoForm({
         <Button
           disabled={form.formState.isSubmitting}
           type="submit"
-          className="w-full">
+          className="w-full"
+        >
           <LoadingSwap isLoading={form.formState.isSubmitting}>
             Save Job Information
           </LoadingSwap>
