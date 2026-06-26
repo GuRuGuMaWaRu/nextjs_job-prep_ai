@@ -71,8 +71,9 @@ export function JobInfoForm({
         jobInfo ? "Job information updated!" : "Job information created!",
       );
 
-      form.reset();
       router.push(routes.jobInfo(res.data.id));
+
+      if (!jobInfo) form.reset();
     }
   }
 
