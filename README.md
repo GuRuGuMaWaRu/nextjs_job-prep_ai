@@ -55,7 +55,7 @@ Most domain features are structured as:
 3. `dal.ts` - data access boundary + DB error translation/cache tags
 4. `db.ts` - direct Drizzle queries
 
-This separation is used in modules like `jobInfos`, `questions`, and `interviews`.
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`.
 
 ### Request and auth flow
 
@@ -264,7 +264,15 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 ```
 
-The smoke specs live in `e2e/smoke/` and cover the landing page plus auth/job creation flows. Shared setup helpers live in `e2e/helpers/`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
+The smoke specs live in `e2e/smoke/` and cover:
+
+- landing page rendering (`landingPage.spec.ts`)
+- auth and job creation flows (`auth.spec.ts`)
+- signed-in user upgrade link visibility (`userFlow.spec.ts`)
+
+Shared setup helpers live in `e2e/helpers/`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
+
+Locally, Playwright runs Chromium only; Firefox and WebKit projects are skipped unless `CI` is set (see `playwright.config.ts`).
 
 `e2e/globalSetup.ts` resets the database before each run by truncating test data. Keep this pointed at a separate test database: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
 
@@ -314,6 +322,6 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 - Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
-- A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
+- Stripe subscription reconciliation runs in two places: the Upgrade page calls `syncSubscriptionOnUpgradePageLoad()` on load (lazy fallback when webhooks were missed), and a Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC as a backstop. The cron route requires a `Bearer ${CRON_SECRET}` authorization header.
 - The middleware skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
 - Neon is a strong fit for Vercel deployments because it provides managed Postgres with straightforward hosted connection management (no containerized DB required in production).
