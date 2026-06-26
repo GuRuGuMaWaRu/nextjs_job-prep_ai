@@ -71,8 +71,9 @@ export function JobInfoForm({
         jobInfo ? "Job information updated!" : "Job information created!",
       );
 
-      form.reset();
       router.push(routes.jobInfo(res.data.id));
+
+      if (!jobInfo) form.reset();
     }
   }
 
@@ -167,8 +168,7 @@ export function JobInfoForm({
         <Button
           disabled={form.formState.isSubmitting}
           type="submit"
-          className="w-full"
-        >
+          className="w-full">
           <LoadingSwap isLoading={form.formState.isSubmitting}>
             Save Job Information
           </LoadingSwap>
