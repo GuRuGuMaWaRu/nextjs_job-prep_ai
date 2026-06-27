@@ -16,5 +16,11 @@ export async function createTestInterview(
     jobInfoId,
   };
 
-  return await insertInterviewDb(testInterview);
+  try {
+    return await insertInterviewDb(testInterview);
+  } catch (error) {
+    throw new Error(`Failed to seed interview for job info "${jobInfoId}".`, {
+      cause: error,
+    });
+  }
 }
