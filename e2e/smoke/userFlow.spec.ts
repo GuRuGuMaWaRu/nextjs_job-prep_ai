@@ -107,9 +107,7 @@ test.describe("User Flow ->", () => {
     await expect(page.getByText(updatedJobInfo.experienceLevel)).toBeVisible();
   });
 
-  test("signed-in user can create a job info and delete it", async ({
-    page,
-  }) => {
+  test("signed-in user can delete a job info", async ({ page }) => {
     // Set up a user
     const session = await createAuthenticatedUser(
       "create-and-delete-job-info-",
@@ -251,5 +249,29 @@ test.describe("User Flow ->", () => {
     // Ensure Resume section is displayed
     await expect(page).toHaveURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/resume$/);
     await expect(page.getByLabel("Upload your resume")).toBeVisible();
+  });
+
+  test("signed-in user can visit Upgrade page", async ({ page }) => {
+    // Set up a user
+    const session = await createAuthenticatedUser("visit-interviews-section-");
+    await applySessionCookie(page, session);
+
+    // Visit Upgrade page
+    await page.goto("/app");
+
+    await Promise.all([
+      page.waitForURL("/app/upgrade"),
+      page.getByRole("link", { name: "Upgrade plan" }).click(),
+    ]);
+
+    await expect(
+      page.getByRole("heading", { name: "Upgrade your plan" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Current plan" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Upgrade to Pro" }),
+    ).toBeVisible();
   });
 });
