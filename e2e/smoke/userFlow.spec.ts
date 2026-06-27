@@ -10,20 +10,17 @@ import {
 
 const JOB_INFO_URL = "/app/jobInfo/[0-9a-f-]{36}";
 
-test.describe("User Flow ->", () => {
+test.describe("Signed-in user flows", () => {
   authedTest.use({ authEmailPrefix: "see-upgrade-link-" });
-  authedTest(
-    "signed-in user sees upgrade link in navbar",
-    async ({ authedPage }) => {
-      await authedPage.goto("/app");
+  authedTest("user can see upgrade link in navbar", async ({ authedPage }) => {
+    await authedPage.goto("/app");
 
-      await expectAppHome(authedPage);
-      await expect(authedPage.getByText("Current plan")).toBeVisible();
-      await expect(
-        authedPage.getByRole("link", { name: "Upgrade plan" }),
-      ).toBeVisible();
-    },
-  );
+    await expectAppHome(authedPage);
+    await expect(authedPage.getByText("Current plan")).toBeVisible();
+    await expect(
+      authedPage.getByRole("link", { name: "Upgrade plan" }),
+    ).toBeVisible();
+  });
 
   authedTest.use({ authEmailPrefix: "create-job-info-" });
   authedTest(
@@ -48,7 +45,7 @@ test.describe("User Flow ->", () => {
 
   authedTest.use({ authEmailPrefix: "edit-job-info-" });
   authedTest(
-    "signed-in user can open existing job info, change fields, save",
+    "user can open existing job info, change fields, save",
     async ({ authedPage, session }) => {
       const updatedJobInfo = {
         name: "Frontend position",
@@ -117,32 +114,29 @@ test.describe("User Flow ->", () => {
   );
 
   authedTest.use({ authEmailPrefix: "delete-job-info-" });
-  authedTest(
-    "signed-in user can delete a job info",
-    async ({ authedPage, session }) => {
-      // Create job info
-      const jobInfoInput = {
-        name: "Frontend prep",
-        description: "React and Next.js interview preparation.",
-      };
-      const jobInfo = await createTestJobInfo(session.userId, jobInfoInput);
+  authedTest("user can delete a job info", async ({ authedPage, session }) => {
+    // Create job info
+    const jobInfoInput = {
+      name: "Frontend prep",
+      description: "React and Next.js interview preparation.",
+    };
+    const jobInfo = await createTestJobInfo(session.userId, jobInfoInput);
 
-      // Delete job info
-      await authedPage.goto("/app");
-      await expect(authedPage.getByTestId(jobInfo.id)).toBeVisible();
-      await authedPage.getByRole("button", { name: "Delete job info" }).click();
+    // Delete job info
+    await authedPage.goto("/app");
+    await expect(authedPage.getByTestId(jobInfo.id)).toBeVisible();
+    await authedPage.getByRole("button", { name: "Delete job info" }).click();
 
-      await expect(authedPage.getByRole("alertdialog")).toBeVisible();
-      await expect(
-        authedPage.getByRole("heading", { name: "Are you sure?" }),
-      ).toBeVisible();
+    await expect(authedPage.getByRole("alertdialog")).toBeVisible();
+    await expect(
+      authedPage.getByRole("heading", { name: "Are you sure?" }),
+    ).toBeVisible();
 
-      await authedPage.getByRole("button", { name: "Yes" }).click();
+    await authedPage.getByRole("button", { name: "Yes" }).click();
 
-      // Ensure job info is deleted
-      await expect(authedPage.getByTestId(jobInfo.id)).toBeHidden();
-    },
-  );
+    // Ensure job info is deleted
+    await expect(authedPage.getByTestId(jobInfo.id)).toBeHidden();
+  });
 
   [
     {
@@ -166,7 +160,7 @@ test.describe("User Flow ->", () => {
   ].forEach(({ sectionName, sectionLink, sectionHeading, checkElement }) => {
     authedTest.use({ authEmailPrefix: `visit-${sectionName}-section-` });
     authedTest(
-      `signed-in user can visit ${sectionHeading} section of a job info`,
+      `user can visit ${sectionHeading} section of a job info`,
       async ({ authedPage, session }) => {
         // Create job info
         const jobInfo = await createTestJobInfo(session.userId);
@@ -203,26 +197,23 @@ test.describe("User Flow ->", () => {
   });
 
   authedTest.use({ authEmailPrefix: "visit-upgrade-page-" });
-  authedTest(
-    "signed-in user can visit Upgrade page",
-    async ({ authedPage }) => {
-      // Visit Upgrade page
-      await authedPage.goto("/app");
+  authedTest("user can visit Upgrade page", async ({ authedPage }) => {
+    // Visit Upgrade page
+    await authedPage.goto("/app");
 
-      await Promise.all([
-        authedPage.waitForURL("/app/upgrade"),
-        authedPage.getByRole("link", { name: "Upgrade plan" }).click(),
-      ]);
+    await Promise.all([
+      authedPage.waitForURL("/app/upgrade"),
+      authedPage.getByRole("link", { name: "Upgrade plan" }).click(),
+    ]);
 
-      await expect(
-        authedPage.getByRole("heading", { name: "Upgrade your plan" }),
-      ).toBeVisible();
-      await expect(
-        authedPage.getByRole("button", { name: "Current plan" }),
-      ).toBeVisible();
-      await expect(
-        authedPage.getByRole("button", { name: "Upgrade to Pro" }),
-      ).toBeVisible();
-    },
-  );
+    await expect(
+      authedPage.getByRole("heading", { name: "Upgrade your plan" }),
+    ).toBeVisible();
+    await expect(
+      authedPage.getByRole("button", { name: "Current plan" }),
+    ).toBeVisible();
+    await expect(
+      authedPage.getByRole("button", { name: "Upgrade to Pro" }),
+    ).toBeVisible();
+  });
 });
