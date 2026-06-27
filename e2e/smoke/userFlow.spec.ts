@@ -131,7 +131,7 @@ test.describe("User Flow ->", () => {
       page.getByRole("heading", { name: "Are you sure?" }),
     ).toBeVisible();
 
-    await page.getByRole("button", { name: "Yes " }).click();
+    await page.getByRole("button", { name: "Yes" }).click();
 
     // Ensure job info is deleted
     await expect(page.getByTestId(jobInfo.id)).toBeHidden();
