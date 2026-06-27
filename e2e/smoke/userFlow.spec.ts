@@ -101,6 +101,34 @@ authedTest.describe("Signed-in user flows", () => {
     },
   );
 
+  authedTest.use({ authEmailPrefix: "job-info-validation-" });
+  authedTest(
+    "empty job info form shows validation and does not navigate",
+    async ({ authedPage }) => {
+      await authedPage.goto("/app");
+
+      const saveButton = authedPage.getByRole("button", {
+        name: /save job information/i,
+      });
+
+      await expect(saveButton).toBeVisible();
+      await saveButton.click();
+
+      await expect(authedPage).toHaveURL(/\/app$/);
+
+      const requiredMessages = authedPage.getByText("Required", {
+        exact: true,
+      });
+
+      await expect(requiredMessages).toHaveCount(2);
+      await expect(requiredMessages.first()).toBeVisible();
+      await expect(requiredMessages.last()).toBeVisible();
+      await expect(
+        authedPage.getByRole("heading", { name: "Frontend prep" }),
+      ).not.toBeVisible();
+    },
+  );
+
   authedTest.use({ authEmailPrefix: "edit-job-info-" });
   authedTest(
     "user can open existing job info, change fields, save",
