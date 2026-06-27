@@ -41,13 +41,13 @@ export async function createTestJobInfoUI(
     .getByRole("option", { name: jobInfoInput.experienceLevel })
     .click();
 
-  await expect(nameInput).toHaveValue(jobInfoInput.name);
-  await expect(titleInput).toHaveValue(jobInfoInput.title);
-  await expect(descriptionInput).toHaveValue(jobInfoInput.description);
-
   // Check if we are redirected to a newly created job description
   await Promise.all([
     page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
     page.getByRole("button", { name: /save job information/i }).click(),
   ]);
+
+  await expect(
+    page.getByRole("heading", { name: jobInfoInput.name }),
+  ).toBeVisible();
 }
