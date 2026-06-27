@@ -6,6 +6,7 @@ import {
   expectAppHome,
   createTestJobInfo,
   createTestJobInfoUI,
+  openJobInfoFromApp,
 } from "../helpers";
 
 test.describe("User Flow ->", () => {
@@ -58,12 +59,7 @@ test.describe("User Flow ->", () => {
     const jobInfo = await createTestJobInfo(session.userId);
 
     // Go to job info page
-    await page.goto("/app");
-    const jobInfoCard = page.getByTestId(jobInfo.id);
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      jobInfoCard.getByRole("link").click(),
-    ]);
+    await openJobInfoFromApp(page, jobInfo.id);
 
     // Go to edit job info page
     await expect(
@@ -148,12 +144,7 @@ test.describe("User Flow ->", () => {
     const jobInfo = await createTestJobInfo(session.userId);
 
     // Go to job info page
-    await page.goto("/app");
-    const jobInfoCard = page.getByTestId(jobInfo.id);
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      jobInfoCard.getByRole("link").click(),
-    ]);
+    await openJobInfoFromApp(page, jobInfo.id);
 
     // Go to Interviews section
     await expect(
@@ -185,12 +176,7 @@ test.describe("User Flow ->", () => {
     const jobInfo = await createTestJobInfo(session.userId);
 
     // Go to job info page
-    await page.goto("/app");
-    const jobInfoCard = page.getByTestId(jobInfo.id);
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      jobInfoCard.getByRole("link").click(),
-    ]);
+    await openJobInfoFromApp(page, jobInfo.id);
 
     // Go to Questions section
     await expect(
@@ -222,12 +208,7 @@ test.describe("User Flow ->", () => {
     const jobInfo = await createTestJobInfo(session.userId);
 
     // Go to job info page
-    await page.goto("/app");
-    const jobInfoCard = page.getByTestId(jobInfo.id);
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      jobInfoCard.getByRole("link").click(),
-    ]);
+    await openJobInfoFromApp(page, jobInfo.id);
 
     // Go to Resume section
     await expect(
