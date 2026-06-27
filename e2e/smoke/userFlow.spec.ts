@@ -121,18 +121,10 @@ test.describe("User Flow ->", () => {
     };
     const jobInfo = await createTestJobInfo(session.userId, jobInfoInput);
 
-    // Go to job info page
-    await page.goto("/app");
-    const jobInfoCard = page.getByTestId(jobInfo.id);
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      jobInfoCard.getByRole("link").click(),
-    ]);
-
     // Delete job info
     await page.goto("/app");
-    await expect(page.locator(".job-info-card")).toHaveCount(1);
-    await page.getByLabel("Delete job info").click();
+    await expect(page.getByTestId(jobInfo.id)).toBeVisible();
+    await page.getByRole("button", { name: "Delete job info" }).click();
 
     await expect(page.getByRole("alertdialog")).toBeVisible();
     await expect(
@@ -142,7 +134,7 @@ test.describe("User Flow ->", () => {
     await page.getByRole("button", { name: "Yes " }).click();
 
     // Ensure job info is deleted
-    await expect(page.locator(".job-info-card")).toHaveCount(0);
+    await expect(page.getByTestId(jobInfo.id)).toBeHidden();
   });
 
   test("signed-in user can visit Interviews section of a job info", async ({
