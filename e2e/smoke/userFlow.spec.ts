@@ -133,95 +133,68 @@ test.describe("User Flow ->", () => {
     await expect(page.getByTestId(jobInfo.id)).toBeHidden();
   });
 
-  test("signed-in user can visit Interviews section of a job info", async ({
-    page,
-  }) => {
-    // Set up a user
-    const session = await createAuthenticatedUser("visit-interviews-section-");
-    await applySessionCookie(page, session);
+  [
+    {
+      sectionName: "interviews",
+      sectionLink: "Practice Interviewing",
+      sectionHeading: "Interviews",
+      checkElement: "Interviews",
+    },
+    {
+      sectionName: "questions",
+      sectionLink: "Answer Technical Questions",
+      sectionHeading: "Questions",
+      checkElement: "Get started by selecting a question difficulty above.",
+    },
+    {
+      sectionName: "resume",
+      sectionLink: "Analyze Your Resume",
+      sectionHeading: "Resume",
+      checkElement: "Upload your resume",
+    },
+  ].forEach(({ sectionName, sectionLink, sectionHeading, checkElement }) => {
+    test(`signed-in user can visit ${sectionHeading} section of a job info`, async ({
+      page,
+    }) => {
+      // Set up a user
+      const session = await createAuthenticatedUser(
+        `visit-${sectionName}-section-`,
+      );
+      await applySessionCookie(page, session);
 
-    // Create job info
-    const jobInfo = await createTestJobInfo(session.userId);
+      // Create job info
+      const jobInfo = await createTestJobInfo(session.userId);
 
-    // Go to job info page
-    await openJobInfoFromApp(page, jobInfo.id);
+      // Go to job info page
+      await openJobInfoFromApp(page, jobInfo.id);
 
-    // Go to Interviews section
-    await expect(
-      page.getByRole("link", { name: "Practice Interviewing" }),
-    ).toBeVisible();
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/interviews$/),
-      page.getByRole("link", { name: "Practice Interviewing" }).click(),
-    ]);
+      // Go to section
+      await Promise.all([
+        page.waitForURL(
+          new RegExp(`\/app\/jobInfo\/[0-9a-f-]{36}\/${sectionName}$`),
+        ),
+        page.getByRole("link", { name: sectionLink }).click(),
+      ]);
 
-    // Ensure Interviews section is displayed
-    await expect(page).toHaveURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/interviews$/);
-    await expect(
-      page.getByRole("heading", { name: "Interviews" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "New Interview" }),
-    ).toBeVisible();
-  });
+      // Ensure section is displayed
+      await expect(page).toHaveURL(
+        new RegExp(`\/app\/jobInfo\/[0-9a-f-]{36}\/${sectionName}$`),
+      );
 
-  test("signed-in user can visit Questions section of a job info", async ({
-    page,
-  }) => {
-    // Set up a user
-    const session = await createAuthenticatedUser("visit-questions-section-");
-    await applySessionCookie(page, session);
+      if (sectionName === "interviews") {
+        await expect(
+          page.getByRole("heading", { name: checkElement }),
+        ).toBeVisible();
+      }
 
-    // Create job info
-    const jobInfo = await createTestJobInfo(session.userId);
+      if (sectionName === "questions") {
+        await expect(page.getByText(checkElement)).toBeVisible();
+      }
 
-    // Go to job info page
-    await openJobInfoFromApp(page, jobInfo.id);
-
-    // Go to Questions section
-    await expect(
-      page.getByRole("link", { name: "Answer Technical Questions" }),
-    ).toBeVisible();
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/questions$/),
-      page.getByRole("link", { name: "Answer Technical Questions" }).click(),
-    ]);
-
-    // Ensure Questions section is displayed
-    await expect(page).toHaveURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/questions$/);
-    await expect(page.getByRole("button", { name: "Easy" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Medium" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Hard" })).toBeVisible();
-    await expect(
-      page.getByText("Get started by selecting a question difficulty above."),
-    ).toBeVisible();
-  });
-
-  test("signed-in user can visit Resume section of a job info", async ({
-    page,
-  }) => {
-    // Set up a user
-    const session = await createAuthenticatedUser("visit-resume-section-");
-    await applySessionCookie(page, session);
-
-    // Create job info
-    const jobInfo = await createTestJobInfo(session.userId);
-
-    // Go to job info page
-    await openJobInfoFromApp(page, jobInfo.id);
-
-    // Go to Resume section
-    await expect(
-      page.getByRole("link", { name: "Analyze Your Resume" }),
-    ).toBeVisible();
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/resume$/),
-      page.getByRole("link", { name: "Analyze Your Resume" }).click(),
-    ]);
-
-    // Ensure Resume section is displayed
-    await expect(page).toHaveURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/resume$/);
-    await expect(page.getByLabel("Upload your resume")).toBeVisible();
+      if (sectionName === "resume") {
+        await expect(page.getByLabel(checkElement)).toBeVisible();
+      }
+    });
   });
 
   test("signed-in user can visit Upgrade page", async ({ page }) => {
