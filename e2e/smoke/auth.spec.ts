@@ -96,3 +96,38 @@ test.describe("Auth", () => {
     await expect(page).toHaveURL("/sign-in");
   });
 });
+
+test.describe("Auth errors", () => {
+  test("a wrong password stays on Sign In and shows an error", async ({
+    page,
+  }) => {
+    const session = await createAuthenticatedUser("auth-wrong-password-");
+
+    await signInViaUI(page, {
+      email: session.email,
+      password: "wrong-password",
+    });
+
+    await expect(page).toHaveURL("/sign-in");
+    await expect(page.getByText("Invalid email or password")).toBeVisible();
+    await expect(page).not.toHaveURL("/app");
+  });
+
+  test("a duplicate email stays on Sign Up and shows an error", async ({
+    page,
+  }) => {
+    const session = await createAuthenticatedUser("auth-duplicate-email-");
+
+    await signUpViaUI(page, {
+      email: session.email,
+      password: "password2",
+      name: "Duplicate User",
+    });
+
+    await expect(page).toHaveURL("/sign-up");
+    await expect(
+      page.getByText("An account with this email already exists").first(),
+    ).toBeVisible();
+    await expect(page).not.toHaveURL("/app");
+  });
+});
