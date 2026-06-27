@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { authedTest } from "../fixtures/auth";
 import {
@@ -10,7 +10,7 @@ import {
 
 const JOB_INFO_URL = "/app/jobInfo/[0-9a-f-]{36}";
 
-test.describe("Signed-in user flows", () => {
+authedTest.describe("Signed-in user flows", () => {
   authedTest.use({ authEmailPrefix: "see-upgrade-link-" });
   authedTest("user can see upgrade link in navbar", async ({ authedPage }) => {
     await authedPage.goto("/app");
