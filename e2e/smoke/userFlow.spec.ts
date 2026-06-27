@@ -12,15 +12,18 @@ const JOB_INFO_URL = "/app/jobInfo/[0-9a-f-]{36}";
 
 authedTest.describe("Signed-in user flows", () => {
   authedTest.use({ authEmailPrefix: "see-upgrade-link-" });
-  authedTest("user can see upgrade link in navbar", async ({ authedPage }) => {
-    await authedPage.goto("/app");
+  authedTest(
+    "user can see Upgrade plan link in navbar",
+    async ({ authedPage }) => {
+      await authedPage.goto("/app");
 
-    await expectAppHome(authedPage);
-    await expect(authedPage.getByText("Current plan")).toBeVisible();
-    await expect(
-      authedPage.getByRole("link", { name: "Upgrade plan" }),
-    ).toBeVisible();
-  });
+      await expectAppHome(authedPage);
+      await expect(authedPage.getByText("Current plan")).toBeVisible();
+      await expect(
+        authedPage.getByRole("link", { name: "Upgrade plan" }),
+      ).toBeVisible();
+    },
+  );
 
   authedTest.use({ authEmailPrefix: "create-job-info-" });
   authedTest(
