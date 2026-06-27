@@ -12,7 +12,7 @@ import type { Page } from "@playwright/test";
 
 import { E2E_BASE_URL } from "../constants";
 
-type UserSession = {
+export type UserSession = {
   email: string;
   password: string;
   userId: string;
