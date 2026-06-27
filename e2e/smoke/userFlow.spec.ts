@@ -15,9 +15,9 @@ test.describe("User Flow ->", () => {
     await page.goto("/app");
 
     await expectAppHome(page);
-    await expect(page.getByText(/current plan/i)).toBeVisible();
+    await expect(page.getByText("Current plan")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /upgrade plan/i }),
+      page.getByRole("link", { name: "Upgrade plan" }),
     ).toBeVisible();
   });
 
@@ -97,7 +97,7 @@ test.describe("User Flow ->", () => {
 
     await Promise.all([
       page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      page.getByRole("button", { name: /save job information/i }).click(),
+      page.getByRole("button", { name: "Save job information" }).click(),
     ]);
 
     // Ensure user sees updated job info
