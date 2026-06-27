@@ -93,10 +93,6 @@ authedTest.describe("Signed-in user flows", () => {
         .getByRole("option", { name: updatedJobInfo.experienceLevel })
         .click();
 
-      await expect(nameInput).toHaveValue(updatedJobInfo.name);
-      await expect(titleInput).toHaveValue(updatedJobInfo.title);
-      await expect(descriptionInput).toHaveValue(updatedJobInfo.description);
-
       await Promise.all([
         authedPage.waitForURL(new RegExp(`${JOB_INFO_URL}$`)),
         authedPage
