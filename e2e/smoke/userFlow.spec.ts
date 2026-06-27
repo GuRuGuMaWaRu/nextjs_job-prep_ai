@@ -245,7 +245,7 @@ test.describe("User Flow ->", () => {
 
   test("signed-in user can visit Upgrade page", async ({ page }) => {
     // Set up a user
-    const session = await createAuthenticatedUser("visit-interviews-section-");
+    const session = await createAuthenticatedUser("visit-upgrade-page-");
     await applySessionCookie(page, session);
 
     // Visit Upgrade page
