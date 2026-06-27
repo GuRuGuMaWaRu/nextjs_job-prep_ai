@@ -41,6 +41,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - `app/` - routes, layouts, pages, and route handlers (`app/api/**/route.ts`)
 - `core/features/` - feature modules with layered structure
+- `core/dal/` - shared DAL error types, helpers, and `ActionResult` shaping
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
@@ -52,10 +53,10 @@ Most domain features are structured as:
 
 1. `actions.ts` - input validation + user-facing error shaping
 2. `service.ts` - business logic + permission checks
-3. `dal.ts` - data access boundary + DB error translation/cache tags
+3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
 4. `db.ts` - direct Drizzle queries
 
-This separation is used in modules like `jobInfos`, `questions`, and `interviews`.
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`.
 
 ### Request and auth flow
 
@@ -264,7 +265,9 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 ```
 
-The smoke specs live in `e2e/smoke/` and cover the landing page plus auth/job creation flows. Shared setup helpers live in `e2e/helpers/`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
+The smoke specs live in `e2e/smoke/` and cover the landing page, auth/job creation flows, and signed-in user plan UI (upgrade link in the navbar). Shared setup helpers live in `e2e/helpers/`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
+
+Local `npm run test:e2e` runs Chromium only; Firefox and WebKit projects are skipped outside CI (`playwright.config.ts` uses `testIgnore` when `CI` is unset).
 
 `e2e/globalSetup.ts` resets the database before each run by truncating test data. Keep this pointed at a separate test database: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
 
