@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { authedTest } from "../fixtures/auth";
 import {
@@ -8,7 +9,61 @@ import {
   openJobInfoFromApp,
 } from "../helpers";
 
-const JOB_INFO_URL = "/app/jobInfo/[0-9a-f-]{36}";
+/** Matches job info URLs against Playwright's full page URL (includes origin). */
+function jobInfoUrlPattern(suffix = "") {
+  return new RegExp(`/app/jobInfo/[0-9a-f-]{36}${suffix}$`);
+}
+
+type JobInfoSectionCase = {
+  sectionName: string;
+  sectionLink: string;
+  sectionHeading: string;
+  assert: "heading" | "text" | "label";
+  checkElement: string;
+};
+
+const jobInfoSections = [
+  {
+    sectionName: "interviews",
+    sectionLink: "Practice Interviewing",
+    sectionHeading: "Interviews",
+    assert: "heading",
+    checkElement: "Interviews",
+  },
+  {
+    sectionName: "questions",
+    sectionLink: "Answer Technical Questions",
+    sectionHeading: "Questions",
+    assert: "text",
+    checkElement: "Get started by selecting a question difficulty above.",
+  },
+  {
+    sectionName: "resume",
+    sectionLink: "Analyze Your Resume",
+    sectionHeading: "Resume",
+    assert: "label",
+    checkElement: "Upload your resume",
+  },
+] satisfies JobInfoSectionCase[];
+
+async function expectSectionContent(
+  page: Page,
+  { assert, checkElement }: Pick<JobInfoSectionCase, "assert" | "checkElement">,
+) {
+  switch (assert) {
+    case "heading":
+      await expect(
+        page.getByRole("heading", { name: checkElement }),
+      ).toBeVisible();
+      break;
+    case "text":
+      await expect(page.getByText(checkElement)).toBeVisible();
+      break;
+    case "label":
+      await expect(page.getByLabel(checkElement)).toBeVisible();
+      break;
+  }
+}
 
 authedTest.describe("Signed-in user flows", () => {
   authedTest.use({ authEmailPrefix: "see-upgrade-link-" });
@@ -68,7 +123,7 @@ authedTest.describe("Signed-in user flows", () => {
         authedPage.getByRole("link", { name: "Update Job Description" }),
       ).toBeVisible();
       await Promise.all([
-        authedPage.waitForURL(new RegExp(`${JOB_INFO_URL}\/edit$`)),
+        authedPage.waitForURL(jobInfoUrlPattern("/edit")),
         authedPage
           .getByRole("link", { name: "Update Job Description" })
           .click(),
@@ -94,14 +149,14 @@ authedTest.describe("Signed-in user flows", () => {
         .click();
 
       await Promise.all([
-        authedPage.waitForURL(new RegExp(`${JOB_INFO_URL}$`)),
+        authedPage.waitForURL(jobInfoUrlPattern()),
         authedPage
           .getByRole("button", { name: "Save job information" })
           .click(),
       ]);
 
       // Ensure user sees updated job info
-      await expect(authedPage).toHaveURL(new RegExp(`${JOB_INFO_URL}$`));
+      await expect(authedPage).toHaveURL(jobInfoUrlPattern());
       await expect(authedPage.getByRole("heading")).toHaveText(
         updatedJobInfo.name,
       );
@@ -137,63 +192,30 @@ authedTest.describe("Signed-in user flows", () => {
     await expect(authedPage.getByTestId(jobInfo.id)).toBeHidden();
   });
 
-  [
-    {
-      sectionName: "interviews",
-      sectionLink: "Practice Interviewing",
-      sectionHeading: "Interviews",
-      checkElement: "Interviews",
+  jobInfoSections.forEach(
+    ({ sectionName, sectionLink, sectionHeading, assert, checkElement }) => {
+      authedTest.use({ authEmailPrefix: `visit-${sectionName}-section-` });
+      authedTest(
+        `user can visit ${sectionHeading} section of a job info`,
+        async ({ authedPage, session }) => {
+          const jobInfo = await createTestJobInfo(session.userId);
+
+          await openJobInfoFromApp(authedPage, jobInfo.id);
+
+          await Promise.all([
+            authedPage.waitForURL(jobInfoUrlPattern(`/${sectionName}`)),
+            authedPage.getByRole("link", { name: sectionLink }).click(),
+          ]);
+
+          await expect(authedPage).toHaveURL(
+            jobInfoUrlPattern(`/${sectionName}`),
+          );
+
+          await expectSectionContent(authedPage, { assert, checkElement });
+        },
+      );
     },
-    {
-      sectionName: "questions",
-      sectionLink: "Answer Technical Questions",
-      sectionHeading: "Questions",
-      checkElement: "Get started by selecting a question difficulty above.",
-    },
-    {
-      sectionName: "resume",
-      sectionLink: "Analyze Your Resume",
-      sectionHeading: "Resume",
-      checkElement: "Upload your resume",
-    },
-  ].forEach(({ sectionName, sectionLink, sectionHeading, checkElement }) => {
-    authedTest.use({ authEmailPrefix: `visit-${sectionName}-section-` });
-    authedTest(
-      `user can visit ${sectionHeading} section of a job info`,
-      async ({ authedPage, session }) => {
-        // Create job info
-        const jobInfo = await createTestJobInfo(session.userId);
-
-        // Go to job info page
-        await openJobInfoFromApp(authedPage, jobInfo.id);
-
-        // Go to section
-        await Promise.all([
-          authedPage.waitForURL(new RegExp(`${JOB_INFO_URL}\/${sectionName}$`)),
-          authedPage.getByRole("link", { name: sectionLink }).click(),
-        ]);
-
-        // Ensure section is displayed
-        await expect(authedPage).toHaveURL(
-          new RegExp(`${JOB_INFO_URL}\/${sectionName}$`),
-        );
-
-        if (sectionName === "interviews") {
-          await expect(
-            authedPage.getByRole("heading", { name: checkElement }),
-          ).toBeVisible();
-        }
-
-        if (sectionName === "questions") {
-          await expect(authedPage.getByText(checkElement)).toBeVisible();
-        }
-
-        if (sectionName === "resume") {
-          await expect(authedPage.getByLabel(checkElement)).toBeVisible();
-        }
-      },
-    );
-  });
+  );
 
   authedTest.use({ authEmailPrefix: "visit-upgrade-page-" });
   authedTest("user can visit Upgrade page", async ({ authedPage }) => {
