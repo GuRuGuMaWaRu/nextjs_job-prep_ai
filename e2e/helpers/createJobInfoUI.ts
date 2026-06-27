@@ -1,11 +1,16 @@
+import { z } from "zod";
 import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { jobInfoSchema } from "@/core/features/jobInfos/schemas";
 
+type JobInfoInput = Omit<z.infer<typeof jobInfoSchema>, "title"> & {
+  title: string;
+};
+
 export async function createTestJobInfoUI(
   page: Page,
-  overrides: Partial<typeof jobInfoSchema> = {},
+  overrides: Partial<JobInfoInput> = {},
 ) {
   const jobInfoInput = {
     name: "Frontend prep",

@@ -1,9 +1,12 @@
+import { z } from "zod";
+
 import { createJobInfoDb } from "@core/features/jobInfos/db";
 import { JobInfoTable } from "@/core/drizzle/schema";
+import { jobInfoSchema } from "@/core/features/jobInfos/schemas";
 
 export async function createTestJobInfo(
   userId: string,
-  overrides: Partial<typeof JobInfoTable.$inferInsert> = {},
+  overrides: Partial<z.infer<typeof jobInfoSchema>> = {},
 ) {
   const testJobInfo = {
     userId,
