@@ -9,6 +9,8 @@ import {
   openJobInfoFromApp,
 } from "../helpers";
 
+const JOB_INFO_URL = "/app/jobInfo/[0-9a-f-]{36}";
+
 test.describe("User Flow ->", () => {
   test("signed-in user sees upgrade link in navbar", async ({ page }) => {
     const session = await createAuthenticatedUser("user-flow-plan-ui-");
@@ -66,7 +68,7 @@ test.describe("User Flow ->", () => {
       page.getByRole("link", { name: "Update Job Description" }),
     ).toBeVisible();
     await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}\/edit$/),
+      page.waitForURL(new RegExp(`${JOB_INFO_URL}\/edit$`)),
       page.getByRole("link", { name: "Update Job Description" }).click(),
     ]);
 
@@ -92,12 +94,12 @@ test.describe("User Flow ->", () => {
     await expect(descriptionInput).toHaveValue(updatedJobInfo.description);
 
     await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
+      page.waitForURL(new RegExp(`${JOB_INFO_URL}$`)),
       page.getByRole("button", { name: "Save job information" }).click(),
     ]);
 
     // Ensure user sees updated job info
-    await expect(page).toHaveURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/);
+    await expect(page).toHaveURL(new RegExp(`${JOB_INFO_URL}$`));
     await expect(page.getByRole("heading")).toHaveText(updatedJobInfo.name);
     await expect(page.getByText(updatedJobInfo.title)).toBeVisible();
     await expect(page.getByText(updatedJobInfo.experienceLevel)).toBeVisible();
@@ -170,15 +172,13 @@ test.describe("User Flow ->", () => {
 
       // Go to section
       await Promise.all([
-        page.waitForURL(
-          new RegExp(`\/app\/jobInfo\/[0-9a-f-]{36}\/${sectionName}$`),
-        ),
+        page.waitForURL(new RegExp(`${JOB_INFO_URL}\/${sectionName}$`)),
         page.getByRole("link", { name: sectionLink }).click(),
       ]);
 
       // Ensure section is displayed
       await expect(page).toHaveURL(
-        new RegExp(`\/app\/jobInfo\/[0-9a-f-]{36}\/${sectionName}$`),
+        new RegExp(`${JOB_INFO_URL}\/${sectionName}$`),
       );
 
       if (sectionName === "interviews") {
