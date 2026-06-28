@@ -265,7 +265,14 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 ```
 
-The smoke specs live in `e2e/smoke/` and cover the landing page, auth/job creation flows, and signed-in user plan UI (upgrade link in the navbar). Shared setup helpers live in `e2e/helpers/`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
+The smoke specs live in `e2e/smoke/`:
+
+- `landingPage.spec.ts` — public landing page content and sign-up/sign-in navigation.
+- `auth.spec.ts` — sign-up, sign-in, logout, protected-route redirects, and auth error states (wrong password, duplicate email).
+- `userFlow.spec.ts` — signed-in flows: navbar upgrade link, job info create/edit/delete, empty form validation, job info section navigation (interviews, questions, resume), and the upgrade page.
+- `planLimits.spec.ts` — free-plan interview limit UI (`PlanLimitAlert` and upgrade link).
+
+Shared setup helpers live in `e2e/helpers/`. Authenticated specs use the `authedTest` fixture from `e2e/fixtures/auth.ts`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
 
 Local `npm run test:e2e` runs Chromium only; Firefox and WebKit projects are skipped outside CI (`playwright.config.ts` uses `testIgnore` when `CI` is unset).
 
