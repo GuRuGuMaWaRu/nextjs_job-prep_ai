@@ -95,54 +95,39 @@ test.describe("Auth", () => {
 
     await expect(page).toHaveURL("/sign-in");
   });
+});
 
-  test("a newly signed up user can add a new job description and see it on the main page", async ({
+test.describe("Auth errors", () => {
+  test("a wrong password stays on Sign In and shows an error", async ({
     page,
   }) => {
-    const jobInfoInput = {
-      name: "Frontend prep",
-      title: "Senior Frontend Engineer",
-      experienceLevel: "Senior",
-      description: "React and Next.js interview preparation.",
-    };
+    const session = await createAuthenticatedUser("auth-wrong-password-");
 
-    const session = await createAuthenticatedUser("create-job-info-");
-    await applySessionCookie(page, session);
+    await signInViaUI(page, {
+      email: session.email,
+      password: "wrong-password",
+    });
 
-    // Go to Create New Job Description page
-    await page.goto("/app");
+    await expect(page).toHaveURL("/sign-in");
+    await expect(page.getByText("Invalid email or password")).toBeVisible();
+    await expect(page).not.toHaveURL("/app");
+  });
+
+  test("a duplicate email stays on Sign Up and shows an error", async ({
+    page,
+  }) => {
+    const session = await createAuthenticatedUser("auth-duplicate-email-");
+
+    await signUpViaUI(page, {
+      email: session.email,
+      password: "password2",
+      name: "Duplicate User",
+    });
+
+    await expect(page).toHaveURL("/sign-up");
     await expect(
-      page.getByRole("button", { name: /save job information/i }),
+      page.getByText("An account with this email already exists").first(),
     ).toBeVisible();
-
-    // Submit a new job info
-    const nameInput = page.getByRole("textbox", { name: "Name" });
-    const titleInput = page.getByRole("textbox", { name: "Job Title" });
-    const descriptionInput = page.getByRole("textbox", { name: "Description" });
-
-    await nameInput.click();
-    await nameInput.fill(jobInfoInput.name);
-    await titleInput.fill(jobInfoInput.title);
-    await descriptionInput.fill(jobInfoInput.description);
-
-    await page.getByRole("combobox", { name: "Experience Level" }).click();
-    await page
-      .getByRole("option", { name: jobInfoInput.experienceLevel })
-      .click();
-
-    await expect(nameInput).toHaveValue(jobInfoInput.name);
-    await expect(titleInput).toHaveValue(jobInfoInput.title);
-    await expect(descriptionInput).toHaveValue(jobInfoInput.description);
-
-    // Check if we are redirected to a newly created job description
-    await Promise.all([
-      page.waitForURL(/\/app\/jobInfo\/[0-9a-f-]{36}$/),
-      page.getByRole("button", { name: /save job information/i }).click(),
-    ]);
-
-    await expect(
-      page.getByRole("heading", { name: jobInfoInput.name }),
-    ).toBeVisible();
-    await expect(page.getByText(jobInfoInput.description)).toBeVisible();
+    await expect(page).not.toHaveURL("/app");
   });
 });

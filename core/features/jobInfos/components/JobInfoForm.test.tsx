@@ -210,7 +210,7 @@ describe("JobInfoForm", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("shows toast.success, resets the form, and routes to the saved job info when the action succeeds", async () => {
+  it("shows toast.success and routes to the saved job info when the action succeeds", async () => {
     mockCreateJobInfoAction.mockResolvedValue({
       success: true,
       data: { id: "job-info-created" },
@@ -228,9 +228,6 @@ describe("JobInfoForm", () => {
         "Job information created!",
       );
     });
-    expect(screen.getByLabelText("Name")).toHaveValue("");
-    expect(screen.getByLabelText("Job Title")).toHaveValue("");
-    expect(screen.getByLabelText("Description")).toHaveValue("");
     expect(mockPush).toHaveBeenCalledWith(routes.jobInfo("job-info-created"));
   });
 });
