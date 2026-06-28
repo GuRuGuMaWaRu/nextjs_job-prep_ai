@@ -10,7 +10,10 @@ authedTest.describe("AI questions", () => {
     "user can generate a question and enter an answer",
     async ({ authedPage, session }) => {
       const jobInfo = await createTestJobInfo(session.userId);
-      await mockAiQuestionGenerationRoute(authedPage);
+      await mockAiQuestionGenerationRoute(authedPage, {
+        expectedPrompt: "easy",
+        expectedJobInfoId: jobInfo.id,
+      });
 
       await authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`);
 

@@ -1,6 +1,10 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+
+import type { QuestionDifficulty } from "@/core/drizzle/schema";
 
 type MockAiQuestionGenerationOptions = {
+  expectedPrompt: QuestionDifficulty;
+  expectedJobInfoId: string;
   questionText?: string;
   questionId?: string;
 };
@@ -10,7 +14,7 @@ const defaultQuestionId = "00000000-0000-4000-8000-000000009901";
 
 export async function mockAiQuestionGenerationRoute(
   page: Page,
-  options: MockAiQuestionGenerationOptions = {},
+  options: MockAiQuestionGenerationOptions,
 ) {
   const questionText = options.questionText ?? defaultQuestionText;
   const questionId = options.questionId ?? defaultQuestionId;
@@ -21,6 +25,13 @@ export async function mockAiQuestionGenerationRoute(
       await route.fallback();
       return;
     }
+
+    const requestBody: unknown = route.request().postDataJSON();
+
+    expect(requestBody).toMatchObject({
+      prompt: options.expectedPrompt,
+      jobInfoId: options.expectedJobInfoId,
+    });
 
     const chunk = {
       type: "text-delta",
