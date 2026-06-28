@@ -50,9 +50,11 @@ authedTest.describe("Plan limits", () => {
 
       await Promise.all(insertPromises);
 
-      await authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`);
+      await Promise.all([
+        authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`),
+        authedPage.waitForURL("/app/upgrade"),
+      ]);
 
-      await expect(authedPage).toHaveURL("/app/upgrade");
       await expect(
         authedPage.getByRole("heading", { name: "Upgrade your plan" }),
       ).toBeVisible();
