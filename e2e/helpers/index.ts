@@ -9,3 +9,4 @@ export { createTestJobInfoUI } from "./createJobInfoUI";
 export { signInViaUI, signUpViaUI, logOutViaUI } from "./authViaUi";
 export { expectAppHome } from "./expectAppHome";
 export { openJobInfoFromApp } from "./openJobInfoFromApp";
+export { mockAiQuestionGenerationRoute } from "./mockAiQuestionGeneration";
