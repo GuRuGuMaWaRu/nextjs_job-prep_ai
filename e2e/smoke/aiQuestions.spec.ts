@@ -26,6 +26,7 @@ authedTest.describe("AI questions", () => {
       await authedPage.getByRole("button", { name: "Easy" }).click();
 
       await expect(authedPage.getByText("What is a React hook?")).toBeVisible();
+      await expect(authedPage.getByText(/Question ID:/)).toHaveCount(0);
 
       const answer = authedPage.getByPlaceholder("Type your answer here...");
       const sampleAnswer =
