@@ -5,6 +5,7 @@ export {
 } from "./createUser";
 export { createTestJobInfo } from "./createJobInfo";
 export { createTestInterview } from "./createTestInterview";
+export { createTestQuestion } from "./createTestQuestion";
 export { createTestJobInfoUI } from "./createJobInfoUI";
 export { signInViaUI, signUpViaUI, logOutViaUI } from "./authViaUi";
 export { expectAppHome } from "./expectAppHome";
