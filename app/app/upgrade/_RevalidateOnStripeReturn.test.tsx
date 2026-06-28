@@ -41,6 +41,7 @@ describe("RevalidateOnStripeReturn", () => {
         success={false}
         canceled={false}
         canceledSubscription={false}
+        subscriptionChanged={false}
       />,
     );
 
@@ -69,7 +70,7 @@ describe("RevalidateOnStripeReturn", () => {
       }),
     );
 
-    render(<RevalidateOnStripeReturn {...props} />);
+    render(<RevalidateOnStripeReturn {...props} subscriptionChanged={false} />);
 
     await waitFor(() => {
       expect(mockRevalidateUpgradePage).toHaveBeenCalledTimes(1);
@@ -97,6 +98,7 @@ describe("RevalidateOnStripeReturn", () => {
           success
           canceled={false}
           canceledSubscription={false}
+          subscriptionChanged={false}
         />,
       );
 
@@ -118,6 +120,7 @@ describe("RevalidateOnStripeReturn", () => {
         success
         canceled={false}
         canceledSubscription={false}
+        subscriptionChanged={false}
       />,
     );
 
@@ -131,10 +134,27 @@ describe("RevalidateOnStripeReturn", () => {
         success={false}
         canceled
         canceledSubscription={false}
+        subscriptionChanged={false}
       />,
     );
 
     expect(mockRevalidateUpgradePage).toHaveBeenCalledTimes(1);
     expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("revalidates and refreshes after lazy subscription reconciliation updates the user", async () => {
+    render(
+      <RevalidateOnStripeReturn
+        success={false}
+        canceled={false}
+        canceledSubscription={false}
+        subscriptionChanged
+      />,
+    );
+
+    await waitFor(() => {
+      expect(mockRevalidateUpgradePage).toHaveBeenCalledTimes(1);
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
   });
 });
