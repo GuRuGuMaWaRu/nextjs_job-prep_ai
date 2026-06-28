@@ -1,7 +1,11 @@
 import { expect } from "@playwright/test";
 
 import { authedTest } from "../fixtures/auth";
-import { createTestInterview, createTestJobInfo } from "../helpers";
+import {
+  createTestInterview,
+  createTestQuestion,
+  createTestJobInfo,
+} from "../helpers";
 
 authedTest.describe("Plan limits", () => {
   authedTest.use({ authEmailPrefix: "interview-plan-limit-" });
@@ -29,6 +33,29 @@ authedTest.describe("Plan limits", () => {
       await expect(upgradeLink).toBeVisible();
       await expect(upgradeLink).toHaveAttribute("href", "/app/upgrade");
       await expect(authedPage).toHaveURL(interviewsUrl);
+    },
+  );
+
+  authedTest.use({ authEmailPrefix: "questions-plan-limit-" });
+  authedTest(
+    "free user at questions limit is redirected to upgrade",
+    async ({ authedPage, session }) => {
+      const jobInfo = await createTestJobInfo(session.userId);
+
+      const insertPromises = Array.from({ length: 10 }, (_, idx) =>
+        createTestQuestion(jobInfo.id, {
+          text: `E2E test question ${idx + 1}`,
+        }),
+      );
+
+      await Promise.all(insertPromises);
+
+      await authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`);
+
+      await expect(authedPage).toHaveURL("/app/upgrade");
+      await expect(
+        authedPage.getByRole("heading", { name: "Upgrade your plan" }),
+      ).toBeVisible();
     },
   );
 });
