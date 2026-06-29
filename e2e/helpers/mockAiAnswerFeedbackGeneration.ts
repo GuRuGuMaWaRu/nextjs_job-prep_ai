@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-type MockAiFeedbackGenerationOptions = {
+type MockAiAnswerFeedbackGenerationOptions = {
   expectedPrompt: string;
   expectedQuestionId: string;
   feedbackText?: string;
@@ -10,7 +10,7 @@ const defaultFeedbackText = "Good job!";
 
 export async function mockAiAnswerFeedbackGenerationRoute(
   page: Page,
-  options: MockAiFeedbackGenerationOptions,
+  options: MockAiAnswerFeedbackGenerationOptions,
 ) {
   const feedbackText = options.feedbackText ?? defaultFeedbackText;
 
