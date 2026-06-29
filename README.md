@@ -270,7 +270,8 @@ The smoke specs live in `e2e/smoke/`:
 - `landingPage.spec.ts` — public landing page content and sign-up/sign-in navigation.
 - `auth.spec.ts` — sign-up, sign-in, logout, protected-route redirects, and auth error states (wrong password, duplicate email).
 - `userFlow.spec.ts` — signed-in flows: navbar upgrade link, job info create/edit/delete, empty form validation, job info section navigation (interviews, questions, resume), and the upgrade page.
-- `planLimits.spec.ts` — free-plan interview limit UI (`PlanLimitAlert` and upgrade link).
+- `planLimits.spec.ts` — free-plan interview limit UI (`PlanLimitAlert` and upgrade link) and questions limit redirect to the upgrade page.
+- `aiQuestions.spec.ts` — mocked AI question generation (route interception), difficulty selection, question display, and answer input.
 
 Shared setup helpers live in `e2e/helpers/`. Authenticated specs use the `authedTest` fixture from `e2e/fixtures/auth.ts`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
 
@@ -284,7 +285,7 @@ Out of scope for E2E for now:
 
 - Stripe checkout and webhooks
 - OAuth provider sign-in flows
-- AI generation
+- Live AI generation (Gemini) and AI answer feedback (question generation is covered via mocked `/api/ai/questions/generate-question` responses)
 - Hume voice
 - Resume upload
 
