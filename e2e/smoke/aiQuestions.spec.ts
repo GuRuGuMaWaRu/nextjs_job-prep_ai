@@ -42,6 +42,8 @@ authedTest.describe("AI questions", () => {
     },
   );
 
+  authedTest.use({ authEmailPrefix: "ai-answer-feedback-generation" });
+
   authedTest(
     "user can submit an answer and receive feedback",
     async ({ authedPage, session }) => {
