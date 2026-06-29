@@ -1,7 +1,11 @@
 import { expect } from "@playwright/test";
 
 import { authedTest } from "../fixtures/auth";
-import { createTestJobInfo, mockAiQuestionGenerationRoute } from "../helpers";
+import {
+  createTestJobInfo,
+  mockAiQuestionGenerationRoute,
+  mockAiFeedbackGenerationRoute,
+} from "../helpers";
 
 authedTest.describe("AI questions", () => {
   authedTest.use({ authEmailPrefix: "ai-question-generation-" });
@@ -35,6 +39,48 @@ authedTest.describe("AI questions", () => {
       await expect(answer).toBeEnabled();
       await answer.fill(sampleAnswer);
       await expect(answer).toHaveValue(sampleAnswer);
+    },
+  );
+
+  authedTest(
+    "user can submit an answer and receive feedback",
+    async ({ authedPage, session }) => {
+      const jobInfo = await createTestJobInfo(session.userId);
+      await mockAiQuestionGenerationRoute(authedPage, {
+        expectedPrompt: "easy",
+        expectedJobInfoId: jobInfo.id,
+        questionId: "00000000-0000-4000-8000-000000009901",
+        questionText: "What is a React hook?",
+      });
+      await mockAiFeedbackGenerationRoute(authedPage, {
+        expectedPrompt: "A hook lets React components use state and effects.",
+        expectedQuestionId: "00000000-0000-4000-8000-000000009901",
+        feedbackText: "Good answer. You explained hooks clearly.",
+      });
+
+      await authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`);
+      await authedPage.getByRole("button", { name: "Easy" }).click();
+
+      await expect(authedPage.getByText("What is a React hook?")).toBeVisible();
+
+      const answer = authedPage.getByPlaceholder("Type your answer here...");
+      await expect(answer).toBeEnabled();
+      await answer.fill("A hook lets React components use state and effects.");
+
+      await authedPage.getByRole("button", { name: "Answer " }).click();
+
+      await expect(
+        authedPage.getByText("Good answer. You explained hooks clearly."),
+      ).toBeVisible();
+      await expect(
+        authedPage.getByRole("button", { name: "Easy" }),
+      ).toBeVisible();
+      await expect(
+        authedPage.getByRole("button", { name: "Medium" }),
+      ).toBeVisible();
+      await expect(
+        authedPage.getByRole("button", { name: "Hard" }),
+      ).toBeVisible();
     },
   );
 });
