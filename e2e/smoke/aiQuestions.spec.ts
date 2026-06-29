@@ -67,7 +67,7 @@ authedTest.describe("AI questions", () => {
       await expect(answer).toBeEnabled();
       await answer.fill("A hook lets React components use state and effects.");
 
-      await authedPage.getByRole("button", { name: "Answer " }).click();
+      await authedPage.getByRole("button", { name: "Answer" }).click();
 
       await expect(
         authedPage.getByText("Good answer. You explained hooks clearly."),
