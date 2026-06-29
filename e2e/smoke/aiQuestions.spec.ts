@@ -4,7 +4,7 @@ import { authedTest } from "../fixtures/auth";
 import {
   createTestJobInfo,
   mockAiQuestionGenerationRoute,
-  mockAiFeedbackGenerationRoute,
+  mockAiAnswerFeedbackGenerationRoute,
 } from "../helpers";
 
 authedTest.describe("AI questions", () => {
@@ -54,7 +54,7 @@ authedTest.describe("AI questions", () => {
         questionId: "00000000-0000-4000-8000-000000009901",
         questionText: "What is a React hook?",
       });
-      await mockAiFeedbackGenerationRoute(authedPage, {
+      await mockAiAnswerFeedbackGenerationRoute(authedPage, {
         expectedPrompt: "A hook lets React components use state and effects.",
         expectedQuestionId: "00000000-0000-4000-8000-000000009901",
         feedbackText: "Good answer. You explained hooks clearly.",

@@ -8,7 +8,7 @@ type MockAiFeedbackGenerationOptions = {
 
 const defaultFeedbackText = "Good job!";
 
-export async function mockAiFeedbackGenerationRoute(
+export async function mockAiAnswerFeedbackGenerationRoute(
   page: Page,
   options: MockAiFeedbackGenerationOptions,
 ) {
