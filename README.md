@@ -56,7 +56,7 @@ Most domain features are structured as:
 3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
 4. `db.ts` - direct Drizzle queries
 
-This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`.
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (permissions + `db.ts`; the analyze API route reserves quota before streaming AI output).
 
 ### Request and auth flow
 
@@ -76,6 +76,7 @@ Key tables include:
 - `job_info`
 - `interviews`
 - `questions`
+- `resume_analyses` (per job info; used for free-plan usage counting and quota reservation)
 - `stripe_events` (webhook idempotency)
 - token tables for verification/password reset workflows
 
@@ -278,6 +279,10 @@ The smoke specs live in `e2e/smoke/`:
 - `aiQuestions.spec.ts` — mocked AI question generation (route interception), difficulty selection, question display, answer input, and mocked answer feedback.
 - `aiResume.spec.ts` — mocked resume analysis upload and streamed results display.
 
+Database-level specs live in `e2e/db/`:
+
+- `resumeAnalysisReservation.spec.ts` — concurrent free-plan quota reservation at the limit boundary (`tryInsertResumeAnalysisDb`).
+
 Shared setup helpers live in `e2e/helpers/`. Authenticated specs use the `authedTest` fixture from `e2e/fixtures/auth.ts`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
 
 Local `npm run test:e2e` runs Chromium only; Firefox and WebKit projects are skipped outside CI (`playwright.config.ts` uses `testIgnore` when `CI` is unset).
@@ -327,7 +332,9 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 ## Development Notes
 
 - Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
+- Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
+- Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`).
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
 - A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
-- The middleware skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
+- `proxy.ts` skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
 - Neon is a strong fit for Vercel deployments because it provides managed Postgres with straightforward hosted connection management (no containerized DB required in production).
