@@ -200,6 +200,25 @@ describe("POST /api/ai/resumes/analyze", () => {
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
+  it("maps reservation failures to a 500 response", async () => {
+    mockReserveResumeAnalysisUsage.mockRejectedValueOnce(
+      new DatabaseError("Reservation insert failed"),
+    );
+
+    const response = await POST(buildFormRequest());
+
+    await expectTextResponse(
+      response,
+      500,
+      "An error occurred while analyzing your resume",
+    );
+    expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error analyzing resume:",
+      expect.any(DatabaseError),
+    );
+  });
+
   it("returns a streamed success response for resume analysis", async () => {
     const resumeFile = makeResumeFile();
     const jobInfo = makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID });

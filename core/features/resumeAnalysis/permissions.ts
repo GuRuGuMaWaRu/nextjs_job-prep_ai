@@ -59,31 +59,26 @@ export async function reserveResumeAnalysisUsage(
   userId: string,
   jobInfoId: string,
 ): Promise<boolean> {
-  try {
-    const hasUnlimited = await hasPermission(
-      PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
-    );
+  const hasUnlimited = await hasPermission(
+    PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
+  );
 
-    if (hasUnlimited) {
-      await insertResumeAnalysisDb({ jobInfoId });
-      return true;
-    }
+  if (hasUnlimited) {
+    await insertResumeAnalysisDb({ jobInfoId });
+    return true;
+  }
 
-    const hasLimited = await hasPermission(PERMISSIONS.LIMITED.RESUME_ANALYSES);
+  const hasLimited = await hasPermission(PERMISSIONS.LIMITED.RESUME_ANALYSES);
 
-    if (!hasLimited) {
-      return false;
-    }
-
-    const reserved = await tryInsertResumeAnalysisDb({
-      userId,
-      jobInfoId,
-      limit: FREE_PLAN_LIMITS.resume_analyses,
-    });
-
-    return reserved != null;
-  } catch (error) {
-    console.error("Error reserving resume analysis usage:", error);
+  if (!hasLimited) {
     return false;
   }
+
+  const reserved = await tryInsertResumeAnalysisDb({
+    userId,
+    jobInfoId,
+    limit: FREE_PLAN_LIMITS.resume_analyses,
+  });
+
+  return reserved != null;
 }
