@@ -14,10 +14,7 @@ import {
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import {
-  PRODUCT_FEATURES,
-  PUBLIC_PLANS,
-} from "@/core/features/billing/plans";
+import { PRODUCT_FEATURES, PUBLIC_PLANS } from "@/core/features/billing/plans";
 import { routes } from "@/core/data/routes";
 
 const FEATURE_ICONS = {
@@ -52,7 +49,8 @@ function Navbar() {
               <Button variant="outline" asChild>
                 <Link href={routes.signIn}>Sign In</Link>
               </Button>
-            }>
+            }
+          >
             <SignInButton />
           </Suspense>
         </div>
@@ -85,9 +83,9 @@ function HeroSection() {
         Preparation
       </h1>
       <p className="text-xl text-muted-foreground max-w-2xl">
-        Practice voice interviews, analyze your resume against a job description,
-        and work through technical questions with AI feedback — all tied to the
-        roles you are targeting.
+        Practice voice interviews, analyze your resume against a job
+        description, and work through technical questions with AI feedback — all
+        tied to the roles you are targeting.
       </p>
       <Button size="lg" className="text-base h-12" asChild>
         <Link href={routes.signUp}>Get Started for Free</Link>
@@ -139,7 +137,8 @@ function PricingSection() {
             key={plan.name}
             className={`relative transition-all ${
               plan.popular && "border-primary shadow-lg"
-            }`}>
+            }`}
+          >
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="px-2 py-0.5 text-xs font-semibold">
@@ -197,7 +196,8 @@ function Footer() {
         </Link>
         <Link
           href="mailto:contact@offerpilot.example.com"
-          className="hover:text-foreground transition-colors">
+          className="hover:text-foreground transition-colors"
+        >
           Contact us
         </Link>
       </div>

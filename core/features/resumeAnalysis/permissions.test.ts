@@ -96,7 +96,9 @@ describe("checkResumeAnalysisPermission", () => {
 
     await expect(checkResumeAnalysisPermission()).resolves.toBe(true);
 
-    expect(mockGetResumeAnalysisCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
+    expect(mockGetResumeAnalysisCountDb).toHaveBeenCalledWith(
+      SIGNED_IN_USER_ID,
+    );
   });
 
   it("denies limited users at the free resume analysis limit", async () => {

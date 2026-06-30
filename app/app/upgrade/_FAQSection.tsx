@@ -4,9 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/core/components/ui/accordion";
-import {
-  formatFreePlanLimitsSummary,
-} from "@/core/features/billing/plans";
+import { formatFreePlanLimitsSummary } from "@/core/features/billing/plans";
 
 const FAQ_ITEMS = [
   {
