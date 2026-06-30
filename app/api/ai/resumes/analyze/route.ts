@@ -1,8 +1,7 @@
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
-import { insertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
+import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { NotFoundError, PermissionError } from "@/core/dal/errors";
@@ -37,13 +36,11 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!(await checkResumeAnalysisPermission())) {
+    if (!(await reserveResumeAnalysisUsage(userId, jobInfoId))) {
       return new Response(PLAN_LIMIT_MESSAGE, {
         status: 403,
       });
     }
-
-    await insertResumeAnalysisDb({ jobInfoId });
 
     const res = await analyzeResumeForJob({
       resumeFile,
