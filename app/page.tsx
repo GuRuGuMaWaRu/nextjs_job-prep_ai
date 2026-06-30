@@ -14,7 +14,17 @@ import {
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
+import {
+  PRODUCT_FEATURES,
+  PUBLIC_PLANS,
+} from "@/core/features/billing/plans";
 import { routes } from "@/core/data/routes";
+
+const FEATURE_ICONS = {
+  "AI Voice Interviews": Mic,
+  "Resume Analysis": FileText,
+  "Technical Question Practice": Brain,
+} as const;
 
 export default function LandingPage() {
   return (
@@ -75,9 +85,9 @@ function HeroSection() {
         Preparation
       </h1>
       <p className="text-xl text-muted-foreground max-w-2xl">
-        Accelerate your job search with personalized AI-powered tools. Get
-        feedback on your resume, practice with mock interviews, and understand
-        job descriptions like a pro.
+        Practice voice interviews, analyze your resume against a job description,
+        and work through technical questions with AI feedback — all tied to the
+        roles you are targeting.
       </p>
       <Button size="lg" className="text-base h-12" asChild>
         <Link href={routes.signUp}>Get Started for Free</Link>
@@ -87,93 +97,44 @@ function HeroSection() {
 }
 
 function FeaturesSection() {
-  const features = [
-    {
-      title: "AI Interview Practice",
-      description:
-        "Engage in realistic mock interviews with our AI interviewer. Get instant feedback on your responses, body language, and communication style.",
-      icon: <Mic className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "Tailored Resume Suggestions",
-      description:
-        "Optimize your resume for specific job postings. Our AI analyzes job requirements and suggests targeted improvements to highlight your strengths.",
-      icon: <FileText className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "Technical Questions Practice",
-      description:
-        "Practice answering technical questions tailored to the job description. Get instant feedback on your responses and improve your chances of landing an interview.",
-      icon: <Brain className="w-6 h-6 text-primary" />,
-    },
-  ];
-
   return (
     <section className="container mx-auto px-6 py-16 md:py-24">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {features.map((feature) => (
-          <Card className="transition-all" key={feature.title}>
-            <CardHeader className="space-y-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                {feature.icon}
-              </div>
-              <CardTitle className="text-xl">{feature.title}</CardTitle>
-              <CardDescription>{feature.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
+        {PRODUCT_FEATURES.map((feature) => {
+          const Icon = FEATURE_ICONS[feature.title];
+
+          return (
+            <Card className="transition-all" key={feature.title}>
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-primary" />
+                </div>
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );
 }
 
 function PricingSection() {
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      description: "Perfect for getting started with job prep",
-      features: [
-        "1 AI mock interview per month",
-        "Basic resume analysis",
-        "10 practice questions per month",
-        "Email support",
-      ],
-      popular: false,
-    },
-    {
-      name: "Pro",
-      price: "$29",
-      period: "per month",
-      description: "Best for serious job seekers",
-      features: [
-        "Unlimited AI mock interviews",
-        "Advanced resume optimization",
-        "Unlimited practice questions",
-        "Priority support",
-        "Interview performance analytics",
-        "Custom job description analysis",
-      ],
-      popular: true,
-    },
-  ];
-
   return (
     <section className="container mx-auto px-6 py-12 md:py-16 bg-muted/30">
       <div className="text-center mb-8">
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-balance">
-          Choose Your <span className="text-primary">Success Plan</span>
+          Simple, transparent pricing
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-          Start for free and upgrade when you&apos;re ready to accelerate your
-          job search. All plans include AI-powered tools to help you land your
-          dream job.
+          Start on Free to explore the product. Upgrade to Pro when you want
+          unlimited interviews, resume analyses, and practice questions.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
-        {plans.map((plan) => (
+        {PUBLIC_PLANS.map((plan) => (
           <Card
             key={plan.name}
             className={`relative transition-all ${

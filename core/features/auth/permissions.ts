@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   LIMITED: {
     INTERVIEWS: "limited_interviews",
     QUESTIONS: "limited_questions",
+    RESUME_ANALYSES: "limited_resume_analyses",
   },
 } as const;
 
@@ -30,7 +31,7 @@ const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
   free: [
     PERMISSIONS.LIMITED.INTERVIEWS,
     PERMISSIONS.LIMITED.QUESTIONS,
-    PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
+    PERMISSIONS.LIMITED.RESUME_ANALYSES,
   ],
   pro: [
     PERMISSIONS.UNLIMITED.INTERVIEWS,

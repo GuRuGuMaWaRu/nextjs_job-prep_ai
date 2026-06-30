@@ -12,8 +12,8 @@ export function HeadlineSection({
         Upgrade your plan
       </h1>
       <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-        Get unlimited interviews and practice questions so you can land <br />
-        your <span className="text-primary">dream job</span> faster.
+        Upgrade to Pro for unlimited interviews, resume analyses, and practice
+        questions.
       </p>
       {currentPlan != null && (
         <p

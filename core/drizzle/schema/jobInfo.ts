@@ -5,6 +5,7 @@ import { UserTable } from "./user";
 import { createdAt, id, updatedAt } from "../schemaHelpers";
 import { InterviewTable } from "./interview";
 import { QuestionTable } from "./question";
+import { ResumeAnalysisTable } from "./resumeAnalysis";
 
 export const experienceLevels = ["junior", "mid-level", "senior"] as const;
 export type ExperienceLevel = (typeof experienceLevels)[number];
@@ -33,4 +34,5 @@ export const jobInfoRelations = relations(JobInfoTable, ({ one, many }) => ({
   }),
   interviews: many(InterviewTable),
   questions: many(QuestionTable),
+  resumeAnalyses: many(ResumeAnalysisTable),
 }));

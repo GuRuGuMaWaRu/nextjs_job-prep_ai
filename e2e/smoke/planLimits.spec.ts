@@ -5,6 +5,7 @@ import {
   createTestInterview,
   createTestQuestion,
   createTestJobInfo,
+  createTestResumeAnalysis,
 } from "../helpers";
 
 authedTest.describe("Plan limits", () => {
@@ -52,6 +53,29 @@ authedTest.describe("Plan limits", () => {
 
       await Promise.all([
         authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`),
+        authedPage.waitForURL("/app/upgrade"),
+      ]);
+
+      await expect(
+        authedPage.getByRole("heading", { name: "Upgrade your plan" }),
+      ).toBeVisible();
+    },
+  );
+
+  authedTest.use({ authEmailPrefix: "resume-plan-limit-" });
+  authedTest(
+    "free user at resume analysis limit is redirected to upgrade",
+    async ({ authedPage, session }) => {
+      const jobInfo = await createTestJobInfo(session.userId);
+
+      const insertPromises = Array.from({ length: 3 }, () =>
+        createTestResumeAnalysis(jobInfo.id),
+      );
+
+      await Promise.all(insertPromises);
+
+      await Promise.all([
+        authedPage.goto(`/app/jobInfo/${jobInfo.id}/resume`),
         authedPage.waitForURL("/app/upgrade"),
       ]);
 
