@@ -2,16 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import {
-  Mic,
-  FileText,
-  Brain,
-  TrendingUp,
-  Clock,
-  Target,
-  Quote,
-  Check,
-} from "lucide-react";
+import { Mic, FileText, Brain, Check } from "lucide-react";
 
 import { Button } from "@/core/components/ui/button";
 import {
@@ -23,8 +14,14 @@ import {
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { PRODUCT_FEATURES, PUBLIC_PLANS } from "@/core/features/billing/plans";
 import { routes } from "@/core/data/routes";
-import { UserAvatar } from "@/core/features/users/components/UserAvatar";
+
+const FEATURE_ICONS = {
+  "AI Voice Interviews": Mic,
+  "Resume Analysis": FileText,
+  "Technical Question Practice": Brain,
+} as const;
 
 export default function LandingPage() {
   return (
@@ -33,8 +30,6 @@ export default function LandingPage() {
       <Navbar />
       <HeroSection />
       <FeaturesSection />
-      <StatsComparisonSection />
-      <TestimonialsSection />
       <PricingSection />
       <Footer />
     </div>
@@ -88,9 +83,9 @@ function HeroSection() {
         Preparation
       </h1>
       <p className="text-xl text-muted-foreground max-w-2xl">
-        Accelerate your job search with personalized AI-powered tools. Get
-        feedback on your resume, practice with mock interviews, and understand
-        job descriptions like a pro.
+        Practice voice interviews, analyze your resume against a job
+        description, and work through technical questions with AI feedback — all
+        tied to the roles you are targeting.
       </p>
       <Button size="lg" className="text-base h-12" asChild>
         <Link href={routes.signUp}>Get Started for Free</Link>
@@ -100,300 +95,48 @@ function HeroSection() {
 }
 
 function FeaturesSection() {
-  const features = [
-    {
-      title: "AI Interview Practice",
-      description:
-        "Engage in realistic mock interviews with our AI interviewer. Get instant feedback on your responses, body language, and communication style.",
-      icon: <Mic className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "Tailored Resume Suggestions",
-      description:
-        "Optimize your resume for specific job postings. Our AI analyzes job requirements and suggests targeted improvements to highlight your strengths.",
-      icon: <FileText className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "Technical Questions Practice",
-      description:
-        "Practice answering technical questions tailored to the job description. Get instant feedback on your responses and improve your chances of landing an interview.",
-      icon: <Brain className="w-6 h-6 text-primary" />,
-    },
-  ];
-
   return (
     <section className="container mx-auto px-6 py-16 md:py-24">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {features.map((feature) => (
-          <Card
-            className="transition-all hover:shadow-lg hover:scale-[1.02]"
-            key={feature.title}
-          >
-            <CardHeader className="space-y-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                {feature.icon}
-              </div>
-              <CardTitle className="text-xl">{feature.title}</CardTitle>
-              <CardDescription>{feature.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
-}
+        {PRODUCT_FEATURES.map((feature) => {
+          const Icon = FEATURE_ICONS[feature.title];
 
-function StatsComparisonSection() {
-  const stats = [
-    {
-      title: "Time to Job Offer",
-      offerPilotUsers: "3.2 weeks",
-      average: "8.5 weeks",
-      improvement: "62% faster",
-      icon: <Clock className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "Interviews Needed",
-      offerPilotUsers: "4.3 interviews",
-      average: "12.7 interviews",
-      improvement: "66% fewer",
-      icon: <Target className="w-6 h-6 text-primary" />,
-    },
-    {
-      title: "Success Rate",
-      offerPilotUsers: "78%",
-      average: "32%",
-      improvement: "2.4x higher",
-      icon: <TrendingUp className="w-6 h-6 text-primary" />,
-    },
-  ];
-
-  return (
-    <section className="container mx-auto px-6 py-16 md:py-24 bg-muted/30">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-          Land Your Dream Job{" "}
-          <span className="text-primary">Faster Than Ever</span>
-        </h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Our users consistently outperform the average job applicant.
-          Here&apos;s how we accelerate your job search success.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        {stats.map((stat) => (
-          <Card
-            className="transition-all hover:shadow-lg hover:scale-[1.02]"
-            key={stat.title}
-          >
-            <CardHeader className="space-y-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                {stat.icon}
-              </div>
-              <CardTitle className="text-xl">{stat.title}</CardTitle>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-primary/5 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    OfferPilot Users
-                  </span>
-                  <span className="text-lg font-bold text-primary">
-                    {stat.offerPilotUsers}
-                  </span>
+          return (
+            <Card className="transition-all" key={feature.title}>
+              <CardHeader className="space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-primary" />
                 </div>
-                <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Average
-                  </span>
-                  <span className="text-lg font-semibold">{stat.average}</span>
-                </div>
-                <div className="text-center pt-2">
-                  <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                    {stat.improvement}
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-
-      <div className="text-center mt-12">
-        <p className="text-sm text-muted-foreground mb-6 text-pretty">
-          Join thousands of successful job seekers who landed their dream roles
-          with OfferPilot
-        </p>
-        <Button size="lg" className="text-base h-12" asChild>
-          <Link href={routes.signUp}>Start Your Success Story</Link>
-        </Button>
-      </div>
-    </section>
-  );
-}
-
-function TestimonialsSection() {
-  const testimonials = [
-    {
-      user: {
-        name: "Sarah Chen",
-        image: "https://i.pravatar.cc/150?img=5",
-      },
-      role: "Software Engineer",
-      company: "Tech Innovations Inc",
-      result: "Hired in 3 weeks",
-      quote:
-        "OfferPilot transformed my interview prep. The AI mock interviews helped me identify weak spots I never knew I had. I landed my dream job after just 3 interviews!",
-    },
-    {
-      user: {
-        name: "Marcus Johnson",
-        image: "https://i.pravatar.cc/150?img=12",
-      },
-      role: "Product Manager",
-      company: "Digital Solutions Co",
-      result: "Hired in 5 weeks",
-      quote:
-        "The resume optimization feature is incredible. It helped me tailor my resume for each application, and my callback rate increased by 300%. Worth every penny!",
-    },
-    {
-      user: {
-        name: "Emily Rodriguez",
-        image: "https://i.pravatar.cc/150?img=9",
-      },
-      role: "Data Scientist",
-      company: "Analytics Pro",
-      result: "Hired in 4 weeks",
-      quote:
-        "I was struggling with technical interviews until I found OfferPilot. The practice questions were spot-on, and the instant feedback helped me improve rapidly. Got an offer in 4 weeks!",
-    },
-    {
-      user: {
-        name: "David Kim",
-        image: "https://i.pravatar.cc/150?img=33",
-      },
-      role: "UX Designer",
-      company: "Creative Studio",
-      result: "Hired in 2 weeks",
-      quote:
-        "The personalized interview feedback was a game-changer. I went from nervous and unprepared to confident and articulate. Highly recommend to anyone job hunting!",
-    },
-  ];
-
-  return (
-    <section className="container mx-auto px-6 py-16 md:py-24">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-balance">
-          Hear From Our <span className="text-primary">Success Stories</span>
-        </h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-          Real people, real results. See how OfferPilot helped professionals
-          land their dream jobs.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-        {testimonials.map((testimonial) => (
-          <Card
-            className="transition-all hover:shadow-lg hover:scale-[1.01]"
-            key={testimonial.user.name}
-          >
-            <CardHeader className="space-y-4 flex flex-col h-full">
-              <div className="flex items-start justify-between gap-2">
-                <Quote className="w-8 h-8 text-primary/40 shrink-0" />
-                <Badge variant="secondary" className="text-xs font-semibold">
-                  ✨ {testimonial.result}
-                </Badge>
-              </div>
-              <CardDescription className="text-base leading-relaxed flex-1">
-                &quot;{testimonial.quote}&quot;
-              </CardDescription>
-              <div className="flex items-center gap-3 pt-2 mt-auto">
-                <UserAvatar user={testimonial.user} className="size-12" />
-                <div>
-                  <p className="font-semibold text-foreground">
-                    {testimonial.user.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {testimonial.role} at {testimonial.company}
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );
 }
 
 function PricingSection() {
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      description: "Perfect for getting started with job prep",
-      features: [
-        "1 AI mock interview per month",
-        "Basic resume analysis",
-        "10 practice questions per month",
-        "Email support",
-      ],
-      popular: false,
-    },
-    {
-      name: "Pro",
-      price: "$29",
-      period: "per month",
-      description: "Best for serious job seekers",
-      features: [
-        "Unlimited AI mock interviews",
-        "Advanced resume optimization",
-        "Unlimited practice questions",
-        "Priority support",
-        "Interview performance analytics",
-        "Custom job description analysis",
-      ],
-      popular: true,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      period: "contact us",
-      description: "For teams and organizations",
-      features: [
-        "Everything in Pro",
-        "Team management dashboard",
-        "Custom integrations",
-        "Dedicated account manager",
-        "White-label options",
-        "API access",
-      ],
-      popular: false,
-    },
-  ];
-
   return (
     <section className="container mx-auto px-6 py-12 md:py-16 bg-muted/30">
       <div className="text-center mb-8">
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-balance">
-          Choose Your <span className="text-primary">Success Plan</span>
+          Simple, transparent pricing
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-          Start for free and upgrade when you&apos;re ready to accelerate your
-          job search. All plans include AI-powered tools to help you land your
-          dream job.
+          Start on Free to explore the product. Upgrade to Pro when you want
+          unlimited interviews, resume analyses, and practice questions.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-        {plans.map((plan) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+        {PUBLIC_PLANS.map((plan) => (
           <Card
             key={plan.name}
-            className={`relative transition-all hover:shadow-lg ${
-              plan.popular
-                ? "border-primary shadow-lg scale-105 md:scale-105"
-                : "hover:scale-[1.02]"
+            className={`relative transition-all ${
+              plan.popular && "border-primary shadow-lg"
             }`}
           >
             {plan.popular && (

@@ -11,57 +11,13 @@ import {
 } from "@/core/components/ui/card";
 import { getUserSubscriptionInfo } from "@/core/features/auth/permissions";
 import { isStripeConfigured } from "@/core/features/billing/stripe";
+import { FREE_PLAN_CARD, PRO_PLAN_CARD } from "@/core/features/billing/plans";
 
 import { StripeActionButton } from "./_StripeActionButton";
 
 const STRIPE_CHECKOUT_URL = "/api/stripe/create-checkout-session";
 const STRIPE_PORTAL_URL = "/api/stripe/create-portal-session";
 const STRIPE_CANCEL_SUBSCRIPTION_URL = "/api/stripe/cancel-subscription";
-
-const FREE_PLAN = {
-  name: "Free",
-  price: "$0",
-  period: "forever",
-  description: "Perfect for getting started with job prep",
-  features: [
-    "1 AI mock interview per month",
-    "Basic resume analysis",
-    "10 practice questions per month",
-    "Email support",
-  ],
-  popular: false,
-} as const;
-
-const PRO_PLAN = {
-  name: "Pro",
-  price: "$29",
-  period: "per month",
-  description: "Best for serious job seekers",
-  features: [
-    "Unlimited AI mock interviews",
-    "Advanced resume optimization",
-    "Unlimited practice questions",
-    "Priority support",
-    "Interview performance analytics",
-    "Custom job description analysis",
-  ],
-  popular: true,
-} as const;
-
-const ENTERPRISE_PLAN = {
-  name: "Enterprise",
-  price: "Custom",
-  period: "contact us",
-  description: "For teams and organizations",
-  features: [
-    "Everything in Pro",
-    "Team management dashboard",
-    "Custom integrations",
-    "Dedicated account manager",
-    "White-label options",
-    "API access",
-  ],
-} as const;
 
 function PlanCard({
   plan,
@@ -73,7 +29,7 @@ function PlanCard({
   checkoutAction,
   cancelAction,
 }: {
-  plan: typeof FREE_PLAN | typeof PRO_PLAN;
+  plan: typeof FREE_PLAN_CARD | typeof PRO_PLAN_CARD;
   isCurrentPlan: boolean;
   cta: string;
   ctaDisabled: boolean;
@@ -168,49 +124,6 @@ function PlanCard({
   );
 }
 
-function EnterpriseBlock() {
-  return (
-    <Card className="max-w-4xl mx-auto border-enterprise/40 bg-enterprise-bg shadow-lg">
-      <CardHeader className="space-y-4 p-5">
-        <div className="space-y-1">
-          <CardTitle className="text-xl">{ENTERPRISE_PLAN.name}</CardTitle>
-          <CardDescription className="text-sm">
-            {ENTERPRISE_PLAN.description}
-          </CardDescription>
-        </div>
-        <div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight">
-              {ENTERPRISE_PLAN.price}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {ENTERPRISE_PLAN.period}
-            </span>
-          </div>
-        </div>
-        <div className="space-y-2 pt-2">
-          {ENTERPRISE_PLAN.features.map((feature) => (
-            <div key={feature} className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-enterprise shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground">{feature}</span>
-            </div>
-          ))}
-        </div>
-      </CardHeader>
-      <CardFooter className="pt-0 px-5">
-        <Button
-          variant="outline"
-          size="lg"
-          className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise"
-          asChild
-        >
-          <a href="mailto:enterprise@offerpilot.example.com">Contact us</a>
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
 export async function PlanCardsSection() {
   const { plan: currentPlan, hasExistingSubscription } =
     await getUserSubscriptionInfo();
@@ -234,7 +147,7 @@ export async function PlanCardsSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <PlanCard
-          plan={FREE_PLAN}
+          plan={FREE_PLAN_CARD}
           isCurrentPlan={currentPlan === "free" && !hasExistingSubscription}
           cta={
             currentPlan === "free" && !hasExistingSubscription
@@ -252,7 +165,7 @@ export async function PlanCardsSection() {
           }
         />
         <PlanCard
-          plan={PRO_PLAN}
+          plan={PRO_PLAN_CARD}
           isCurrentPlan={currentPlan === "pro"}
           cta={currentPlan === "pro" ? "Current plan" : "Upgrade to Pro"}
           ctaDisabled={!canCheckout}
@@ -285,8 +198,6 @@ export async function PlanCardsSection() {
           </StripeActionButton>
         </div>
       )}
-
-      <EnterpriseBlock />
     </section>
   );
 }

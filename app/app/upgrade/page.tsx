@@ -7,7 +7,6 @@ import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 
 import { RevalidateOnStripeReturn } from "./_RevalidateOnStripeReturn";
 import { FAQSection } from "./_FAQSection";
-import { WhyUpgradeSection } from "./_WhyUpgradeSection";
 import { PlanCardsSection } from "./_PlanCardsSection";
 import { PlanCardsSkeleton } from "./_PlanCardsSkeleton";
 import { HeadlineSection, HeadlineWithPlan } from "./_HeadlineSection";
@@ -95,8 +94,6 @@ export default async function UpgradePage(props: UpgradePageProps) {
         <Suspense fallback={<PlanCardsSkeleton />}>
           <PlanCardsSection />
         </Suspense>
-
-        <WhyUpgradeSection />
 
         <FAQSection />
       </div>

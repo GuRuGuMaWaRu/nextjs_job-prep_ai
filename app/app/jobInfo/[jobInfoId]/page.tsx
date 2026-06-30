@@ -28,13 +28,14 @@ const options = [
   },
   {
     label: "Practice Interviewing",
-    description: "Simulate a real interview with AI-powered mock interviews.",
+    description:
+      "Run a voice-based mock interview and review AI feedback on your answers.",
     href: "interviews",
   },
   {
     label: "Analyze Your Resume",
     description:
-      "Get expert feedback on your resume and improve your chances of landing an interview.",
+      "Compare your resume to the job description and get structured ATS and job-match feedback.",
     href: "resume",
   },
   {

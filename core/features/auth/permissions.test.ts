@@ -71,6 +71,12 @@ describe("auth permission helpers", () => {
     await expect(hasPermission(PERMISSIONS.UNLIMITED.QUESTIONS)).resolves.toBe(
       false,
     );
+    await expect(
+      hasPermission(PERMISSIONS.LIMITED.RESUME_ANALYSES),
+    ).resolves.toBe(true);
+    await expect(
+      hasPermission(PERMISSIONS.UNLIMITED.RESUME_ANALYSES),
+    ).resolves.toBe(false);
   });
 
   it("treats an empty stored plan as the free plan for permission checks", async () => {

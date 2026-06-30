@@ -12,10 +12,8 @@ import { Button } from "@core/components/ui/button";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { JobInfoCard } from "@/core/features/jobInfos/components/JobInfoCard";
 import { getJobInfosAction } from "@/core/features/jobInfos/actions";
-import {
-  FREE_PLAN_LIMITS,
-  getUserPlan,
-} from "@/core/features/auth/permissions";
+import { getUserPlan } from "@/core/features/auth/permissions";
+import { formatFreePlanLimitsSummary } from "@/core/features/billing/plans";
 import { routes } from "@/core/data/routes";
 
 export async function JobInfos() {
@@ -99,15 +97,15 @@ function CurrentPlanUpgradeCard({ plan }: { plan: "free" | "pro" }) {
         </CardTitle>
         <CardDescription className="text-sm md:text-base">
           {isFreePlan
-            ? "You are on the Free plan. Upgrade for unlimited interviews and questions."
-            : "You are on the Pro plan with unlimited interviews and questions."}
+            ? "You are on the Free plan. Upgrade for unlimited interviews, resume analyses, and practice questions."
+            : "You are on the Pro plan with unlimited interviews, resume analyses, and practice questions."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="text-sm text-muted-foreground">
           {isFreePlan
-            ? `Free limits: ${FREE_PLAN_LIMITS.interviews} interview and ${FREE_PLAN_LIMITS.questions} questions per month.`
-            : "Resume analysis is available on both plans."}
+            ? `Free limits: ${formatFreePlanLimitsSummary()}.`
+            : "All core workflows are unlimited on Pro."}
         </div>
         <Button asChild variant="outline" size="sm">
           <Link href={routes.upgrade}>

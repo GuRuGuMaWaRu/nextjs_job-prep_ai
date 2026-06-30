@@ -4,22 +4,22 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/core/components/ui/accordion";
+import { formatFreePlanLimitsSummary } from "@/core/features/billing/plans";
 
 const FAQ_ITEMS = [
   {
     question: "What's included in Pro?",
-    answer:
-      "Pro includes unlimited AI mock interviews, unlimited practice questions, advanced resume optimization, priority support, interview performance analytics, and custom job description analysis.",
+    answer: `Pro removes the Free plan limits of ${formatFreePlanLimitsSummary()}. You get unlimited voice interviews, resume analyses, and practice questions with the same AI feedback workflows.`,
   },
   {
     question: "Can I cancel anytime?",
     answer:
-      "Yes. You will be able to cancel your Pro subscription at any time. You'll keep access until the end of your billing period, then your account will switch back to the Free plan.",
+      "Yes. You can cancel your Pro subscription at any time. You'll keep access until the end of your billing period, then your account will switch back to the Free plan.",
   },
   {
     question: "How does billing work?",
     answer:
-      'Pro will be billed monthly. Payment will be charged at the start of each billing cycle. We plan to send you a receipt by email. You will be able to manage your subscription or payment method from the Upgrade page using the "Manage subscription" button.',
+      'Pro is billed monthly at the start of each billing cycle. Manage your subscription or payment method from this page using the "Manage subscription" button.',
   },
 ] as const;
 

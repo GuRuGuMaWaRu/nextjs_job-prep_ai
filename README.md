@@ -208,7 +208,7 @@ Open [http://localhost:3000](http://localhost:3000).
   - `SESSION_REFRESH_THRESHOLD_MS` (7 days)
   - session cookie name/options (`session_token`, `httpOnly`, etc.)
 - `core/features/auth/permissions.ts`
-  - free-plan limits: 1 completed voice interview (rows with a Hume chat id) and 10 generated questions lifetime (total row counts, not reset monthly); resume analyses are unlimited on all plans
+  - free-plan limits: 1 completed voice interview (rows with a Hume chat id), 10 generated questions, and 3 resume analyses lifetime (total row counts, not reset monthly)
   - plan-to-permission mapping for `free` and `pro`
 - `next.config.ts`
   - `cacheComponents: true`
@@ -249,13 +249,17 @@ After the workflows have run at least once on `main`, enable **Require status ch
 
 ### End-to-end tests (Playwright)
 
-Playwright tests require a dedicated test database. Copy `.env.test.example` to `.env.test`, point it at that database, and apply the schema once against that same environment:
+Playwright tests require a dedicated test database. Copy `.env.test.example` to `.env.test` and point it at that database. Schema sync and data reset run automatically at the start of each e2e run via `e2e/globalSetup.ts` (`drizzle-kit push`, then truncate).
 
-```bash
-npx dotenv -e .env.test -- npm run db:push
-```
+Stop any other dev server on port 3000 before running e2e locally, or Playwright may reuse it against the wrong database. In CI, Playwright always starts a fresh `dev:test` server.
 
 For local Docker Postgres, run `docker compose up -d`, use `DB_HOST=localhost`, and omit `DB_SSLMODE`. For Neon, use a separate branch/database and set `DB_SSLMODE=require`.
+
+To sync the test schema manually (optional, for debugging):
+
+```bash
+npx dotenv -e .env.test -- npm run db:push -- --force
+```
 
 Run the E2E suite with:
 
@@ -270,14 +274,15 @@ The smoke specs live in `e2e/smoke/`:
 - `landingPage.spec.ts` — public landing page content and sign-up/sign-in navigation.
 - `auth.spec.ts` — sign-up, sign-in, logout, protected-route redirects, and auth error states (wrong password, duplicate email).
 - `userFlow.spec.ts` — signed-in flows: navbar upgrade link, job info create/edit/delete, empty form validation, job info section navigation (interviews, questions, resume), and the upgrade page.
-- `planLimits.spec.ts` — free-plan interview limit UI (`PlanLimitAlert` and upgrade link) and questions limit redirect to the upgrade page.
-- `aiQuestions.spec.ts` — mocked AI question generation (route interception), difficulty selection, question display, and answer input.
+- `planLimits.spec.ts` — free-plan interview limit UI (`PlanLimitAlert` and upgrade link), questions limit redirect, and resume analysis limit redirect to the upgrade page.
+- `aiQuestions.spec.ts` — mocked AI question generation (route interception), difficulty selection, question display, answer input, and mocked answer feedback.
+- `aiResume.spec.ts` — mocked resume analysis upload and streamed results display.
 
 Shared setup helpers live in `e2e/helpers/`. Authenticated specs use the `authedTest` fixture from `e2e/fixtures/auth.ts`. Playwright starts the app via `npm run dev:test` (loads `.env.test`).
 
 Local `npm run test:e2e` runs Chromium only; Firefox and WebKit projects are skipped outside CI (`playwright.config.ts` uses `testIgnore` when `CI` is unset).
 
-`e2e/globalSetup.ts` resets the database before each run by truncating test data. Keep this pointed at a separate test database: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
+`e2e/globalSetup.ts` performs that schema sync and reset. Keep the test database separate: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
 
 CI runs Playwright from [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) on pull requests and pushes to `main`/`master`. It expects a GitHub secret named `E2E_ENV_FILE` containing the full `.env.test` contents. Failed runs upload the `playwright-report` artifact, and traces are collected on the first retry.
 
@@ -285,9 +290,7 @@ Out of scope for E2E for now:
 
 - Stripe checkout and webhooks
 - OAuth provider sign-in flows
-- Live AI generation (Gemini) and AI answer feedback (question generation is covered via mocked `/api/ai/questions/generate-question` responses)
-- Hume voice
-- Resume upload
+- Live AI generation (Gemini) and live Hume voice
 
 Keep those covered by Jest or integration tests until the E2E scope expands.
 

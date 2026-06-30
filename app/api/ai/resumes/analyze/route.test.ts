@@ -10,6 +10,10 @@ jest.mock("@/core/features/resumeAnalysis/permissions", () => ({
   checkResumeAnalysisPermission: jest.fn(),
 }));
 
+jest.mock("@/core/features/resumeAnalysis/db", () => ({
+  insertResumeAnalysisDb: jest.fn(),
+}));
+
 jest.mock("@/core/features/resumeAnalysis/schemas", () => {
   const actual = jest.requireActual<
     typeof import("@/core/features/resumeAnalysis/schemas")
@@ -35,6 +39,7 @@ import { z } from "zod";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
+import { insertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import {
@@ -53,6 +58,7 @@ const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockCheckResumeAnalysisPermission = jest.mocked(
   checkResumeAnalysisPermission,
 );
+const mockInsertResumeAnalysisDb = jest.mocked(insertResumeAnalysisDb);
 const mockAnalyzeResumeForJob = jest.mocked(analyzeResumeForJob);
 const mockResumeAnalysisSafeParse = jest.mocked(
   resumeAnalysisInputSchema.safeParse,
@@ -130,6 +136,7 @@ describe("POST /api/ai/resumes/analyze", () => {
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
     mockCheckResumeAnalysisPermission.mockResolvedValue(true);
+    mockInsertResumeAnalysisDb.mockResolvedValue({ id: jobInfoId });
     mockResumeAnalysisSafeParse.mockImplementation((input) =>
       actualResumeAnalysisInputSchema.safeParse(input),
     );
@@ -215,6 +222,7 @@ describe("POST /api/ai/resumes/analyze", () => {
     });
 
     expect(mockGetJobInfoAction).toHaveBeenCalledWith(jobInfoId);
+    expect(mockInsertResumeAnalysisDb).toHaveBeenCalledWith({ jobInfoId });
     expect(mockAnalyzeResumeForJob).toHaveBeenCalledWith({
       resumeFile: expect.objectContaining({
         name: resumeFile.name,
