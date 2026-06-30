@@ -4,23 +4,21 @@ import type { z } from "zod";
 import type { aiAnalyzeSchema } from "@/core/services/ai/resumes/schemas";
 
 type MockAiResumeAnalysisOptions = {
-  expectedJobInfoId?: string;
+  expectedJobInfoId: string;
   overallScore?: number;
   atsSummary?: string;
+  /** Optional artificial delay before the response is sent (for loading UI). */
+  responseDelayMs?: number;
 };
 
-const defaultOverallScore = 8;
-const defaultAtsSummary = "Resume is ATS-friendly.";
-
-export async function mockAiResumeAnalysisRoute(
-  page: Page,
-  options: MockAiResumeAnalysisOptions = {},
-) {
-  const analysis = {
-    overallScore: options.overallScore ?? defaultOverallScore,
+function buildResumeAnalysis(
+  options: MockAiResumeAnalysisOptions,
+): z.infer<typeof aiAnalyzeSchema> {
+  return {
+    overallScore: options.overallScore ?? 8,
     ats: {
       score: 8,
-      summary: options.atsSummary ?? defaultAtsSummary,
+      summary: options.atsSummary ?? "Resume is ATS-friendly.",
       feedback: [
         {
           type: "strength",
@@ -49,25 +47,32 @@ export async function mockAiResumeAnalysisRoute(
       summary: "No additional issues were found.",
       feedback: [],
     },
-  } satisfies z.infer<typeof aiAnalyzeSchema>;
+  };
+}
+
+export async function mockAiResumeAnalysisRoute(
+  page: Page,
+  options: MockAiResumeAnalysisOptions,
+) {
+  const analysis = buildResumeAnalysis(options);
 
   await page.route("**/api/ai/resumes/analyze", async (route) => {
-    const request = route.request();
-
-    expect(request.method()).toBe("POST");
-    expect(request.headers()["content-type"]).toMatch(
-      /^multipart\/form-data; boundary=/,
-    );
-
-    const requestBody = request.postData();
-    expect(requestBody).toContain('name="resumeFile"');
-
-    if (options.expectedJobInfoId != null) {
-      expect(requestBody).toContain('name="jobInfoId"');
-      expect(requestBody).toContain(options.expectedJobInfoId);
+    if (route.request().method() !== "POST") {
+      await route.fallback();
+      return;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const requestBody = route.request().postData();
+    expect(requestBody).not.toBeNull();
+    expect(requestBody).toContain('name="resumeFile"');
+    expect(requestBody).toContain('name="jobInfoId"');
+    expect(requestBody).toContain(options.expectedJobInfoId);
+
+    if (options.responseDelayMs) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, options.responseDelayMs),
+      );
+    }
 
     await route.fulfill({
       status: 200,

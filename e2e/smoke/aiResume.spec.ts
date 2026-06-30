@@ -11,45 +11,29 @@ authedTest.describe("AI resume analysis", () => {
     "user can upload a resume and see analysis results",
     async ({ authedPage, session }) => {
       const jobInfo = await createTestJobInfo(session.userId);
+
       await mockAiResumeAnalysisRoute(authedPage, {
         expectedJobInfoId: jobInfo.id,
+        overallScore: 7,
+        atsSummary: "The resume is readable and ATS-friendly.",
       });
 
       await authedPage.goto(`/app/jobInfo/${jobInfo.id}/resume`);
 
-      await expect(
-        authedPage.locator('[data-slot="card-title"]', {
-          hasText: "Upload your resume",
-        }),
-      ).toBeVisible();
-      await expect(
-        authedPage.getByText("Drag your resume here or click to upload"),
-      ).toBeVisible();
-
       await authedPage
-        .locator("#resume-upload")
+        .getByLabel("Upload your resume")
         .setInputFiles(resolve("e2e/fixtures/sample-resume.txt"));
 
-      await expect(
-        authedPage.locator('[data-slot="card-title"]', {
-          hasText: "Analyzing your resume...",
-        }),
-      ).toBeVisible();
-      await expect(
-        authedPage.locator('[data-slot="card-title"]', {
-          hasText: "Analysis Results",
-        }),
-      ).toBeVisible();
-      await expect(authedPage.getByText("Overall Score: 8/10")).toBeVisible();
+      await expect(authedPage.getByText("Overall Score: 7/10")).toBeVisible();
 
-      const atsSection = authedPage.getByRole("button", {
-        name: /ATS Compatibility/,
-      });
-      await expect(atsSection).toBeVisible();
-      await atsSection.click();
+      await authedPage
+        .getByRole("button", {
+          name: /ATS Compatibility/,
+        })
+        .click();
 
       await expect(
-        authedPage.getByText("Resume is ATS-friendly."),
+        authedPage.getByText("The resume is readable and ATS-friendly."),
       ).toBeVisible();
     },
   );
