@@ -2,16 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import {
-  Mic,
-  FileText,
-  Brain,
-  TrendingUp,
-  Clock,
-  Target,
-  Quote,
-  Check,
-} from "lucide-react";
+import { Mic, FileText, Brain, Check } from "lucide-react";
 
 import { Button } from "@/core/components/ui/button";
 import {
@@ -24,7 +15,6 @@ import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { routes } from "@/core/data/routes";
-import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
 export default function LandingPage() {
   return (
