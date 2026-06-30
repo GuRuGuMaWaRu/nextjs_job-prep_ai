@@ -7,11 +7,7 @@ jest.mock("@/core/features/jobInfos/actions", () => ({
 }));
 
 jest.mock("@/core/features/resumeAnalysis/permissions", () => ({
-  checkResumeAnalysisPermission: jest.fn(),
-}));
-
-jest.mock("@/core/features/resumeAnalysis/db", () => ({
-  insertResumeAnalysisDb: jest.fn(),
+  reserveResumeAnalysisUsage: jest.fn(),
 }));
 
 jest.mock("@/core/features/resumeAnalysis/schemas", () => {
@@ -38,8 +34,7 @@ import { z } from "zod";
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
-import { insertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
+import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import {
@@ -55,10 +50,7 @@ import { POST } from "./route";
 
 const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
-const mockCheckResumeAnalysisPermission = jest.mocked(
-  checkResumeAnalysisPermission,
-);
-const mockInsertResumeAnalysisDb = jest.mocked(insertResumeAnalysisDb);
+const mockReserveResumeAnalysisUsage = jest.mocked(reserveResumeAnalysisUsage);
 const mockAnalyzeResumeForJob = jest.mocked(analyzeResumeForJob);
 const mockResumeAnalysisSafeParse = jest.mocked(
   resumeAnalysisInputSchema.safeParse,
@@ -135,8 +127,7 @@ describe("POST /api/ai/resumes/analyze", () => {
     mockGetJobInfoAction.mockResolvedValue(
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
-    mockCheckResumeAnalysisPermission.mockResolvedValue(true);
-    mockInsertResumeAnalysisDb.mockResolvedValue({ id: jobInfoId });
+    mockReserveResumeAnalysisUsage.mockResolvedValue(true);
     mockResumeAnalysisSafeParse.mockImplementation((input) =>
       actualResumeAnalysisInputSchema.safeParse(input),
     );
@@ -154,7 +145,7 @@ describe("POST /api/ai/resumes/analyze", () => {
 
     await expectTextResponse(response, 400, "Missing resume or job info id");
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-    expect(mockCheckResumeAnalysisPermission).not.toHaveBeenCalled();
+    expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
@@ -196,17 +187,36 @@ describe("POST /api/ai/resumes/analyze", () => {
       403,
       "You do not have permission to do this",
     );
-    expect(mockCheckResumeAnalysisPermission).not.toHaveBeenCalled();
+    expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
   it("returns the plan limit response when resume analysis is not allowed", async () => {
-    mockCheckResumeAnalysisPermission.mockResolvedValueOnce(false);
+    mockReserveResumeAnalysisUsage.mockResolvedValueOnce(false);
 
     const response = await POST(buildFormRequest());
 
     await expectTextResponse(response, 403, PLAN_LIMIT_MESSAGE);
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
+  });
+
+  it("maps reservation failures to a 500 response", async () => {
+    mockReserveResumeAnalysisUsage.mockRejectedValueOnce(
+      new DatabaseError("Reservation insert failed"),
+    );
+
+    const response = await POST(buildFormRequest());
+
+    await expectTextResponse(
+      response,
+      500,
+      "An error occurred while analyzing your resume",
+    );
+    expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error analyzing resume:",
+      expect.any(DatabaseError),
+    );
   });
 
   it("returns a streamed success response for resume analysis", async () => {
@@ -222,7 +232,10 @@ describe("POST /api/ai/resumes/analyze", () => {
     });
 
     expect(mockGetJobInfoAction).toHaveBeenCalledWith(jobInfoId);
-    expect(mockInsertResumeAnalysisDb).toHaveBeenCalledWith({ jobInfoId });
+    expect(mockReserveResumeAnalysisUsage).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      jobInfoId,
+    );
     expect(mockAnalyzeResumeForJob).toHaveBeenCalledWith({
       resumeFile: expect.objectContaining({
         name: resumeFile.name,

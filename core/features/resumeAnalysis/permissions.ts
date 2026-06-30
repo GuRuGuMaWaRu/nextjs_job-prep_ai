@@ -5,7 +5,11 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 
-import { getResumeAnalysisCountDb } from "./db";
+import {
+  getResumeAnalysisCountDb,
+  insertResumeAnalysisDb,
+  tryInsertResumeAnalysisDb,
+} from "./db";
 
 /**
  * Check if user can analyze resumes
@@ -45,4 +49,36 @@ export async function checkResumeAnalysisPermission(): Promise<boolean> {
 
 async function getResumeAnalysisCount(userId: string) {
   return getResumeAnalysisCountDb(userId);
+}
+
+/**
+ * Reserves one resume analysis for the current request.
+ * Pro users insert without quota checks; free users consume quota atomically.
+ */
+export async function reserveResumeAnalysisUsage(
+  userId: string,
+  jobInfoId: string,
+): Promise<boolean> {
+  const hasUnlimited = await hasPermission(
+    PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
+  );
+
+  if (hasUnlimited) {
+    await insertResumeAnalysisDb({ jobInfoId });
+    return true;
+  }
+
+  const hasLimited = await hasPermission(PERMISSIONS.LIMITED.RESUME_ANALYSES);
+
+  if (!hasLimited) {
+    return false;
+  }
+
+  const reserved = await tryInsertResumeAnalysisDb({
+    userId,
+    jobInfoId,
+    limit: FREE_PLAN_LIMITS.resume_analyses,
+  });
+
+  return reserved != null;
 }
