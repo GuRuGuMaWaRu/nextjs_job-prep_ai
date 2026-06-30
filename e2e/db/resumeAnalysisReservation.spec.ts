@@ -38,7 +38,9 @@ test.describe("tryInsertResumeAnalysisDb", () => {
     ]);
 
     const results = [firstResult, secondResult];
-    const reservedIds = results.flatMap((result) => (result ? [result.id] : []));
+    const reservedIds = results.flatMap((result) =>
+      result ? [result.id] : [],
+    );
 
     expect(reservedIds).toHaveLength(1);
     expect(results.filter((result) => result == null)).toHaveLength(1);
