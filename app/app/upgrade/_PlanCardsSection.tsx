@@ -48,21 +48,6 @@ const PRO_PLAN = {
   popular: true,
 } as const;
 
-const ENTERPRISE_PLAN = {
-  name: "Enterprise",
-  price: "Custom",
-  period: "contact us",
-  description: "For teams and organizations",
-  features: [
-    "Everything in Pro",
-    "Team management dashboard",
-    "Custom integrations",
-    "Dedicated account manager",
-    "White-label options",
-    "API access",
-  ],
-} as const;
-
 function PlanCard({
   plan,
   isCurrentPlan,
@@ -91,8 +76,7 @@ function PlanCard({
       className={`relative transition-all hover:shadow-lg ${
         plan.popular ? "border-primary shadow-lg" : ""
       } ${isCurrentPlan ? "ring-2 ring-primary/30" : ""}`}
-      aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}
-    >
+      aria-label={isCurrentPlan ? `Current plan: ${plan.name}` : undefined}>
       {showBadges && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2">
           {plan.popular && (
@@ -137,8 +121,7 @@ function PlanCard({
             className="w-full"
             size="lg"
             buttonClassName="w-full"
-            pendingLabel="Starting checkout..."
-          >
+            pendingLabel="Starting checkout...">
             {cta}
           </StripeActionButton>
         ) : cancelAction ? (
@@ -149,8 +132,7 @@ function PlanCard({
             variant="outline"
             size="lg"
             buttonClassName="w-full"
-            pendingLabel="Canceling..."
-          >
+            pendingLabel="Canceling...">
             {cta}
           </StripeActionButton>
         ) : (
@@ -158,54 +140,10 @@ function PlanCard({
             size="lg"
             className="w-full"
             disabled={ctaDisabled}
-            variant={ctaDisabled ? "outline" : "default"}
-          >
+            variant={ctaDisabled ? "outline" : "default"}>
             {cta}
           </Button>
         )}
-      </CardFooter>
-    </Card>
-  );
-}
-
-function EnterpriseBlock() {
-  return (
-    <Card className="max-w-4xl mx-auto border-enterprise/40 bg-enterprise-bg shadow-lg">
-      <CardHeader className="space-y-4 p-5">
-        <div className="space-y-1">
-          <CardTitle className="text-xl">{ENTERPRISE_PLAN.name}</CardTitle>
-          <CardDescription className="text-sm">
-            {ENTERPRISE_PLAN.description}
-          </CardDescription>
-        </div>
-        <div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight">
-              {ENTERPRISE_PLAN.price}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {ENTERPRISE_PLAN.period}
-            </span>
-          </div>
-        </div>
-        <div className="space-y-2 pt-2">
-          {ENTERPRISE_PLAN.features.map((feature) => (
-            <div key={feature} className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-enterprise shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground">{feature}</span>
-            </div>
-          ))}
-        </div>
-      </CardHeader>
-      <CardFooter className="pt-0 px-5">
-        <Button
-          variant="outline"
-          size="lg"
-          className="w-full border-enterprise/50 text-enterprise hover:bg-enterprise/10 hover:text-enterprise"
-          asChild
-        >
-          <a href="mailto:enterprise@offerpilot.example.com">Contact us</a>
-        </Button>
       </CardFooter>
     </Card>
   );
@@ -224,8 +162,7 @@ export async function PlanCardsSection() {
       {hasExistingSubscription && currentPlan !== "pro" && (
         <div
           className="max-w-4xl mx-auto rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200"
-          role="alert"
-        >
+          role="alert">
           Your subscription payment needs attention. Use{" "}
           <strong>Manage subscription</strong> below to update your payment
           method.
@@ -269,8 +206,7 @@ export async function PlanCardsSection() {
             url={STRIPE_PORTAL_URL}
             variant="outline"
             size="sm"
-            pendingLabel="Opening portal..."
-          >
+            pendingLabel="Opening portal...">
             Manage subscription
           </StripeActionButton>
           <StripeActionButton
@@ -279,14 +215,11 @@ export async function PlanCardsSection() {
             variant="ghost"
             size="sm"
             buttonClassName="text-muted-foreground hover:text-destructive"
-            pendingLabel="Canceling..."
-          >
+            pendingLabel="Canceling...">
             Cancel subscription
           </StripeActionButton>
         </div>
       )}
-
-      <EnterpriseBlock />
     </section>
   );
 }

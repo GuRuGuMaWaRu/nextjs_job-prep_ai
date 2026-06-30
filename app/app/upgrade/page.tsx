@@ -7,7 +7,6 @@ import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 
 import { RevalidateOnStripeReturn } from "./_RevalidateOnStripeReturn";
 import { FAQSection } from "./_FAQSection";
-import { WhyUpgradeSection } from "./_WhyUpgradeSection";
 import { PlanCardsSection } from "./_PlanCardsSection";
 import { PlanCardsSkeleton } from "./_PlanCardsSkeleton";
 import { HeadlineSection, HeadlineWithPlan } from "./_HeadlineSection";
@@ -51,16 +50,14 @@ export default async function UpgradePage(props: UpgradePageProps) {
         {errorMessage && (
           <div
             className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm text-red-800 dark:text-red-200"
-            role="alert"
-          >
+            role="alert">
             {errorMessage}
           </div>
         )}
         {success && (
           <div
             className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-center text-sm text-green-800 dark:text-green-200"
-            role="alert"
-          >
+            role="alert">
             You&apos;re now on the <strong>Pro</strong> plan. Thank you for
             upgrading!
           </div>
@@ -68,16 +65,14 @@ export default async function UpgradePage(props: UpgradePageProps) {
         {canceled && (
           <div
             className="rounded-lg border border-muted-foreground/30 bg-muted/50 px-4 py-3 text-center text-sm text-muted-foreground"
-            role="status"
-          >
+            role="status">
             Checkout was canceled. You can try again whenever you&apos;re ready.
           </div>
         )}
         {canceledSubscription && (
           <div
             className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-200"
-            role="status"
-          >
+            role="status">
             You&apos;ve canceled your subscription. You&apos;ll keep Pro until
             the end of your billing period, then you&apos;ll be on the Free
             plan.
@@ -95,8 +90,6 @@ export default async function UpgradePage(props: UpgradePageProps) {
         <Suspense fallback={<PlanCardsSkeleton />}>
           <PlanCardsSection />
         </Suspense>
-
-        <WhyUpgradeSection />
 
         <FAQSection />
       </div>
