@@ -1,0 +1,3 @@
+Senior Frontend Engineer
+
+Experienced with React, Next.js, TypeScript, and accessible web applications.
