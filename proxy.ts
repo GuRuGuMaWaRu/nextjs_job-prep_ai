@@ -9,7 +9,7 @@ import { routes } from "@/core/data/routes";
 const EXACT_PUBLIC_ROUTES = ["/"];
 const PREFIX_PUBLIC_ROUTES = ["/sign-in", "/sign-up", "/api/oauth"];
 
-//** Check if route is public */
+//** Check if route is public
 function isPublicRoute(pathname: string): boolean {
   if (EXACT_PUBLIC_ROUTES.includes(pathname)) {
     return true;
@@ -29,7 +29,7 @@ function isPublicRoute(pathname: string): boolean {
  * Page navigations are protected by session auth checks below.
  */
 function shouldRunArcjet(pathname: string): boolean {
-  // Stripe routes can be noisy and are validated in their own handlers.
+  //** Stripe routes can be noisy and are validated in their own handlers.
   if (pathname.startsWith("/api/stripe/")) {
     return false;
   }
@@ -37,7 +37,7 @@ function shouldRunArcjet(pathname: string): boolean {
   return pathname.startsWith("/api");
 }
 
-//** Arcjet instance */
+//** Arcjet instance
 const aj = arcjet({
   // TODO: add ts for env vars
   key: env.ARCJET_KEY,
@@ -67,17 +67,17 @@ const aj = arcjet({
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip Arcjet and auth for Stripe webhooks; they use signature verification in the route.
+  //** Skip Arcjet and auth for Stripe webhooks; they use signature verification in the route.
   if (pathname === "/api/stripe/webhooks") {
     return NextResponse.next();
   }
 
-  // Skip Arcjet and auth for cron jobs; they use a secret header.
+  //** Skip Arcjet and auth for cron jobs; they use a secret header.
   if (pathname.startsWith("/api/cron/")) {
     return NextResponse.next();
   }
 
-  // Arcjet protection for API/TRPC traffic only.
+  //** Arcjet protection for API/TRPC traffic only.
   if (shouldRunArcjet(pathname)) {
     const decision = await aj.protect(req);
     if (decision.isDenied()) {
@@ -88,17 +88,19 @@ export default async function middleware(req: NextRequest) {
   const isPublic = isPublicRoute(pathname);
   const hasSessionToken = !!req.cookies.get(SESSION_COOKIE_NAME)?.value;
 
-  if (isPublic) {
-    if (!hasSessionToken) return NextResponse.next();
-    // Let the route handler validate the token and redirect to /app or clear and redirect to /
+  if (isPublic && !hasSessionToken) {
+    return NextResponse.next();
+  }
+
+  if (isPublic && hasSessionToken) {
     return NextResponse.redirect(new URL(routes.api.validateSession, req.url));
   }
 
-  if (!hasSessionToken) {
+  if (!isPublic && !hasSessionToken) {
     return NextResponse.redirect(new URL(routes.signIn, req.url));
   }
 
-  // Session validation happens in server components via getCurrentUser / getCurrentUserWithProfile
+  //** Session validation happens in server components via getCurrentUser / getCurrentUserWithProfile
   return NextResponse.next();
 }
 
