@@ -61,10 +61,11 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 ### Request and auth flow
 
 1. Requests pass through `proxy.ts`.
-2. Public routes are allowed; private routes require a `session_token` cookie.
-3. API routes (except Stripe webhook paths) are protected by Arcjet.
-4. Server actions/route handlers resolve user context via `getCurrentUser()`.
-5. Features execute service/DAL/database logic and return data or stream AI output.
+2. `/api/stripe/webhooks` and `/api/cron/*` bypass Arcjet and session checks (Stripe signature / `Bearer ${CRON_SECRET}` validation happen in route handlers).
+3. Other `/api/**` routes (except `/api/stripe/*`) run Arcjet before auth checks; page navigations skip Arcjet.
+4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth/**`) allow anonymous access; visitors with a `session_token` cookie are redirected to `/api/auth/validate-session`.
+5. Private routes require a `session_token` cookie or redirect to sign-in; full session validation happens in server components via `getCurrentUser()`.
+6. Features execute service/DAL/database logic and return data or stream AI output.
 
 ### Data model (high level)
 
