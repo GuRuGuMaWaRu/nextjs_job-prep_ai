@@ -118,17 +118,17 @@ describe("auth permission helpers", () => {
       permission: PERMISSIONS.RESUME_ANALYSES,
       countLookup: mockGetResumeAnalysisCountDb,
     },
-  ])("passes free-plan userId to count lookup for $permission permission", async ({
-    permission,
-    countLookup,
-  }) => {
-    mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
-    countLookup.mockResolvedValueOnce(0);
+  ])(
+    "passes free-plan userId to count lookup for $permission permission",
+    async ({ permission, countLookup }) => {
+      mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
+      countLookup.mockResolvedValueOnce(0);
 
-    await hasPermission(permission);
+      await hasPermission(permission);
 
-    expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
-  });
+      expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
+    },
+  );
 
   it("treats an empty stored plan as the free plan for permission checks", async () => {
     mockGetUserAction.mockResolvedValue(makeUser({ plan: "" }));
@@ -207,5 +207,14 @@ describe("auth permission helpers", () => {
       plan: "pro",
       hasExistingSubscription: true,
     });
+  });
+
+  it("denies unsupported runtime permissions", async () => {
+    mockGetUserAction.mockResolvedValue(makeProUser());
+    // Simulates an untyped caller crossing the module boundary.
+    const unsupportedPermission = "unsupported" as Parameters<
+      typeof hasPermission
+    >[0];
+    await expect(hasPermission(unsupportedPermission)).resolves.toBe(false);
   });
 });
