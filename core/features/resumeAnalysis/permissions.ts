@@ -5,6 +5,7 @@ import {
 } from "@/core/features/auth/permissions";
 import { getUserAction } from "@/core/features/users/actions";
 import type { UserPlan } from "@/core/drizzle/schema/user";
+import { DatabaseError } from "@/core/dal/errors";
 
 import { tryInsertResumeAnalysisDb } from "./db";
 
@@ -16,7 +17,7 @@ export async function checkResumeAnalysisPermission(): Promise<boolean> {
     return await hasPermission(PERMISSIONS.RESUME_ANALYSES);
   } catch (error) {
     console.error("Error checking resume analysis permission:", error);
-    return false;
+    throw new DatabaseError("Error checking resume analysis permission", error);
   }
 }
 

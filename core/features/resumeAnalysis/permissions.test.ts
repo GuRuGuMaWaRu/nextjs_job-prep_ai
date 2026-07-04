@@ -87,10 +87,14 @@ describe("checkResumeAnalysisPermission", () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
-  it("returns false when hasPermission rejects", async () => {
-    mockHasPermission.mockRejectedValue(new Error("permission failed"));
+  it("throws DatabaseError when hasPermission rejects", async () => {
+    const error = new Error("permission failed");
 
-    await expect(checkResumeAnalysisPermission()).resolves.toBe(false);
+    mockHasPermission.mockRejectedValue(error);
+
+    await expect(checkResumeAnalysisPermission()).rejects.toThrow(
+      new DatabaseError("Error checking resume analysis permission", error),
+    );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Error checking resume analysis permission:",
