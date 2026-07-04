@@ -52,6 +52,11 @@ export async function tryInsertResumeAnalysisDb({
   jobInfoId: string;
   limit: number | null;
 }): Promise<{ id: string } | null> {
+  if (limit === null) {
+    const newResumeAnalysis = await insertResumeAnalysisDb(db, { jobInfoId });
+    return newResumeAnalysis ?? null;
+  }
+
   return db.transaction(async (tx) => {
     await tx
       .select({ id: UserTable.id })
@@ -64,7 +69,7 @@ export async function tryInsertResumeAnalysisDb({
       userId,
     );
 
-    if (limit !== null && resumeAnalysisCount >= limit) {
+    if (resumeAnalysisCount >= limit) {
       return null;
     }
 
