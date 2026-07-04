@@ -255,7 +255,7 @@ function CategoryAccordionHeader({
   } else if (score >= 6) {
     badge = <Badge variant="warning">Ok</Badge>;
   } else {
-    badge = <Badge variant="destructive">Needs Works</Badge>;
+    badge = <Badge variant="destructive">Needs Work</Badge>;
   }
 
   return (

@@ -61,15 +61,15 @@ export async function createInterviewAction({
 }: {
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
-  const { userId } = await getCurrentUserAction();
-  if (userId == null) {
-    return {
-      success: false,
-      message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
-    };
-  }
-
   try {
+    const { userId } = await getCurrentUserAction();
+    if (userId == null) {
+      return {
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
+      };
+    }
+
     // Check permissions
     const permitted = await checkInterviewPermission();
     if (!permitted) {
@@ -218,6 +218,14 @@ export async function getInterviewsAction(jobInfoId: string, userId: string) {
 export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
+  const { userId } = await getCurrentUserAction();
+  if (userId == null) {
+    return {
+      success: false,
+      message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+    };
+  }
+
   try {
     await generateInterviewFeedbackService(interviewId);
 

@@ -28,9 +28,10 @@ export async function getResumeAnalysisCountDb(userId: string) {
 }
 
 export async function insertResumeAnalysisDb(
+  client: DbClient | DbTransaction,
   resumeAnalysis: typeof ResumeAnalysisTable.$inferInsert,
 ) {
-  const [newResumeAnalysis] = await db
+  const [newResumeAnalysis] = await client
     .insert(ResumeAnalysisTable)
     .values(resumeAnalysis)
     .returning({ id: ResumeAnalysisTable.id });
@@ -49,8 +50,13 @@ export async function tryInsertResumeAnalysisDb({
 }: {
   userId: string;
   jobInfoId: string;
-  limit: number;
+  limit: number | null;
 }): Promise<{ id: string } | null> {
+  if (limit === null) {
+    const newResumeAnalysis = await insertResumeAnalysisDb(db, { jobInfoId });
+    return newResumeAnalysis ?? null;
+  }
+
   return db.transaction(async (tx) => {
     await tx
       .select({ id: UserTable.id })
@@ -67,10 +73,7 @@ export async function tryInsertResumeAnalysisDb({
       return null;
     }
 
-    const [newResumeAnalysis] = await tx
-      .insert(ResumeAnalysisTable)
-      .values({ jobInfoId })
-      .returning({ id: ResumeAnalysisTable.id });
+    const newResumeAnalysis = await insertResumeAnalysisDb(tx, { jobInfoId });
 
     return newResumeAnalysis ?? null;
   });

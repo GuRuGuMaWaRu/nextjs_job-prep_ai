@@ -1,100 +1,59 @@
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
-}));
-
 jest.mock("@/core/features/auth/permissions", () => ({
-  FREE_PLAN_LIMITS: {
-    interviews: 1,
-    questions: 10,
-    resume_analyses: 3,
-  },
-  PERMISSIONS: {
-    UNLIMITED: {
-      INTERVIEWS: "unlimited_interviews",
-      QUESTIONS: "unlimited_questions",
-      RESUME_ANALYSES: "unlimited_resume_analyses",
-    },
-    LIMITED: {
-      INTERVIEWS: "limited_interviews",
-      QUESTIONS: "limited_questions",
-    },
-  },
   hasPermission: jest.fn(),
 }));
 
-jest.mock("@/core/features/interviews/db", () => ({
-  getInterviewCountDb: jest.fn(),
-}));
-
-import { getCurrentUserAction } from "@/core/features/auth/actions";
-import {
-  FREE_PLAN_LIMITS,
-  hasPermission,
-  PERMISSIONS,
-} from "@/core/features/auth/permissions";
-import { getInterviewCountDb } from "@/core/features/interviews/db";
-import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeCurrentUser } from "@/core/test-utils/factories/user";
+import { hasPermission } from "@/core/features/auth/permissions";
+import { PERMISSIONS } from "@/core/data/constants";
 
 import { checkInterviewPermission } from "./permissions";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockHasPermission = jest.mocked(hasPermission);
-const mockGetInterviewCountDb = jest.mocked(getInterviewCountDb);
-
-const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("checkInterviewPermission", () => {
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(
-      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
-    );
-    mockHasPermission.mockResolvedValue(false);
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
   });
 
-  it("allows users with unlimited interview permission without reading usage", async () => {
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("passes correct permission to hasPermission", async () => {
+    mockHasPermission.mockResolvedValueOnce(true);
+
+    await checkInterviewPermission();
+
+    expect(mockHasPermission).toHaveBeenCalledWith(PERMISSIONS.INTERVIEWS);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns true when hasPermission resolves true", async () => {
     mockHasPermission.mockResolvedValueOnce(true);
 
     await expect(checkInterviewPermission()).resolves.toBe(true);
 
-    expect(mockHasPermission).toHaveBeenCalledWith(
-      PERMISSIONS.UNLIMITED.INTERVIEWS,
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns false when hasPermission resolves false", async () => {
+    mockHasPermission.mockResolvedValueOnce(false);
+
+    await expect(checkInterviewPermission()).resolves.toBe(false);
+
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+  });
+
+  it("returns false when hasPermission rejects", async () => {
+    mockHasPermission.mockRejectedValueOnce(new Error("permission failed"));
+
+    await expect(checkInterviewPermission()).resolves.toBe(false);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error checking interview permission:",
+      expect.any(Error),
     );
-    expect(mockGetInterviewCountDb).not.toHaveBeenCalled();
-  });
-
-  it("denies users without limited or unlimited interview permission", async () => {
-    mockHasPermission.mockResolvedValue(false);
-
-    await expect(checkInterviewPermission()).resolves.toBe(false);
-
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
-    expect(mockGetInterviewCountDb).not.toHaveBeenCalled();
-  });
-
-  it("allows limited users below the free interview limit", async () => {
-    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    mockGetInterviewCountDb.mockResolvedValue(FREE_PLAN_LIMITS.interviews - 1);
-
-    await expect(checkInterviewPermission()).resolves.toBe(true);
-
-    expect(mockGetInterviewCountDb).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
-  });
-
-  it("treats a missing current user as zero interviews after limited permission is granted", async () => {
-    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
-
-    await expect(checkInterviewPermission()).resolves.toBe(true);
-
-    expect(mockGetInterviewCountDb).not.toHaveBeenCalled();
-  });
-
-  it("denies limited users at the free interview limit", async () => {
-    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    mockGetInterviewCountDb.mockResolvedValue(FREE_PLAN_LIMITS.interviews);
-
-    await expect(checkInterviewPermission()).resolves.toBe(false);
   });
 });

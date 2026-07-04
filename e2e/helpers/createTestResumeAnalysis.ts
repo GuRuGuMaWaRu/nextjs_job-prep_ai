@@ -1,3 +1,4 @@
+import { db } from "@/core/drizzle/db";
 import { ResumeAnalysisTable } from "@/core/drizzle/schema";
 import { insertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
 
@@ -15,7 +16,7 @@ export async function createTestResumeAnalysis(
   };
 
   try {
-    return await insertResumeAnalysisDb(testResumeAnalysis);
+    return await insertResumeAnalysisDb(db, testResumeAnalysis);
   } catch (error) {
     throw new Error(
       `Failed to seed resume analysis for job info "${jobInfoId}".`,
