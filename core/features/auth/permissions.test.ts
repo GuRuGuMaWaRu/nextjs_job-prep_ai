@@ -18,12 +18,11 @@ jest.mock("@/core/features/resumeAnalysis/db", () => ({
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import {
-  PLAN_LIMITS,
   getUserPlan,
   getUserSubscriptionInfo,
   hasPermission,
-  PERMISSIONS,
 } from "@/core/features/auth/permissions";
+import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
 import { getUserAction } from "@/core/features/users/actions";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
 import { getQuestionCountDb } from "@/core/features/questions/db";
@@ -118,17 +117,17 @@ describe("auth permission helpers", () => {
       permission: PERMISSIONS.RESUME_ANALYSES,
       countLookup: mockGetResumeAnalysisCountDb,
     },
-  ])("passes free-plan userId to count lookup for $permission permission", async ({
-    permission,
-    countLookup,
-  }) => {
-    mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
-    countLookup.mockResolvedValueOnce(0);
+  ])(
+    "passes free-plan userId to count lookup for $permission permission",
+    async ({ permission, countLookup }) => {
+      mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
+      countLookup.mockResolvedValueOnce(0);
 
-    await hasPermission(permission);
+      await hasPermission(permission);
 
-    expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
-  });
+      expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
+    },
+  );
 
   it("treats an empty stored plan as the free plan for permission checks", async () => {
     mockGetUserAction.mockResolvedValue(makeUser({ plan: "" }));

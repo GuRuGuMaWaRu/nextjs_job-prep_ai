@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { PLAN_LIMITS } from "@/core/features/auth/permissions";
+import { PLAN_LIMITS } from "@/core/data/constants";
 import {
   getResumeAnalysisCountDb,
   tryInsertResumeAnalysisDb,

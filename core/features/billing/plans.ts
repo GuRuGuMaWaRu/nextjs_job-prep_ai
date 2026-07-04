@@ -1,4 +1,4 @@
-import { PLAN_LIMITS } from "@/core/features/auth/permissions";
+import { PLAN_LIMITS } from "@/core/data/constants";
 
 const { interviews, questions, resume_analyses } = PLAN_LIMITS.free;
 

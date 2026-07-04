@@ -4,33 +4,11 @@ import type { UserPlan } from "@/core/drizzle/schema/user";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 import { getResumeAnalysisCountDb } from "@/core/features/resumeAnalysis/db";
-
-export const PERMISSIONS = {
-  INTERVIEWS: "interviews",
-  QUESTIONS: "questions",
-  RESUME_ANALYSES: "resume_analyses",
-} as const;
-
-type ValueOf<T> = T[keyof T];
-
-type Permission = ValueOf<typeof PERMISSIONS>;
-type PlanLimitsByPlan = {
-  free: Record<ValueOf<typeof PERMISSIONS>, number>;
-  pro: Record<ValueOf<typeof PERMISSIONS>, null>;
-};
-
-export const PLAN_LIMITS = {
-  free: {
-    interviews: 1,
-    questions: 10,
-    resume_analyses: 3,
-  },
-  pro: {
-    interviews: null,
-    questions: null,
-    resume_analyses: null,
-  },
-} as PlanLimitsByPlan;
+import {
+  PERMISSIONS,
+  type Permission,
+  PLAN_LIMITS,
+} from "@/core/data/constants";
 
 /**
  * Check if the current user has a specific permission

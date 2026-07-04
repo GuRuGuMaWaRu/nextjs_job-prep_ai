@@ -1,21 +1,4 @@
 jest.mock("@/core/features/auth/permissions", () => ({
-  PLAN_LIMITS: {
-    free: {
-      interviews: 1,
-      questions: 10,
-      resume_analyses: 3,
-    },
-    pro: {
-      interviews: null,
-      questions: null,
-      resume_analyses: null,
-    },
-  },
-  PERMISSIONS: {
-    INTERVIEWS: "interviews",
-    QUESTIONS: "questions",
-    RESUME_ANALYSES: "resume_analyses",
-  },
   hasPermission: jest.fn(),
 }));
 
@@ -27,11 +10,9 @@ jest.mock("@/core/features/users/actions", () => ({
   getUserAction: jest.fn(),
 }));
 
-import {
-  PLAN_LIMITS,
-  hasPermission,
-  PERMISSIONS,
-} from "@/core/features/auth/permissions";
+import { hasPermission } from "@/core/features/auth/permissions";
+import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
+
 import { tryInsertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
 import { getUserAction } from "@/core/features/users/actions";
 import { DatabaseError } from "@/core/dal/errors";
