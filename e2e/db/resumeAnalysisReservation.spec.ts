@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { FREE_PLAN_LIMITS } from "@/core/features/auth/permissions";
+import { PLAN_LIMITS } from "@/core/features/auth/permissions";
 import {
   getResumeAnalysisCountDb,
   tryInsertResumeAnalysisDb,
@@ -16,7 +16,7 @@ test.describe("tryInsertResumeAnalysisDb", () => {
   test("serializes concurrent reservations at the quota boundary", async () => {
     const session = await createAuthenticatedUser("resume-reservation-race-");
     const jobInfo = await createTestJobInfo(session.userId);
-    const limit = FREE_PLAN_LIMITS.resume_analyses;
+    const limit = PLAN_LIMITS.free.resume_analyses;
 
     await Promise.all(
       Array.from({ length: limit - 1 }, () =>
