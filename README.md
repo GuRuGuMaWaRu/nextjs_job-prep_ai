@@ -45,6 +45,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
+- `core/data/constants.ts` - shared permission identifiers and plan limits (`PERMISSIONS`, `PLAN_LIMITS`)
 - `proxy.ts` - middleware for auth redirect rules and Arcjet API protection
 
 ### Layered feature pattern
@@ -56,7 +57,7 @@ Most domain features are structured as:
 3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
 4. `db.ts` - direct Drizzle queries
 
-This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (permissions + `db.ts`; the analyze API route reserves quota before streaming AI output).
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Plan limits are defined in `core/data/constants.ts`; `core/features/auth/permissions.ts` exposes `hasPermission()`, and feature modules (`interviews`, `questions`, `resumeAnalysis`) delegate to it from their own `permissions.ts` files. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`permissions.ts` + `db.ts`; the analyze API route reserves quota before streaming AI output).
 
 ### Request and auth flow
 
@@ -210,9 +211,13 @@ Open [http://localhost:3000](http://localhost:3000).
   - `SESSION_DURATION_MS` (30 days)
   - `SESSION_REFRESH_THRESHOLD_MS` (7 days)
   - session cookie name/options (`session_token`, `httpOnly`, etc.)
+- `core/data/constants.ts`
+  - `PERMISSIONS` identifiers (`interviews`, `questions`, `resume_analyses`)
+  - `PLAN_LIMITS` for `free` and `pro` (free: 1 completed voice interview, 10 generated questions, and 3 resume analyses lifetime — total row counts, not reset monthly; pro: unlimited / `null` limits)
 - `core/features/auth/permissions.ts`
-  - free-plan limits: 1 completed voice interview (rows with a Hume chat id), 10 generated questions, and 3 resume analyses lifetime (total row counts, not reset monthly)
-  - plan-to-permission mapping for `free` and `pro`
+  - `hasPermission()` — centralized plan-limit checks against current usage counts
+  - `getUserPlan()` and `getUserSubscriptionInfo()` for upgrade and billing UI
+- Feature modules (`interviews`, `questions`, `resumeAnalysis`) expose thin `permissions.ts` wrappers that call `hasPermission()` with the matching `PERMISSIONS` key
 - `next.config.ts`
   - `cacheComponents: true`
 
@@ -335,7 +340,7 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 - Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
 - Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
-- Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`).
+- Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`); free-plan card limits are derived from `PLAN_LIMITS` in `core/data/constants.ts`.
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
 - A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
 - `proxy.ts` skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
