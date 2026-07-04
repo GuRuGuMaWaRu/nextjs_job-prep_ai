@@ -53,7 +53,7 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
   const userPlan = (user.plan || "free") as UserPlan;
   const permissionLimit = PLAN_LIMITS[userPlan][permission];
 
-  if (permissionLimit == null) {
+  if (permissionLimit === null) {
     return true;
   }
 
