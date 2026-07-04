@@ -218,6 +218,14 @@ export async function getInterviewsAction(jobInfoId: string, userId: string) {
 export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
+  const { userId } = await getCurrentUserAction();
+  if (userId == null) {
+    return {
+      success: false,
+      message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+    };
+  }
+
   try {
     await generateInterviewFeedbackService(interviewId);
 
