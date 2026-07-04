@@ -1,62 +1,36 @@
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getUserAction } from "@/core/features/users/actions";
 import type { UserPlan } from "@/core/drizzle/schema/user";
+import { getInterviewCountDb } from "@/core/features/interviews/db";
+import { getQuestionCountDb } from "@/core/features/questions/db";
+import { getResumeAnalysisCountDb } from "@/core/features/resumeAnalysis/db";
 
-/**
- * Permission types that can be checked
- */
 export const PERMISSIONS = {
-  UNLIMITED: {
-    INTERVIEWS: "unlimited_interviews",
-    QUESTIONS: "unlimited_questions",
-    RESUME_ANALYSES: "unlimited_resume_analyses",
-  },
-  LIMITED: {
-    INTERVIEWS: "limited_interviews",
-    QUESTIONS: "limited_questions",
-    RESUME_ANALYSES: "limited_resume_analyses",
-  },
+  INTERVIEWS: "interviews",
+  QUESTIONS: "questions",
+  RESUME_ANALYSES: "resume_analyses",
 } as const;
 
 type ValueOf<T> = T[keyof T];
 
-export type Permission =
-  | ValueOf<typeof PERMISSIONS.UNLIMITED>
-  | ValueOf<typeof PERMISSIONS.LIMITED>;
-
-/**
- * Plan configurations defining what each plan allows
- */
-const PLAN_PERMISSIONS: Record<UserPlan, Permission[]> = {
-  free: [
-    PERMISSIONS.LIMITED.INTERVIEWS,
-    PERMISSIONS.LIMITED.QUESTIONS,
-    PERMISSIONS.LIMITED.RESUME_ANALYSES,
-  ],
-  pro: [
-    PERMISSIONS.UNLIMITED.INTERVIEWS,
-    PERMISSIONS.UNLIMITED.QUESTIONS,
-    PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
-  ],
+type Permission = ValueOf<typeof PERMISSIONS>;
+type PlanLimitsByPlan = {
+  free: Record<ValueOf<typeof PERMISSIONS>, number>;
+  pro: Record<ValueOf<typeof PERMISSIONS>, null>;
 };
 
-/**
- * Map of features to unlimited permissions
- */
-const UNLIMITED_PERMISSION_MAP = {
-  interviews: PERMISSIONS.UNLIMITED.INTERVIEWS,
-  questions: PERMISSIONS.UNLIMITED.QUESTIONS,
-  resume_analyses: PERMISSIONS.UNLIMITED.RESUME_ANALYSES,
-} as const;
-
-/**
- * Usage limits for free plan
- */
-export const FREE_PLAN_LIMITS = {
-  interviews: 1,
-  questions: 10,
-  resume_analyses: 3,
-} as const;
+export const PLAN_LIMITS = {
+  free: {
+    interviews: 1,
+    questions: 10,
+    resume_analyses: 3,
+  },
+  pro: {
+    interviews: null,
+    questions: null,
+    resume_analyses: null,
+  },
+} as PlanLimitsByPlan;
 
 /**
  * Check if the current user has a specific permission
@@ -77,9 +51,28 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
   }
 
   const userPlan = (user.plan || "free") as UserPlan;
-  const planPermissions = PLAN_PERMISSIONS[userPlan];
+  const permissionLimit = PLAN_LIMITS[userPlan][permission];
 
-  return planPermissions.includes(permission);
+  if (permissionLimit == null) {
+    return true;
+  }
+
+  switch (permission) {
+    case PERMISSIONS.INTERVIEWS:
+      const interviewCount = await getInterviewCountDb(userId);
+      return interviewCount < permissionLimit;
+
+    case PERMISSIONS.QUESTIONS:
+      const questionCount = await getQuestionCountDb(userId);
+      return questionCount < permissionLimit;
+
+    case PERMISSIONS.RESUME_ANALYSES:
+      const resumeAnalysisCount = await getResumeAnalysisCountDb(userId);
+      return resumeAnalysisCount < permissionLimit;
+
+    default:
+      return false;
+  }
 }
 
 /**
@@ -121,15 +114,4 @@ export async function getUserSubscriptionInfo(): Promise<SubscriptionInfo> {
     plan: (user?.plan as UserPlan) || "free",
     hasExistingSubscription: !!user?.stripeSubscriptionId,
   };
-}
-
-/**
- * Check if user has unlimited access to a feature
- * @param feature - The feature to check
- * @returns true if unlimited, false if limited or no access
- */
-export async function hasUnlimitedAccess(
-  feature: keyof typeof UNLIMITED_PERMISSION_MAP,
-): Promise<boolean> {
-  return hasPermission(UNLIMITED_PERMISSION_MAP[feature]);
 }

@@ -1,6 +1,6 @@
-import { FREE_PLAN_LIMITS } from "@/core/features/auth/permissions";
+import { PLAN_LIMITS } from "@/core/features/auth/permissions";
 
-const { interviews, questions, resume_analyses } = FREE_PLAN_LIMITS;
+const { interviews, questions, resume_analyses } = PLAN_LIMITS.free;
 
 export type PlanCardDefinition = {
   name: string;
