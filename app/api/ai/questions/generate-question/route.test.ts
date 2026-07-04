@@ -37,11 +37,11 @@ jest.mock("@/core/features/jobInfos/actions", () => ({
 
 jest.mock("@/core/features/questions/actions", () => ({
   getQuestionsAction: jest.fn(),
-  insertQuestionAction: jest.fn(),
 }));
 
 jest.mock("@/core/features/questions/permissions", () => ({
   checkQuestionsPermission: jest.fn(),
+  reserveQuestionUsage: jest.fn(),
 }));
 
 jest.mock("@/core/services/ai/questions", () => ({
@@ -52,11 +52,11 @@ import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
+import { getQuestionsAction } from "@/core/features/questions/actions";
 import {
-  getQuestionsAction,
-  insertQuestionAction,
-} from "@/core/features/questions/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
+  checkQuestionsPermission,
+  reserveQuestionUsage,
+} from "@/core/features/questions/permissions";
 import { generateAiQuestion } from "@/core/services/ai/questions";
 import {
   DatabaseError,
@@ -81,8 +81,8 @@ const mockCreateUIMessageStreamResponse = jest.mocked(
 const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockGetQuestionsAction = jest.mocked(getQuestionsAction);
-const mockInsertQuestionAction = jest.mocked(insertQuestionAction);
 const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
+const mockReserveQuestionUsage = jest.mocked(reserveQuestionUsage);
 const mockGenerateAiQuestion = jest.mocked(generateAiQuestion);
 
 const jobInfoId = "00000000-0000-4000-8000-000000000101";
@@ -133,7 +133,7 @@ describe("POST /api/ai/questions/generate-question", () => {
         text: "How would you model tenant-specific billing?",
       }),
     ]);
-    mockInsertQuestionAction.mockResolvedValue(
+    mockReserveQuestionUsage.mockResolvedValue(
       makeQuestion({
         id: "00000000-0000-4002-8000-000000000202",
         jobInfoId,
@@ -231,11 +231,11 @@ describe("POST /api/ai/questions/generate-question", () => {
       difficulty: "medium",
       onFinish: expect.any(Function),
     });
-    expect(mockInsertQuestionAction).toHaveBeenCalledWith(
-      "How would you stream a generated response?",
+    expect(mockReserveQuestionUsage).toHaveBeenCalledWith(TEST_USER_ID, {
+      text: "How would you stream a generated response?",
       jobInfoId,
-      "medium",
-    );
+      difficulty: "medium",
+    });
     expect(mockCreateUIMessageStream).toHaveBeenCalledTimes(1);
     expect(mockCreateUIMessageStreamResponse).toHaveBeenCalledWith(
       expect.objectContaining({

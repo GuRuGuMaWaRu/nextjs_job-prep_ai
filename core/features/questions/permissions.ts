@@ -4,7 +4,13 @@ import {
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { getQuestionCountDb } from "@/core/features/questions/db";
+import {
+  getQuestionCountDb,
+  insertQuestionDb,
+  tryInsertQuestionDb,
+} from "@/core/features/questions/db";
+import { QuestionTable } from "@/core/drizzle/schema";
+import { DatabaseError } from "@/core/dal/errors";
 
 /**
  * Check if user can generate more questions
@@ -45,4 +51,37 @@ export async function checkQuestionsPermission(): Promise<boolean> {
 
 async function getQuestionCount(userId: string) {
   return getQuestionCountDb(userId);
+}
+
+export async function reserveQuestionUsage(
+  userId: string,
+  question: typeof QuestionTable.$inferInsert,
+): Promise<{ id: string; jobInfoId: string } | null> {
+  const hasUnlimited = await hasPermission(PERMISSIONS.UNLIMITED.QUESTIONS);
+
+  if (hasUnlimited) {
+    return runQuestionReservation(() => insertQuestionDb(question));
+  }
+
+  const hasLimited = await hasPermission(PERMISSIONS.LIMITED.QUESTIONS);
+
+  if (!hasLimited) {
+    return null;
+  }
+
+  return runQuestionReservation(() =>
+    tryInsertQuestionDb({
+      userId,
+      question,
+      limit: FREE_PLAN_LIMITS.questions,
+    }),
+  );
+}
+
+async function runQuestionReservation<T>(operation: () => Promise<T>) {
+  try {
+    return await operation();
+  } catch (error) {
+    throw new DatabaseError("Failed to reserve question quota", error);
+  }
 }

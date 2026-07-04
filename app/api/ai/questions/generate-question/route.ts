@@ -5,12 +5,12 @@ import { questionDifficulties } from "@/core/drizzle/schema";
 import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
 import { generateAiQuestion } from "@/core/services/ai/questions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
-import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import {
-  getQuestionsAction,
-  insertQuestionAction,
-} from "@/core/features/questions/actions";
+  checkQuestionsPermission,
+  reserveQuestionUsage,
+} from "@/core/features/questions/permissions";
+import { getJobInfoAction } from "@/core/features/jobInfos/actions";
+import { getQuestionsAction } from "@/core/features/questions/actions";
 import {
   DatabaseError,
   NotFoundError,
@@ -63,14 +63,19 @@ export async function POST(req: Request) {
             jobInfo,
             difficulty,
             onFinish: async (question) => {
-              const { id } = await insertQuestionAction(
-                question,
+              const reservedQuestion = await reserveQuestionUsage(userId, {
+                text: question,
                 jobInfoId,
                 difficulty,
-              );
+              });
+
+              if (reservedQuestion == null) {
+                throw new PermissionError(PLAN_LIMIT_MESSAGE);
+              }
+
               writer.write({
                 type: "text-delta",
-                delta: `Question ID: ${id}`,
+                delta: `Question ID: ${reservedQuestion.id}`,
                 id: "generate-question",
               });
             },

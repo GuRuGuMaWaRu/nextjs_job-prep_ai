@@ -24,6 +24,8 @@ jest.mock("@/core/features/auth/permissions", () => ({
 
 jest.mock("@/core/features/questions/db", () => ({
   getQuestionCountDb: jest.fn(),
+  insertQuestionDb: jest.fn(),
+  tryInsertQuestionDb: jest.fn(),
 }));
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
@@ -32,15 +34,22 @@ import {
   hasPermission,
   PERMISSIONS,
 } from "@/core/features/auth/permissions";
-import { getQuestionCountDb } from "@/core/features/questions/db";
+import {
+  getQuestionCountDb,
+  insertQuestionDb,
+  tryInsertQuestionDb,
+} from "@/core/features/questions/db";
+import { DatabaseError } from "@/core/dal/errors";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
-import { checkQuestionsPermission } from "./permissions";
+import { checkQuestionsPermission, reserveQuestionUsage } from "./permissions";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockHasPermission = jest.mocked(hasPermission);
 const mockGetQuestionCountDb = jest.mocked(getQuestionCountDb);
+const mockInsertQuestionDb = jest.mocked(insertQuestionDb);
+const mockTryInsertQuestionDb = jest.mocked(tryInsertQuestionDb);
 
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 
@@ -142,5 +151,74 @@ describe("checkQuestionsPermission", () => {
       "Error checking question permission:",
       expect.any(Error),
     );
+  });
+});
+
+describe("reserveQuestionUsage", () => {
+  const question = {
+    text: "How do you prevent quota races?",
+    jobInfoId: "00000000-0000-4000-8000-000000000101",
+    difficulty: "medium" as const,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockHasPermission.mockResolvedValue(false);
+  });
+
+  it("inserts directly for users with unlimited question permission", async () => {
+    const inserted = { id: "question-id", jobInfoId: question.jobInfoId };
+    mockHasPermission.mockResolvedValueOnce(true);
+    mockInsertQuestionDb.mockResolvedValue(inserted);
+
+    await expect(
+      reserveQuestionUsage(SIGNED_IN_USER_ID, question),
+    ).resolves.toEqual(inserted);
+
+    expect(mockInsertQuestionDb).toHaveBeenCalledWith(question);
+    expect(mockTryInsertQuestionDb).not.toHaveBeenCalled();
+  });
+
+  it("returns null when the user has no question permission", async () => {
+    await expect(
+      reserveQuestionUsage(SIGNED_IN_USER_ID, question),
+    ).resolves.toBeNull();
+
+    expect(mockInsertQuestionDb).not.toHaveBeenCalled();
+    expect(mockTryInsertQuestionDb).not.toHaveBeenCalled();
+  });
+
+  it("atomically inserts for a limited user below quota", async () => {
+    const inserted = { id: "question-id", jobInfoId: question.jobInfoId };
+    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockTryInsertQuestionDb.mockResolvedValue(inserted);
+
+    await expect(
+      reserveQuestionUsage(SIGNED_IN_USER_ID, question),
+    ).resolves.toEqual(inserted);
+
+    expect(mockTryInsertQuestionDb).toHaveBeenCalledWith({
+      userId: SIGNED_IN_USER_ID,
+      question,
+      limit: FREE_PLAN_LIMITS.questions,
+    });
+  });
+
+  it("returns null when a limited user has exhausted quota", async () => {
+    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockTryInsertQuestionDb.mockResolvedValue(null);
+
+    await expect(
+      reserveQuestionUsage(SIGNED_IN_USER_ID, question),
+    ).resolves.toBeNull();
+  });
+
+  it("propagates reservation write failures", async () => {
+    mockHasPermission.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    mockTryInsertQuestionDb.mockRejectedValue(new Error("Reservation failed"));
+
+    await expect(
+      reserveQuestionUsage(SIGNED_IN_USER_ID, question),
+    ).rejects.toThrow(DatabaseError);
   });
 });

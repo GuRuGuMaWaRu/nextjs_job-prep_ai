@@ -1,7 +1,7 @@
 import { and, count, desc, eq, isNotNull } from "drizzle-orm";
 
 import { db } from "@/core/drizzle/db";
-import { InterviewTable, JobInfoTable } from "@/core/drizzle/schema";
+import { InterviewTable, JobInfoTable, UserTable } from "@/core/drizzle/schema";
 import { revalidateInterviewCache } from "@/core/features/interviews/dbCache";
 
 export async function getInterviewByIdDb(id: string) {
@@ -39,6 +39,64 @@ export async function insertInterviewDb(
   return newInterview;
 }
 
+type DbClient = typeof db;
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function getInterviewCountWithClient(
+  client: DbClient | DbTransaction,
+  userId: string,
+) {
+  const [{ count: interviewCount }] = await client
+    .select({ count: count() })
+    .from(InterviewTable)
+    .innerJoin(JobInfoTable, eq(InterviewTable.jobInfoId, JobInfoTable.id))
+    .where(eq(JobInfoTable.userId, userId));
+
+  return interviewCount;
+}
+
+export async function tryInsertInterviewDb({
+  userId,
+  interview,
+  limit,
+}: {
+  userId: string;
+  interview: typeof InterviewTable.$inferInsert;
+  limit: number;
+}): Promise<{ id: string; jobInfoId: string } | null> {
+  const newInterview = await db.transaction(async (tx) => {
+    await tx
+      .select({ id: UserTable.id })
+      .from(UserTable)
+      .where(eq(UserTable.id, userId))
+      .for("update");
+
+    const interviewCount = await getInterviewCountWithClient(tx, userId);
+
+    if (interviewCount >= limit) {
+      return null;
+    }
+
+    const [insertedInterview] = await tx
+      .insert(InterviewTable)
+      .values(interview)
+      .returning({
+        id: InterviewTable.id,
+        jobInfoId: InterviewTable.jobInfoId,
+      });
+
+    return insertedInterview ?? null;
+  });
+
+  if (newInterview == null) {
+    return null;
+  }
+
+  revalidateInterviewCache(newInterview);
+
+  return newInterview;
+}
+
 export async function updateInterviewDb(
   id: string,
   interview: Partial<typeof InterviewTable.$inferInsert>,
@@ -58,18 +116,7 @@ export async function updateInterviewDb(
 }
 
 export async function getInterviewCountDb(userId: string) {
-  const [{ count: interviewCount }] = await db
-    .select({ count: count() })
-    .from(InterviewTable)
-    .innerJoin(JobInfoTable, eq(InterviewTable.jobInfoId, JobInfoTable.id))
-    .where(
-      and(
-        eq(JobInfoTable.userId, userId),
-        isNotNull(InterviewTable.humeChatId),
-      ),
-    );
-
-  return interviewCount;
+  return getInterviewCountWithClient(db, userId);
 }
 
 export async function getInterviewsDb(jobInfoId: string, userId: string) {

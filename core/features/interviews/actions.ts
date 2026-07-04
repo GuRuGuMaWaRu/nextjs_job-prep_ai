@@ -3,7 +3,10 @@
 import { z } from "zod";
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import { checkInterviewPermission } from "@/core/features/interviews/permissions";
+import {
+  checkInterviewPermission,
+  reserveInterviewUsage,
+} from "@/core/features/interviews/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
@@ -16,7 +19,6 @@ import {
   UnauthorizedError,
 } from "@/core/dal/errors";
 import {
-  createInterviewService,
   updateInterviewService,
   getInterviewByIdService,
   getInterviewsService,
@@ -70,15 +72,6 @@ export async function createInterviewAction({
   }
 
   try {
-    // Check permissions
-    const permitted = await checkInterviewPermission();
-    if (!permitted) {
-      return {
-        success: false,
-        message: PLAN_LIMIT_MESSAGE,
-      };
-    }
-
     // Check rate limit
     const decision = await aj.protect(await request(), {
       userId,
@@ -100,8 +93,14 @@ export async function createInterviewAction({
       };
     }
 
-    // Create interview
-    const interview = await createInterviewService(jobInfoId);
+    const interview = await reserveInterviewUsage(userId, jobInfoId);
+
+    if (interview == null) {
+      return {
+        success: false,
+        message: PLAN_LIMIT_MESSAGE,
+      };
+    }
 
     return {
       success: true,

@@ -12,9 +12,14 @@ export type DrizzleMutationChainMock<TResult = unknown> = {
   set: jest.Mock<DrizzleMutationChainMock<TResult>, [AnyRecord]>;
   where: jest.Mock<DrizzleMutationChainMock<TResult>, [AnyPredicate]>;
   from: jest.Mock<DrizzleMutationChainMock<TResult>, [AnyTable]>;
+  innerJoin: jest.Mock<
+    DrizzleMutationChainMock<TResult>,
+    [AnyTable, AnyPredicate]
+  >;
   orderBy: jest.Mock<DrizzleMutationChainMock<TResult>, [AnyPredicate]>;
   limit: jest.Mock<DrizzleMutationChainMock<TResult>, [number]>;
   onConflictDoNothing: jest.Mock<DrizzleMutationChainMock<TResult>, [unknown?]>;
+  for: jest.Mock<DrizzleMutationChainMock<TResult>, ["update"]>;
   returning: jest.Mock<Promise<TResult>, [AnySelection?]>;
   then: Promise<TResult>["then"];
   catch: Promise<TResult>["catch"];
@@ -51,18 +56,22 @@ export function createDrizzleMutationChainMock<TResult = unknown>(
     set: jest.fn(),
     where: jest.fn(),
     from: jest.fn(),
+    innerJoin: jest.fn(),
     orderBy: jest.fn(),
     limit: jest.fn(),
     onConflictDoNothing: jest.fn(),
+    for: jest.fn(),
     returning: jest.fn(),
   } as DrizzleMutationChainMock<TResult>;
 
   chain.values.mockReturnValue(chain);
   chain.set.mockReturnValue(chain);
   chain.from.mockReturnValue(chain);
+  chain.innerJoin.mockReturnValue(chain);
   chain.orderBy.mockReturnValue(chain);
   chain.limit.mockReturnValue(chain);
   chain.onConflictDoNothing.mockReturnValue(chain);
+  chain.for.mockReturnValue(chain);
   chain.where.mockReturnValue(chain);
   chain.returning.mockResolvedValue(result as TResult);
   chain.then = (...args) => Promise.resolve(result as TResult).then(...args);
