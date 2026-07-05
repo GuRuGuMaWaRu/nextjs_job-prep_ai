@@ -22,6 +22,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - Technical question generation and answer feedback.
 - Resume analysis endpoint that evaluates ATS fit and job alignment.
 - Upgrade and subscription management through Stripe Checkout + Billing Portal.
+- Cancel-at-period-end reminder banner for Pro users who canceled but retain access until billing period end.
 - API protection via Arcjet on API routes.
 
 ## Architecture Overview
@@ -242,6 +243,7 @@ Use `npm run check` to auto-fix lint and format issues locally. CI uses the read
 
 ```bash
 npm run check:ci
+npm run typecheck
 npm test
 ```
 
@@ -249,7 +251,7 @@ npm test
 
 CI is split across three workflows:
 
-- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) - Biome lint and format checks (`npm run check:ci`) and Jest tests (`npm test`)
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) - Biome lint and format checks (`npm run check:ci`), TypeScript (`npm run typecheck`), and Jest tests (`npm test`)
 - [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) - Playwright smoke tests (`npm run test:e2e`)
 - [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml) - validates PR titles match Conventional Commit style (`type(scope): summary`)
 
