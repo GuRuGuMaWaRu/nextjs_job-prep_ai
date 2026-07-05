@@ -2,7 +2,6 @@
 
 - Prefer early returns.
 - Avoid inline styling.
-- Follow best practices, reference implementation and apply epistemic reasoning.
 - All code should be formatted for readability with logical parts separated by empty lines.
 - In tests, place module-level `jest.mock(...)` calls before imports when mocking imported modules.
 
@@ -13,8 +12,8 @@
 - If a double assertion is needed, isolate it in a named helper or factory and explain why.
 - Prefer `satisfies`, `Pick`, narrow local types, typed factories, or proper runtime validation over broad casts.
 - Do not use `any`; prefer `unknown`, generics, precise interfaces, or narrow local types.
-- Keep mocks type-safe where practical, especially for external SDK payloads.
-- Run `npx.cmd tsc --noEmit` after TypeScript changes.
+- Keep mocks type-safe, especially for external SDK payloads.
+- Run `npm run typecheck` after TypeScript changes.
 
 ## General Rules
 
@@ -24,7 +23,7 @@
 
 - Commit messages and PR titles created through Codex must use Conventional Commit style:
   `type(scope): concise summary`
-- Use a short lowercase scope matching the touched area, such as `auth`, `stripe`, `billing`, `users`, `jobInfos`, `tests`, or `docs`.
+- Use a short lowercase scope matching the touched area, such as `auth`, `stripe`, `billing`, `users`, `job-infos`, `tests`, or `docs`.
 - Common types include:
   - `feat` for user-facing features
   - `fix` for bug fixes

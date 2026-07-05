@@ -32,5 +32,8 @@ jobs:
       - name: Biome (lint + format)
         run: npm run check:ci
 
+      - name: TypeScript
+        run: npm run typecheck
+
       - name: Jest
         run: npm test
