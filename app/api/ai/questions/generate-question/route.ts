@@ -3,7 +3,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import { questionDifficulties } from "@/core/drizzle/schema";
-import { PLAN_LIMIT_MESSAGE } from "@/core/data/constants";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestion } from "@/core/services/ai/questions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
@@ -69,9 +69,7 @@ export async function POST(req: Request) {
       requested: 1,
     });
     if (decision.isDenied()) {
-      throw new RateLimitError(
-        "You are making too many requests. Please try again later",
-      );
+      throw new RateLimitError(RATE_LIMIT_MESSAGE);
     }
 
     const jobInfo = await getJobInfoAction(jobInfoId);

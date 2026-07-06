@@ -80,7 +80,7 @@ import {
   PermissionError,
   UnauthorizedError,
 } from "@/core/dal/errors";
-import { PLAN_LIMIT_MESSAGE } from "@/core/data/constants";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import {
   makeCurrentUser,
@@ -228,11 +228,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(
-      response,
-      429,
-      "You are making too many requests. Please try again later",
-    );
+    await expectTextResponse(response, 429, RATE_LIMIT_MESSAGE);
     expect(mockRequest).toHaveBeenCalledWith();
     expect(mockProtect).toHaveBeenCalledWith(requestContext, {
       userId: TEST_USER_ID,
