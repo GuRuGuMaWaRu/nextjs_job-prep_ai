@@ -43,6 +43,8 @@ const schema = z.object({
   jobInfoId: z.string().min(1),
 });
 
+const JOB_ACCESS_DENIED_MESSAGE = "You do not have permission to do this";
+
 export async function POST(req: Request) {
   try {
     const { userId } = await getCurrentUserAction();
@@ -74,7 +76,7 @@ export async function POST(req: Request) {
 
     const jobInfo = await getJobInfoAction(jobInfoId);
     if (jobInfo == null) {
-      throw new PermissionError(PLAN_LIMIT_MESSAGE);
+      throw new NotFoundError(JOB_ACCESS_DENIED_MESSAGE);
     }
 
     const previousQuestions = await getQuestionsAction(jobInfoId);
@@ -120,10 +122,16 @@ export async function POST(req: Request) {
       return new Response("You are not logged in", { status: 401 });
     }
 
-    if (error instanceof NotFoundError || error instanceof PermissionError) {
-      return new Response(PLAN_LIMIT_MESSAGE, {
-        status: 403,
-      });
+    if (error instanceof PermissionError) {
+      if (error.message === PLAN_LIMIT_MESSAGE) {
+        return new Response(PLAN_LIMIT_MESSAGE, { status: 403 });
+      }
+
+      return new Response(JOB_ACCESS_DENIED_MESSAGE, { status: 403 });
+    }
+
+    if (error instanceof NotFoundError) {
+      return new Response(JOB_ACCESS_DENIED_MESSAGE, { status: 403 });
     }
 
     if (error instanceof DatabaseError) {

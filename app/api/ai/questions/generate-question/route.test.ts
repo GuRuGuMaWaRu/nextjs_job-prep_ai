@@ -107,6 +107,7 @@ const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
 const mockGenerateAiQuestion = jest.mocked(generateAiQuestion);
 
 const jobInfoId = "00000000-0000-4000-8000-000000000101";
+const jobAccessDeniedMessage = "You do not have permission to do this";
 
 const allowDecision = { isDenied: () => false };
 const denyDecision = { isDenied: () => true };
@@ -246,7 +247,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(response, 403, PLAN_LIMIT_MESSAGE);
+    await expectTextResponse(response, 403, jobAccessDeniedMessage);
     expect(mockGetQuestionsAction).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
@@ -339,7 +340,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(response, 403, PLAN_LIMIT_MESSAGE);
+    await expectTextResponse(response, 403, jobAccessDeniedMessage);
   });
 
   it("maps permission action failures to a 403 response", async () => {
@@ -351,7 +352,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(response, 403, PLAN_LIMIT_MESSAGE);
+    await expectTextResponse(response, 403, jobAccessDeniedMessage);
   });
 
   it("maps database failures to a 500 response", async () => {
