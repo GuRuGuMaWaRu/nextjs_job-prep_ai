@@ -1,4 +1,5 @@
 import { z } from "zod";
+import arcjet, { request, tokenBucket } from "@arcjet/next";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import { questionDifficulties } from "@/core/drizzle/schema";
@@ -16,7 +17,26 @@ import {
   NotFoundError,
   PermissionError,
   UnauthorizedError,
+  BadRequestError,
+  RateLimitError,
 } from "@/core/dal/errors";
+import { env } from "@/core/data/env/server";
+
+/**
+ * Rate Limiting Layer for Generating questions
+ */
+const aj = arcjet({
+  characteristics: ["userId"],
+  key: env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 12,
+      refillRate: 4,
+      interval: "1d",
+      mode: "LIVE",
+    }),
+  ],
+});
 
 const schema = z.object({
   prompt: z.enum(questionDifficulties),
@@ -24,31 +44,39 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const result = schema.safeParse(body);
-
-  if (!result.success) {
-    return new Response("Error generating your question", { status: 400 });
-  }
-
-  const { prompt: difficulty, jobInfoId } = result.data;
-  const { userId } = await getCurrentUserAction();
-
-  if (userId == null) {
-    return new Response("You are not logged in", { status: 401 });
-  }
-
-  if (!(await checkQuestionsPermission())) {
-    return new Response(PLAN_LIMIT_MESSAGE, { status: 403 });
-  }
-
   try {
-    // getJobInfoAction handles auth internally and throws on error
+    const { userId } = await getCurrentUserAction();
+
+    if (userId == null) {
+      throw new UnauthorizedError("You are not logged in");
+    }
+
+    if (!(await checkQuestionsPermission())) {
+      throw new PermissionError(PLAN_LIMIT_MESSAGE);
+    }
+
+    const body = await req.json();
+    const parseResult = schema.safeParse(body);
+
+    if (!parseResult.success) {
+      throw new BadRequestError("Error generating your question");
+    }
+
+    const { prompt: difficulty, jobInfoId } = parseResult.data;
+
+    const decision = await aj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+    if (decision.isDenied()) {
+      throw new RateLimitError(
+        "You are making too many requests. Please try again later",
+      );
+    }
+
     const jobInfo = await getJobInfoAction(jobInfoId);
     if (jobInfo == null) {
-      return new Response("You do not have permission to do this", {
-        status: 403,
-      });
+      throw new PermissionError(PLAN_LIMIT_MESSAGE);
     }
 
     const previousQuestions = await getQuestionsAction(jobInfoId);
@@ -74,6 +102,10 @@ export async function POST(req: Request) {
                 id: "generate-question",
               });
             },
+            onError: async (error) => {
+              console.error("Error streaming response", error);
+              throw new Error("Error streaming response");
+            },
           });
 
           writer.merge(res.toUIMessageStream());
@@ -83,12 +115,16 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Error generating question:", error);
 
+    if (error instanceof BadRequestError) {
+      return new Response("Error generating your question", { status: 400 });
+    }
+
     if (error instanceof UnauthorizedError) {
       return new Response("You are not logged in", { status: 401 });
     }
 
     if (error instanceof NotFoundError || error instanceof PermissionError) {
-      return new Response("You do not have permission to do this", {
+      return new Response(PLAN_LIMIT_MESSAGE, {
         status: 403,
       });
     }
@@ -97,6 +133,10 @@ export async function POST(req: Request) {
       return new Response("Database error while generating question", {
         status: 500,
       });
+    }
+
+    if (error instanceof RateLimitError) {
+      return new Response(error.message, { status: 429 });
     }
 
     return new Response("An error occurred while generating your question", {

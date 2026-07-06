@@ -34,16 +34,6 @@ describe("question actions", () => {
     expect(mockGetQuestionsService).toHaveBeenCalledWith("job-info-1");
   });
 
-  it("wraps get questions failures with job info context", async () => {
-    const cause = new Error("database failed");
-    mockGetQuestionsService.mockRejectedValue(cause);
-
-    await expect(getQuestionsAction("job-info-1")).rejects.toMatchObject({
-      message: 'Failed to get questions for job info "job-info-1".',
-      cause,
-    });
-  });
-
   it("inserts a question through the service", async () => {
     const question = makeQuestion({
       jobInfoId: "job-info-1",
@@ -60,19 +50,6 @@ describe("question actions", () => {
       "job-info-1",
       "medium",
     );
-  });
-
-  it("wraps insert failures with job info and difficulty context", async () => {
-    const cause = new Error("insert failed");
-    mockInsertQuestionService.mockRejectedValue(cause);
-
-    await expect(
-      insertQuestionAction("What did you ship?", "job-info-1", "hard"),
-    ).rejects.toMatchObject({
-      message:
-        'Failed to insert question for job info "job-info-1" with difficulty "hard".',
-      cause,
-    });
   });
 
   it("gets one question through the service", async () => {

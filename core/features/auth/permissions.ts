@@ -9,6 +9,7 @@ import {
   type Permission,
   PLAN_LIMITS,
 } from "@/core/data/constants";
+import { DatabaseError } from "@/core/dal/errors";
 
 /**
  * Check if the current user has a specific permission
@@ -35,21 +36,26 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
     return true;
   }
 
-  switch (permission) {
-    case PERMISSIONS.INTERVIEWS:
-      const interviewCount = await getInterviewCountDb(userId);
-      return interviewCount < permissionLimit;
+  try {
+    switch (permission) {
+      case PERMISSIONS.INTERVIEWS:
+        const interviewCount = await getInterviewCountDb(userId);
+        return interviewCount < permissionLimit;
 
-    case PERMISSIONS.QUESTIONS:
-      const questionCount = await getQuestionCountDb(userId);
-      return questionCount < permissionLimit;
+      case PERMISSIONS.QUESTIONS:
+        const questionCount = await getQuestionCountDb(userId);
+        return questionCount < permissionLimit;
 
-    case PERMISSIONS.RESUME_ANALYSES:
-      const resumeAnalysisCount = await getResumeAnalysisCountDb(userId);
-      return resumeAnalysisCount < permissionLimit;
+      case PERMISSIONS.RESUME_ANALYSES:
+        const resumeAnalysisCount = await getResumeAnalysisCountDb(userId);
+        return resumeAnalysisCount < permissionLimit;
 
-    default:
-      return false;
+      default:
+        return false;
+    }
+  } catch (error) {
+    console.error("Error getting count", error);
+    throw new DatabaseError("Failed to count", error);
   }
 }
 
