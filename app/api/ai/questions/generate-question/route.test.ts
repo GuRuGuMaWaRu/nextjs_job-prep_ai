@@ -293,7 +293,7 @@ describe("POST /api/ai/questions/generate-question", () => {
     );
   });
 
-  it("logs and rethrows when question streaming fails", async () => {
+  it("logs when question streaming fails without rethrowing", async () => {
     const streamError = new Error("Model rate limited");
     let capturedOnError: ((error: unknown) => void | Promise<void>) | undefined;
 
@@ -308,9 +308,7 @@ describe("POST /api/ai/questions/generate-question", () => {
     await POST(buildJsonRequest({ prompt: "medium", jobInfoId }));
 
     expect(capturedOnError).toEqual(expect.any(Function));
-    await expect(capturedOnError!(streamError)).rejects.toThrow(
-      "Error streaming response",
-    );
+    capturedOnError!(streamError);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Error streaming response",
       streamError,

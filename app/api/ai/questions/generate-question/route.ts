@@ -100,9 +100,8 @@ export async function POST(req: Request) {
                 id: "generate-question",
               });
             },
-            onError: async (error) => {
+            onError: (error) => {
               console.error("Error streaming response", error);
-              throw new Error("Error streaming response");
             },
           });
 
