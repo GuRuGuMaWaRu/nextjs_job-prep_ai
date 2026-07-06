@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/core/components/ui/button";
 import { LoadingSwap } from "@/core/components/ui/loading-swap";
+import { errorToast } from "@/core/lib/errorToast";
 import {
   AlertDialog,
   AlertDialogDescription,
@@ -41,7 +42,7 @@ export function ActionButton({
     startTransition(async () => {
       const data = await action();
       if (!data.success) {
-        toast.error(data.message ?? "Error");
+        void errorToast(data.message ?? "Error");
       }
       if (data.success && successMessage) {
         toast.success(successMessage);

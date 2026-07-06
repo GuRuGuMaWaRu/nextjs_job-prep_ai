@@ -47,6 +47,10 @@ export function ResumeAnalysisClientPage({ jobInfoId }: { jobInfoId: string }) {
   } = useObject({
     api: routes.api.aiResumeAnalysis,
     schema: aiAnalyzeSchema,
+    onError: (error) => {
+      console.error(error);
+      void errorToast(error.message);
+    },
     fetch: (url, options) => {
       const headers = new Headers(options?.headers);
       headers.delete("Content-Type");

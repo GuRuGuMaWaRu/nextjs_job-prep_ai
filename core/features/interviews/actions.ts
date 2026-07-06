@@ -42,6 +42,19 @@ const aj = arcjet({
   ],
 });
 
+const feedbackAj = arcjet({
+  characteristics: ["userId"],
+  key: env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 12,
+      refillRate: 4,
+      interval: "1d",
+      mode: "LIVE",
+    }),
+  ],
+});
+
 const updateInterviewSchema = z
   .object({
     humeChatId: z.string().min(1).optional(),
@@ -218,15 +231,26 @@ export async function getInterviewsAction(jobInfoId: string, userId: string) {
 export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
-  const { userId } = await getCurrentUserAction();
-  if (userId == null) {
-    return {
-      success: false,
-      message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
-    };
-  }
-
   try {
+    const { userId } = await getCurrentUserAction();
+    if (userId == null) {
+      return {
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+      };
+    }
+
+    const decision = await feedbackAj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+    if (decision.isDenied()) {
+      return {
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
+      };
+    }
+
     await generateInterviewFeedbackService(interviewId);
 
     return { success: true, data: undefined };
