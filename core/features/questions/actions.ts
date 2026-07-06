@@ -38,11 +38,5 @@ export async function insertQuestionAction(
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionByIdAction(questionId: string) {
-  try {
-    return await getQuestionByIdService(questionId);
-  } catch (error) {
-    throw new Error(`Failed to get question "${questionId}".`, {
-      cause: error,
-    });
-  }
+  return await getQuestionByIdService(questionId);
 }

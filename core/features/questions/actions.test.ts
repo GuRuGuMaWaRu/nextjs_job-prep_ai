@@ -14,6 +14,7 @@ import {
   getQuestionsService,
   insertQuestionService,
 } from "@/core/features/questions/service";
+import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
 import { makeQuestion } from "@/core/test-utils/factories";
 
 const mockGetQuestionsService = jest.mocked(getQuestionsService);
@@ -67,13 +68,17 @@ describe("question actions", () => {
     expect(mockGetQuestionByIdService).toHaveBeenCalledWith(question.id);
   });
 
-  it("wraps get question failures with question context", async () => {
-    const cause = new Error("lookup failed");
-    mockGetQuestionByIdService.mockRejectedValue(cause);
+  it("bubbles get question failures from the service", async () => {
+    const error = new DatabaseError("Failed to fetch question from database");
+    mockGetQuestionByIdService.mockRejectedValue(error);
 
-    await expect(getQuestionByIdAction("question-1")).rejects.toMatchObject({
-      message: 'Failed to get question "question-1".',
-      cause,
-    });
+    await expect(getQuestionByIdAction("question-1")).rejects.toBe(error);
+  });
+
+  it("bubbles unauthorized failures from the service", async () => {
+    const error = new UnauthorizedError();
+    mockGetQuestionByIdService.mockRejectedValue(error);
+
+    await expect(getQuestionByIdAction("question-1")).rejects.toBe(error);
   });
 });
