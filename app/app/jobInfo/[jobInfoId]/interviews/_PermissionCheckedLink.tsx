@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { errorToast, PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { errorToast } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE } from "@/core/data/constants";
 import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 
 interface PermissionCheckedLinkProps {

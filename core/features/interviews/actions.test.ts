@@ -58,7 +58,7 @@ import {
   updateInterviewService,
 } from "@/core/features/interviews/service";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 import { makeInterview, makeJobInfo } from "@/core/test-utils/factories";

@@ -9,15 +9,16 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { isValidElement } from "react";
 import { toast } from "sonner";
 
-import { routes } from "@core/data/routes";
+import { routes } from "@/core/data/routes";
 import {
-  errorToast,
   FILE_SIZE_TOO_LARGE_MESSAGE,
   FILE_TYPE_NOT_SUPPORTED_MESSAGE,
   HUME_UNAVAILABLE_MESSAGE,
   PLAN_LIMIT_MESSAGE,
   RATE_LIMIT_MESSAGE,
-} from "./errorToast";
+} from "@/core/data/constants";
+
+import { errorToast } from "./errorToast";
 
 const mockToast = jest.mocked(toast);
 

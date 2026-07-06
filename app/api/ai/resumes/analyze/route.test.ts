@@ -42,7 +42,7 @@ import {
   NotFoundError,
   PermissionError,
 } from "@/core/dal/errors";
-import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser, makeJobInfo } from "@/core/test-utils/factories";
 

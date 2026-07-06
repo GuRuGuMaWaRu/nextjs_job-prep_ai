@@ -1,3 +1,5 @@
+//** Permission and Plans */
+
 export const PERMISSIONS = {
   INTERVIEWS: "interviews",
   QUESTIONS: "questions",
@@ -24,3 +26,12 @@ export const PLAN_LIMITS = {
     resume_analyses: null,
   },
 } as PlanLimitsByPlan;
+
+//** Error messages */
+
+export const PLAN_LIMIT_MESSAGE = "PLAN_LIMIT";
+export const RATE_LIMIT_MESSAGE = "RATE_LIMIT";
+export const HUME_UNAVAILABLE_MESSAGE = "HUME_UNAVAILABLE_MESSAGE";
+export const FILE_SIZE_TOO_LARGE_MESSAGE = "FILE_SIZE_TOO_LARGE_MESSAGE";
+export const FILE_TYPE_NOT_SUPPORTED_MESSAGE =
+  "FILE_TYPE_NOT_SUPPORTED_MESSAGE";

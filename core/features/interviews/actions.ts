@@ -6,7 +6,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { env } from "@/core/data/env/server";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
 import { ActionResult } from "@/core/dal/helpers";

@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   FILE_SIZE_TOO_LARGE_MESSAGE,
   FILE_TYPE_NOT_SUPPORTED_MESSAGE,
-} from "@/core/lib/errorToast";
+} from "@/core/data/constants";
 
 export const MAX_RESUME_FILE_SIZE = 10 * 1024 * 1024;
 
