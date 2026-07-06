@@ -45,13 +45,13 @@ describe("generateAiQuestion", () => {
           difficulty: "medium",
         }),
       ];
-      const onFinish = jest.fn();
 
       const stream = generateAiQuestion({
         jobInfo,
         previousQuestions,
         difficulty: "hard",
-        onFinish,
+        onFinish: jest.fn(),
+        onError: jest.fn(),
       });
 
       expect(stream).toEqual({ kind: "question-stream" });
@@ -93,6 +93,7 @@ describe("generateAiQuestion", () => {
         previousQuestions: [],
         difficulty: "easy",
         onFinish: jest.fn(),
+        onError: jest.fn(),
       });
 
       const { messages, system } = getStreamTextOptions();
@@ -116,9 +117,33 @@ describe("generateAiQuestion", () => {
         previousQuestions: [],
         difficulty: "medium",
         onFinish,
+        onError: jest.fn(),
       });
 
       expect(onFinish).toHaveBeenCalledWith("## What is React?");
+    });
+  });
+
+  describe("when streaming errors", () => {
+    it("invokes the caller onError callback with the stream error", () => {
+      const jobInfo = makeJobInfo();
+      const onError = jest.fn();
+      const streamError = new Error("Model rate limited");
+      mockStreamText.mockImplementation(({ onError: sdkOnError }) => {
+        sdkOnError?.({ error: streamError });
+
+        return { kind: "question-stream" };
+      });
+
+      generateAiQuestion({
+        jobInfo,
+        previousQuestions: [],
+        difficulty: "medium",
+        onFinish: jest.fn(),
+        onError,
+      });
+
+      expect(onError).toHaveBeenCalledWith(streamError);
     });
   });
 });

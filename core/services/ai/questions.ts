@@ -12,6 +12,7 @@ export function generateAiQuestion({
   previousQuestions,
   difficulty,
   onFinish,
+  onError,
 }: {
   jobInfo: Pick<
     typeof JobInfoTable.$inferSelect,
@@ -23,6 +24,7 @@ export function generateAiQuestion({
   >[];
   difficulty: QuestionDifficulty;
   onFinish: (question: string) => void;
+  onError: (error: unknown) => void;
 }) {
   const previousMessages = previousQuestions.flatMap(
     (q) =>
@@ -35,6 +37,7 @@ export function generateAiQuestion({
   return streamText({
     model: google("gemini-2.5-flash"),
     onFinish: ({ text }) => onFinish(text),
+    onError: ({ error }) => onError(error),
     messages: [
       ...previousMessages,
       {

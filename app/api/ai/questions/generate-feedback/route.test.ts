@@ -1,3 +1,22 @@
+jest.mock("@arcjet/next", () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    protect: jest.fn(),
+  })),
+  request: jest.fn(),
+  tokenBucket: jest.fn((config) => config),
+}));
+
+jest.mock("@/core/data/env/server", () => ({
+  env: {
+    ARCJET_KEY: "test-arcjet-key",
+  },
+}));
+
+jest.mock("@/core/features/auth/actions", () => ({
+  getCurrentUserAction: jest.fn(),
+}));
+
 jest.mock("@/core/features/questions/actions", () => ({
   getQuestionByIdAction: jest.fn(),
 }));
@@ -6,19 +25,33 @@ jest.mock("@/core/services/ai/questions", () => ({
   generateAiQuestionFeedback: jest.fn(),
 }));
 
+import arcjet, { request } from "@arcjet/next";
+
+import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
+import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeQuestion } from "@/core/test-utils/factories";
+import { makeCurrentUser, makeQuestion } from "@/core/test-utils/factories";
 
 import { POST } from "./route";
 
+const mockArcjet = jest.mocked(arcjet);
+const mockProtect = jest.mocked(
+  mockArcjet.mock.results[0].value.protect as jest.Mock,
+);
+const mockRequest = jest.mocked(request);
+const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
 const mockGetQuestionByIdAction = jest.mocked(getQuestionByIdAction);
 const mockGenerateAiQuestionFeedback = jest.mocked(generateAiQuestionFeedback);
 
 const questionId = "00000000-0000-4002-8000-000000000301";
 const questionText = "How would you explain server actions in Next.js?";
+
+const allowDecision = { isDenied: () => false };
+const denyDecision = { isDenied: () => true };
+const requestContext = { ip: "127.0.0.1" };
 
 function buildJsonRequest(body: unknown): Request {
   return new Request(
@@ -73,6 +106,13 @@ describe("POST /api/ai/questions/generate-feedback", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockGetCurrentUserAction.mockResolvedValue(
+      makeCurrentUser({ userId: TEST_USER_ID }),
+    );
+    mockRequest.mockResolvedValue(requestContext);
+    mockProtect.mockResolvedValue(allowDecision);
+
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -84,6 +124,38 @@ describe("POST /api/ai/questions/generate-feedback", () => {
     const response = await POST(buildJsonRequest({ prompt: "Use caching." }));
 
     await expectTextResponse(response, 400, "Error generating feedback");
+    expect(mockProtect).not.toHaveBeenCalled();
+    expect(mockGetQuestionByIdAction).not.toHaveBeenCalled();
+    expect(mockGenerateAiQuestionFeedback).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when the current user is unauthenticated", async () => {
+    mockGetCurrentUserAction.mockResolvedValueOnce(
+      makeCurrentUser({ userId: null }),
+    );
+
+    const response = await POST(
+      buildJsonRequest({ prompt: "Use caching.", questionId }),
+    );
+
+    await expectTextResponse(response, 401, "You are not logged in");
+    expect(mockProtect).not.toHaveBeenCalled();
+    expect(mockGenerateAiQuestionFeedback).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when Arcjet denies the request", async () => {
+    mockProtect.mockResolvedValueOnce(denyDecision);
+
+    const response = await POST(
+      buildJsonRequest({ prompt: "Use caching.", questionId }),
+    );
+
+    await expectTextResponse(response, 429, RATE_LIMIT_MESSAGE);
+    expect(mockRequest).toHaveBeenCalledWith();
+    expect(mockProtect).toHaveBeenCalledWith(requestContext, {
+      userId: TEST_USER_ID,
+      requested: 1,
+    });
     expect(mockGetQuestionByIdAction).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestionFeedback).not.toHaveBeenCalled();
   });
@@ -116,6 +188,10 @@ describe("POST /api/ai/questions/generate-feedback", () => {
       kind: "feedback-stream",
     });
 
+    expect(mockProtect).toHaveBeenCalledWith(requestContext, {
+      userId: TEST_USER_ID,
+      requested: 1,
+    });
     expect(mockGenerateAiQuestionFeedback).toHaveBeenCalledWith({
       question: questionText,
       answer: "They can run on the server and mutate data safely.",

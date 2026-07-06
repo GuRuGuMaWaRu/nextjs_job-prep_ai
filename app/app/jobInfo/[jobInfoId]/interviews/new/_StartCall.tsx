@@ -19,9 +19,10 @@ import {
   createInterviewAction,
   updateInterviewAction,
 } from "@/core/features/interviews/actions";
-import { errorToast, HUME_UNAVAILABLE_MESSAGE } from "@/core/lib/errorToast";
+import { errorToast } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/client";
 import { routes } from "@/core/data/routes";
+import { HUME_UNAVAILABLE_MESSAGE } from "@/core/data/constants";
 
 export function StartCall({
   accessToken,

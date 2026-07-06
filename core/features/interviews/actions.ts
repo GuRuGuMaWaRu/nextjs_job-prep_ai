@@ -6,7 +6,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { env } from "@/core/data/env/server";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
 import { ActionResult } from "@/core/dal/helpers";
@@ -30,6 +30,19 @@ import {
  */
 
 const aj = arcjet({
+  characteristics: ["userId"],
+  key: env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 12,
+      refillRate: 4,
+      interval: "1d",
+      mode: "LIVE",
+    }),
+  ],
+});
+
+const feedbackAj = arcjet({
   characteristics: ["userId"],
   key: env.ARCJET_KEY,
   rules: [
@@ -192,15 +205,10 @@ export async function getInterviewByIdAction(id: string, userId: string) {
 
 /**
  * Check if user can create an interview
- * Used for UI permission checks
+ * Used for UI permission checks; errors bubble to callers/error boundaries
  */
 export async function canCreateInterviewAction(): Promise<boolean> {
-  try {
-    return await checkInterviewPermission();
-  } catch (error) {
-    console.error("Error checking interview creation permission:", error);
-    return false;
-  }
+  return await checkInterviewPermission();
 }
 
 /**
@@ -218,15 +226,26 @@ export async function getInterviewsAction(jobInfoId: string, userId: string) {
 export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
-  const { userId } = await getCurrentUserAction();
-  if (userId == null) {
-    return {
-      success: false,
-      message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
-    };
-  }
-
   try {
+    const { userId } = await getCurrentUserAction();
+    if (userId == null) {
+      return {
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+      };
+    }
+
+    const decision = await feedbackAj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+    if (decision.isDenied()) {
+      return {
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
+      };
+    }
+
     await generateInterviewFeedbackService(interviewId);
 
     return { success: true, data: undefined };

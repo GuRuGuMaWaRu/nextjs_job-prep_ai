@@ -1,6 +1,7 @@
 "use server";
 
 import { QuestionDifficulty } from "@/core/drizzle/schema";
+import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import {
   getQuestionByIdService,
   getQuestionsService,
@@ -18,13 +19,7 @@ import {
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionsAction(jobInfoId: string) {
-  try {
-    return await getQuestionsService(jobInfoId);
-  } catch (error) {
-    throw new Error(`Failed to get questions for job info "${jobInfoId}".`, {
-      cause: error,
-    });
-  }
+  return await getQuestionsService(jobInfoId);
 }
 
 /**
@@ -36,14 +31,7 @@ export async function insertQuestionAction(
   jobInfoId: string,
   difficulty: QuestionDifficulty,
 ) {
-  try {
-    return await insertQuestionService(question, jobInfoId, difficulty);
-  } catch (error) {
-    throw new Error(
-      `Failed to insert question for job info "${jobInfoId}" with difficulty "${difficulty}".`,
-      { cause: error },
-    );
-  }
+  return await insertQuestionService(question, jobInfoId, difficulty);
 }
 
 /**
@@ -51,11 +39,13 @@ export async function insertQuestionAction(
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionByIdAction(questionId: string) {
-  try {
-    return await getQuestionByIdService(questionId);
-  } catch (error) {
-    throw new Error(`Failed to get question "${questionId}".`, {
-      cause: error,
-    });
-  }
+  return await getQuestionByIdService(questionId);
+}
+
+/**
+ * Check if user can generate a new question
+ * Used for UI permission checks; errors bubble to callers/error boundaries
+ */
+export async function canGenerateQuestionsAction(): Promise<boolean> {
+  return await checkQuestionsPermission();
 }

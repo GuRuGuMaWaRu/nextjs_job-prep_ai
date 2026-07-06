@@ -1,33 +1,66 @@
+import arcjet, { request, tokenBucket } from "@arcjet/next";
+
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
-import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
-import { NotFoundError, PermissionError } from "@/core/dal/errors";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
+import {
+  BadRequestError,
+  NotFoundError,
+  PermissionError,
+  RateLimitError,
+  UnauthorizedError,
+} from "@/core/dal/errors";
+import { env } from "@/core/data/env/server";
+
+/**
+ * Rate limiting layer for resume analysis
+ */
+const aj = arcjet({
+  characteristics: ["userId"],
+  key: env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 12,
+      refillRate: 4,
+      interval: "1d",
+      mode: "LIVE",
+    }),
+  ],
+});
 
 export async function POST(req: Request) {
-  const { userId } = await getCurrentUserAction();
-
-  if (userId == null) {
-    return new Response("You are not logged in", { status: 401 });
-  }
-
-  const formData = await req.formData();
-  const validation = resumeAnalysisInputSchema.safeParse({
-    resumeFile: formData.get("resumeFile"),
-    jobInfoId: formData.get("jobInfoId"),
-  });
-  if (!validation.success) {
-    const message =
-      validation.error.issues[0]?.message ?? "Missing resume or job info id";
-    return new Response(message, { status: 400 });
-  }
-
   try {
+    const { userId } = await getCurrentUserAction();
+
+    if (userId == null) {
+      throw new UnauthorizedError("You are not logged in");
+    }
+
+    const formData = await req.formData();
+    const validation = resumeAnalysisInputSchema.safeParse({
+      resumeFile: formData.get("resumeFile"),
+      jobInfoId: formData.get("jobInfoId"),
+    });
+
+    if (!validation.success) {
+      const message =
+        validation.error.issues[0]?.message ?? "Missing resume or job info id";
+      throw new BadRequestError(message);
+    }
+
+    const decision = await aj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+    if (decision.isDenied()) {
+      throw new RateLimitError(RATE_LIMIT_MESSAGE);
+    }
+
     const { resumeFile, jobInfoId } = validation.data;
 
-    // getJobInfoAction handles auth internally and throws on error
     const jobInfo = await getJobInfoAction(jobInfoId);
 
     if (jobInfo == null) {
@@ -49,10 +82,22 @@ export async function POST(req: Request) {
 
     return res.toTextStreamResponse();
   } catch (error) {
+    if (error instanceof BadRequestError) {
+      return new Response(error.message, { status: 400 });
+    }
+
+    if (error instanceof UnauthorizedError) {
+      return new Response("You are not logged in", { status: 401 });
+    }
+
     if (error instanceof NotFoundError || error instanceof PermissionError) {
       return new Response("You do not have permission to do this", {
         status: 403,
       });
+    }
+
+    if (error instanceof RateLimitError) {
+      return new Response(error.message, { status: 429 });
     }
 
     console.error("Error analyzing resume:", error);

@@ -4,21 +4,29 @@ jest.mock("@/core/features/questions/service", () => ({
   insertQuestionService: jest.fn(),
 }));
 
+jest.mock("@/core/features/questions/permissions", () => ({
+  checkQuestionsPermission: jest.fn(),
+}));
+
 import {
+  canGenerateQuestionsAction,
   getQuestionByIdAction,
   getQuestionsAction,
   insertQuestionAction,
 } from "@/core/features/questions/actions";
+import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import {
   getQuestionByIdService,
   getQuestionsService,
   insertQuestionService,
 } from "@/core/features/questions/service";
+import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
 import { makeQuestion } from "@/core/test-utils/factories";
 
 const mockGetQuestionsService = jest.mocked(getQuestionsService);
 const mockInsertQuestionService = jest.mocked(insertQuestionService);
 const mockGetQuestionByIdService = jest.mocked(getQuestionByIdService);
+const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
 
 describe("question actions", () => {
   beforeEach(() => {
@@ -32,16 +40,6 @@ describe("question actions", () => {
     await expect(getQuestionsAction("job-info-1")).resolves.toBe(questions);
 
     expect(mockGetQuestionsService).toHaveBeenCalledWith("job-info-1");
-  });
-
-  it("wraps get questions failures with job info context", async () => {
-    const cause = new Error("database failed");
-    mockGetQuestionsService.mockRejectedValue(cause);
-
-    await expect(getQuestionsAction("job-info-1")).rejects.toMatchObject({
-      message: 'Failed to get questions for job info "job-info-1".',
-      cause,
-    });
   });
 
   it("inserts a question through the service", async () => {
@@ -62,19 +60,6 @@ describe("question actions", () => {
     );
   });
 
-  it("wraps insert failures with job info and difficulty context", async () => {
-    const cause = new Error("insert failed");
-    mockInsertQuestionService.mockRejectedValue(cause);
-
-    await expect(
-      insertQuestionAction("What did you ship?", "job-info-1", "hard"),
-    ).rejects.toMatchObject({
-      message:
-        'Failed to insert question for job info "job-info-1" with difficulty "hard".',
-      cause,
-    });
-  });
-
   it("gets one question through the service", async () => {
     const question = {
       ...makeQuestion({ jobInfoId: "job-info-1" }),
@@ -90,13 +75,42 @@ describe("question actions", () => {
     expect(mockGetQuestionByIdService).toHaveBeenCalledWith(question.id);
   });
 
-  it("wraps get question failures with question context", async () => {
-    const cause = new Error("lookup failed");
-    mockGetQuestionByIdService.mockRejectedValue(cause);
+  it("bubbles get question failures from the service", async () => {
+    const error = new DatabaseError("Failed to fetch question from database");
+    mockGetQuestionByIdService.mockRejectedValue(error);
 
-    await expect(getQuestionByIdAction("question-1")).rejects.toMatchObject({
-      message: 'Failed to get question "question-1".',
-      cause,
-    });
+    await expect(getQuestionByIdAction("question-1")).rejects.toBe(error);
+  });
+
+  it("bubbles unauthorized failures from the service", async () => {
+    const error = new UnauthorizedError();
+    mockGetQuestionByIdService.mockRejectedValue(error);
+
+    await expect(getQuestionByIdAction("question-1")).rejects.toBe(error);
+  });
+});
+
+describe("canGenerateQuestionsAction", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns true when question generation is allowed", async () => {
+    mockCheckQuestionsPermission.mockResolvedValueOnce(true);
+
+    await expect(canGenerateQuestionsAction()).resolves.toBe(true);
+  });
+
+  it("returns false when question generation is denied", async () => {
+    mockCheckQuestionsPermission.mockResolvedValueOnce(false);
+
+    await expect(canGenerateQuestionsAction()).resolves.toBe(false);
+  });
+
+  it("bubbles permission check failures", async () => {
+    const error = new Error("db down");
+    mockCheckQuestionsPermission.mockRejectedValueOnce(error);
+
+    await expect(canGenerateQuestionsAction()).rejects.toBe(error);
   });
 });

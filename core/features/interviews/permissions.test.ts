@@ -46,14 +46,11 @@ describe("checkInterviewPermission", () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
-  it("returns false when hasPermission rejects", async () => {
+  it("throws when hasPermission rejects", async () => {
     mockHasPermission.mockRejectedValueOnce(new Error("permission failed"));
 
-    await expect(checkInterviewPermission()).resolves.toBe(false);
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error checking interview permission:",
-      expect.any(Error),
+    await expect(checkInterviewPermission()).rejects.toThrow(
+      "permission failed",
     );
   });
 });

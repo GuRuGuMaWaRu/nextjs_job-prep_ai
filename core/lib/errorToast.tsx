@@ -1,15 +1,26 @@
 import Link from "next/link";
 import { toast } from "sonner";
 
-import { Button } from "@core/components/ui/button";
-import { routes } from "@core/data/routes";
+import { Button } from "@/core/components/ui/button";
+import { routes } from "@/core/data/routes";
+import {
+  PLAN_LIMIT_MESSAGE,
+  RATE_LIMIT_MESSAGE,
+  HUME_UNAVAILABLE_MESSAGE,
+  FILE_SIZE_TOO_LARGE_MESSAGE,
+  FILE_TYPE_NOT_SUPPORTED_MESSAGE,
+} from "@/core/data/constants";
 
-export const PLAN_LIMIT_MESSAGE = "PLAN_LIMIT";
-export const RATE_LIMIT_MESSAGE = "RATE_LIMIT";
-export const HUME_UNAVAILABLE_MESSAGE = "HUME_UNAVAILABLE_MESSAGE";
-export const FILE_SIZE_TOO_LARGE_MESSAGE = "FILE_SIZE_TOO_LARGE_MESSAGE";
-export const FILE_TYPE_NOT_SUPPORTED_MESSAGE =
-  "FILE_TYPE_NOT_SUPPORTED_MESSAGE";
+export const UNEXPECTED_ERROR_MESSAGE = "An error occurred. Please try again.";
+
+/**
+ * Shows a generic toast for unexpected infrastructure failures.
+ * Use when a catch block should not expose internal error messages or
+ * domain tokens handled by {@link errorToast}.
+ */
+export function unexpectedErrorToast() {
+  toast.error(UNEXPECTED_ERROR_MESSAGE);
+}
 
 export async function errorToast(message: string) {
   if (message === PLAN_LIMIT_MESSAGE) {

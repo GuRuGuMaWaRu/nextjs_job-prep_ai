@@ -1,3 +1,18 @@
+jest.mock("@arcjet/next", () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    protect: jest.fn(),
+  })),
+  request: jest.fn(),
+  tokenBucket: jest.fn((config) => config),
+}));
+
+jest.mock("@/core/data/env/server", () => ({
+  env: {
+    ARCJET_KEY: "test-arcjet-key",
+  },
+}));
+
 jest.mock("@/core/features/auth/actions", () => ({
   getCurrentUserAction: jest.fn(),
 }));
@@ -30,6 +45,7 @@ jest.mock("@/core/services/ai/resumes/ai", () => ({
   analyzeResumeForJob: jest.fn(),
 }));
 
+import arcjet, { request } from "@arcjet/next";
 import { z } from "zod";
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
@@ -42,12 +58,17 @@ import {
   NotFoundError,
   PermissionError,
 } from "@/core/dal/errors";
-import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser, makeJobInfo } from "@/core/test-utils/factories";
 
 import { POST } from "./route";
 
+const mockArcjet = jest.mocked(arcjet);
+const mockProtect = jest.mocked(
+  mockArcjet.mock.results[0].value.protect as jest.Mock,
+);
+const mockRequest = jest.mocked(request);
 const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockReserveResumeAnalysisUsage = jest.mocked(reserveResumeAnalysisUsage);
@@ -60,6 +81,10 @@ const actualResumeAnalysisInputSchema = jest.requireActual<
 >("@/core/features/resumeAnalysis/schemas").resumeAnalysisInputSchema;
 
 const jobInfoId = "00000000-0000-4000-8000-000000000401";
+
+const allowDecision = { isDenied: () => false };
+const denyDecision = { isDenied: () => true };
+const requestContext = { ip: "127.0.0.1" };
 
 function makeResumeFile(overrides: Partial<FilePropertyBag> = {}): File {
   return new File(["Synthetic resume content"], "resume.txt", {
@@ -128,6 +153,8 @@ describe("POST /api/ai/resumes/analyze", () => {
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
     mockReserveResumeAnalysisUsage.mockResolvedValue(true);
+    mockRequest.mockResolvedValue(requestContext);
+    mockProtect.mockResolvedValue(allowDecision);
     mockResumeAnalysisSafeParse.mockImplementation((input) =>
       actualResumeAnalysisInputSchema.safeParse(input),
     );
@@ -144,6 +171,7 @@ describe("POST /api/ai/resumes/analyze", () => {
     const response = await POST(buildFormRequest({ resumeFile: null }));
 
     await expectTextResponse(response, 400, "Missing resume or job info id");
+    expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
     expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
@@ -170,7 +198,24 @@ describe("POST /api/ai/resumes/analyze", () => {
     const response = await POST(buildFormRequest());
 
     await expectTextResponse(response, 401, "You are not logged in");
+    expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+    expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when Arcjet denies the request", async () => {
+    mockProtect.mockResolvedValueOnce(denyDecision);
+
+    const response = await POST(buildFormRequest());
+
+    await expectTextResponse(response, 429, RATE_LIMIT_MESSAGE);
+    expect(mockRequest).toHaveBeenCalledWith();
+    expect(mockProtect).toHaveBeenCalledWith(requestContext, {
+      userId: TEST_USER_ID,
+      requested: 1,
+    });
+    expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+    expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
@@ -231,6 +276,10 @@ describe("POST /api/ai/resumes/analyze", () => {
       kind: "resume-analysis-stream",
     });
 
+    expect(mockProtect).toHaveBeenCalledWith(requestContext, {
+      userId: TEST_USER_ID,
+      requested: 1,
+    });
     expect(mockGetJobInfoAction).toHaveBeenCalledWith(jobInfoId);
     expect(mockReserveResumeAnalysisUsage).toHaveBeenCalledWith(
       TEST_USER_ID,

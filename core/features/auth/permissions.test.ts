@@ -34,6 +34,7 @@ import {
   makeUser,
 } from "@/core/test-utils/factories/user";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
+import { DatabaseError } from "@/core/dal/errors";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
 const mockGetUserAction = jest.mocked(getUserAction);
@@ -44,11 +45,18 @@ const mockGetResumeAnalysisCountDb = jest.mocked(getResumeAnalysisCountDb);
 const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("auth permission helpers", () => {
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetCurrentUser.mockResolvedValue(
       makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
     );
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   it("exposes free plan limits used by feature permission checks", () => {
@@ -157,11 +165,17 @@ describe("auth permission helpers", () => {
   });
 
   it("rejects when count lookup throws", async () => {
+    const randomError = new Error("Boom!");
+
     mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
-    mockGetInterviewCountDb.mockRejectedValue(new Error("Boom!"));
+    mockGetInterviewCountDb.mockRejectedValue(randomError);
 
     await expect(hasPermission(PERMISSIONS.INTERVIEWS)).rejects.toThrow(
-      "Boom!",
+      DatabaseError,
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error getting count",
+      randomError,
     );
   });
 

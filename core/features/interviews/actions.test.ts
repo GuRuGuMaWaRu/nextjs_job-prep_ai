@@ -58,7 +58,7 @@ import {
   updateInterviewService,
 } from "@/core/features/interviews/service";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser } from "@/core/test-utils/factories/user";
 import { makeInterview, makeJobInfo } from "@/core/test-utils/factories";
@@ -66,6 +66,9 @@ import { makeInterview, makeJobInfo } from "@/core/test-utils/factories";
 const mockArcjet = jest.mocked(arcjet);
 const mockProtect = jest.mocked(
   mockArcjet.mock.results[0].value.protect as jest.Mock,
+);
+const mockFeedbackProtect = jest.mocked(
+  mockArcjet.mock.results[1].value.protect as jest.Mock,
 );
 const mockRequest = jest.mocked(request);
 const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
@@ -95,6 +98,7 @@ describe("interview actions", () => {
     mockCheckInterviewPermission.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
+    mockFeedbackProtect.mockResolvedValue(allowDecision);
   });
 
   afterEach(() => {
@@ -361,10 +365,48 @@ describe("interview actions", () => {
         data: undefined,
       });
 
+      expect(mockFeedbackProtect).toHaveBeenCalledWith(requestContext, {
+        userId: TEST_USER_ID,
+        requested: 1,
+      });
       expect(mockGenerateInterviewFeedbackService).toHaveBeenCalledWith(
         "interview-1",
       );
       expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it("returns the rate limit message when Arcjet denies the request", async () => {
+      mockFeedbackProtect.mockResolvedValueOnce(denyDecision);
+
+      await expect(
+        generateInterviewFeedbackAction("interview-1"),
+      ).resolves.toEqual({
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
+      });
+
+      expect(mockRequest).toHaveBeenCalledWith();
+      expect(mockFeedbackProtect).toHaveBeenCalledWith(requestContext, {
+        userId: TEST_USER_ID,
+        requested: 1,
+      });
+      expect(mockGenerateInterviewFeedbackService).not.toHaveBeenCalled();
+    });
+
+    it("returns unauthorized when the user is not signed in", async () => {
+      mockGetCurrentUser.mockResolvedValueOnce(
+        makeCurrentUser({ userId: null }),
+      );
+
+      await expect(
+        generateInterviewFeedbackAction("interview-1"),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+      });
+
+      expect(mockFeedbackProtect).not.toHaveBeenCalled();
+      expect(mockGenerateInterviewFeedbackService).not.toHaveBeenCalled();
     });
 
     it("maps unauthorized errors to a login message", async () => {
@@ -426,15 +468,11 @@ describe("interview actions", () => {
     expect(mockCheckInterviewPermission).toHaveBeenCalledWith();
   });
 
-  it("returns false when interview creation permission checks fail", async () => {
-    mockCheckInterviewPermission.mockRejectedValue(new Error("permission"));
+  it("bubbles permission check failures", async () => {
+    const error = new Error("permission");
+    mockCheckInterviewPermission.mockRejectedValue(error);
 
-    await expect(canCreateInterviewAction()).resolves.toBe(false);
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error checking interview creation permission:",
-      expect.any(Error),
-    );
+    await expect(canCreateInterviewAction()).rejects.toBe(error);
   });
 
   it("gets one interview by id through the service", async () => {

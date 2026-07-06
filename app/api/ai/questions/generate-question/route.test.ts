@@ -1,3 +1,18 @@
+jest.mock("@arcjet/next", () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    protect: jest.fn(),
+  })),
+  request: jest.fn(),
+  tokenBucket: jest.fn((config) => config),
+}));
+
+jest.mock("@/core/data/env/server", () => ({
+  env: {
+    ARCJET_KEY: "test-arcjet-key",
+  },
+}));
+
 jest.mock("ai", () => ({
   createUIMessageStream: jest.fn(({ execute }) => {
     const writer = {
@@ -48,6 +63,7 @@ jest.mock("@/core/services/ai/questions", () => ({
   generateAiQuestion: jest.fn(),
 }));
 
+import arcjet, { request } from "@arcjet/next";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
@@ -64,7 +80,7 @@ import {
   PermissionError,
   UnauthorizedError,
 } from "@/core/dal/errors";
-import { PLAN_LIMIT_MESSAGE } from "@/core/lib/errorToast";
+import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import {
   makeCurrentUser,
@@ -74,6 +90,11 @@ import {
 
 import { POST } from "./route";
 
+const mockArcjet = jest.mocked(arcjet);
+const mockProtect = jest.mocked(
+  mockArcjet.mock.results[0].value.protect as jest.Mock,
+);
+const mockRequest = jest.mocked(request);
 const mockCreateUIMessageStream = jest.mocked(createUIMessageStream);
 const mockCreateUIMessageStreamResponse = jest.mocked(
   createUIMessageStreamResponse,
@@ -86,6 +107,11 @@ const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
 const mockGenerateAiQuestion = jest.mocked(generateAiQuestion);
 
 const jobInfoId = "00000000-0000-4000-8000-000000000101";
+const jobAccessDeniedMessage = "You do not have permission to do this";
+
+const allowDecision = { isDenied: () => false };
+const denyDecision = { isDenied: () => true };
+const requestContext = { ip: "127.0.0.1" };
 
 function buildJsonRequest(body: unknown): Request {
   return new Request(
@@ -124,6 +150,8 @@ describe("POST /api/ai/questions/generate-question", () => {
       makeCurrentUser({ userId: TEST_USER_ID }),
     );
     mockCheckQuestionsPermission.mockResolvedValue(true);
+    mockRequest.mockResolvedValue(requestContext);
+    mockProtect.mockResolvedValue(allowDecision);
     mockGetJobInfoAction.mockResolvedValue(
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
@@ -162,7 +190,7 @@ describe("POST /api/ai/questions/generate-question", () => {
     );
 
     await expectTextResponse(response, 400, "Error generating your question");
-    expect(mockGetCurrentUserAction).not.toHaveBeenCalled();
+    expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
 
@@ -177,6 +205,7 @@ describe("POST /api/ai/questions/generate-question", () => {
 
     await expectTextResponse(response, 401, "You are not logged in");
     expect(mockCheckQuestionsPermission).not.toHaveBeenCalled();
+    expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
 
@@ -188,7 +217,26 @@ describe("POST /api/ai/questions/generate-question", () => {
     );
 
     await expectTextResponse(response, 403, PLAN_LIMIT_MESSAGE);
+    expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+    expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when Arcjet denies the request", async () => {
+    mockProtect.mockResolvedValueOnce(denyDecision);
+
+    const response = await POST(
+      buildJsonRequest({ prompt: "medium", jobInfoId }),
+    );
+
+    await expectTextResponse(response, 429, RATE_LIMIT_MESSAGE);
+    expect(mockRequest).toHaveBeenCalledWith();
+    expect(mockProtect).toHaveBeenCalledWith(requestContext, {
+      userId: TEST_USER_ID,
+      requested: 1,
+    });
+    expect(mockGetJobInfoAction).not.toHaveBeenCalled();
+    expect(mockGetQuestionsAction).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
 
@@ -199,11 +247,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(
-      response,
-      403,
-      "You do not have permission to do this",
-    );
+    await expectTextResponse(response, 403, jobAccessDeniedMessage);
     expect(mockGetQuestionsAction).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
@@ -221,6 +265,10 @@ describe("POST /api/ai/questions/generate-question", () => {
       writes: [],
     });
 
+    expect(mockProtect).toHaveBeenCalledWith(requestContext, {
+      userId: TEST_USER_ID,
+      requested: 1,
+    });
     expect(mockGenerateAiQuestion).toHaveBeenCalledWith({
       previousQuestions: expect.arrayContaining([
         expect.objectContaining({
@@ -230,6 +278,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       jobInfo: expect.objectContaining({ id: jobInfoId }),
       difficulty: "medium",
       onFinish: expect.any(Function),
+      onError: expect.any(Function),
     });
     expect(mockInsertQuestionAction).toHaveBeenCalledWith(
       "How would you stream a generated response?",
@@ -243,6 +292,29 @@ describe("POST /api/ai/questions/generate-question", () => {
         statusText: "OK",
       }),
     );
+  });
+
+  it("logs when question streaming fails without rethrowing", async () => {
+    const streamError = new Error("Model rate limited");
+    let capturedOnError: ((error: unknown) => void | Promise<void>) | undefined;
+
+    mockGenerateAiQuestion.mockImplementation(({ onError }) => {
+      capturedOnError = onError;
+
+      return {
+        toUIMessageStream: jest.fn(() => ({ kind: "model-stream" })),
+      } as unknown as ReturnType<typeof generateAiQuestion>;
+    });
+
+    await POST(buildJsonRequest({ prompt: "medium", jobInfoId }));
+
+    expect(capturedOnError).toEqual(expect.any(Function));
+    capturedOnError!(streamError);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error streaming response",
+      streamError,
+    );
+    expect(mockInsertQuestionAction).not.toHaveBeenCalled();
   });
 
   it("maps unauthorized service failures to a 401 response", async () => {
@@ -268,11 +340,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(
-      response,
-      403,
-      "You do not have permission to do this",
-    );
+    await expectTextResponse(response, 403, jobAccessDeniedMessage);
   });
 
   it("maps permission action failures to a 403 response", async () => {
@@ -284,11 +352,7 @@ describe("POST /api/ai/questions/generate-question", () => {
       buildJsonRequest({ prompt: "medium", jobInfoId }),
     );
 
-    await expectTextResponse(
-      response,
-      403,
-      "You do not have permission to do this",
-    );
+    await expectTextResponse(response, 403, jobAccessDeniedMessage);
   });
 
   it("maps database failures to a 500 response", async () => {
