@@ -18,17 +18,24 @@ import { ScrollArea, ScrollBar } from "@/core/components/ui/scroll-area";
 import { Textarea } from "@/core/components/ui/textarea";
 import { LoadingSwap } from "@/core/components/ui/loading-swap";
 import { MarkdownRenderer } from "@/core/components/MarkdownRenderer";
+import { PlanLimitAlert } from "@/core/components/PlanLimitAlert";
 import { formatQuestionDifficulty } from "@/core/features/questions/formatters";
-import { errorToast } from "@/core/lib/errorToast";
+import { canGenerateQuestionsAction } from "@/core/features/questions/actions";
+import { errorToast, unexpectedErrorToast } from "@/core/lib/errorToast";
 import { routes } from "@/core/data/routes";
 
 type Status = "awaiting-answer" | "awaiting-difficulty" | "init";
 
 export function NewQuestionClientPage({
   jobInfo,
+  canGenerateQuestions: initialCanGenerateQuestions,
 }: {
   jobInfo: Pick<typeof JobInfoTable.$inferSelect, "id" | "title" | "name">;
+  canGenerateQuestions: boolean;
 }) {
+  const [canGenerateQuestions, setCanGenerateQuestions] = useState(
+    initialCanGenerateQuestions,
+  );
   const [status, setStatus] = useState<Status>("init");
   const [answer, setAnswer] = useState<string | null>(null);
   const [questionId, setQuestionId] = useState<string | null>(null);
@@ -43,6 +50,13 @@ export function NewQuestionClientPage({
         setQuestionId(questionId);
         setQuestion(question);
         setStatus("awaiting-answer");
+
+        try {
+          setCanGenerateQuestions(await canGenerateQuestionsAction());
+        } catch (error) {
+          console.error(error);
+          unexpectedErrorToast();
+        }
       },
       onError: (error) => {
         console.error(error);
@@ -68,14 +82,22 @@ export function NewQuestionClientPage({
 
   return (
     <div className="flex flex-col gap-4 items-center h-full w-full mx-auto max-w-[2000px]">
+      {!canGenerateQuestions ? (
+        <PlanLimitAlert hasRedirectButton={true} />
+      ) : null}
       <Controls
         answerBtnDisabled={
           answer == null || answer.trim() === "" || questionId == null
         }
+        canGenerateQuestions={canGenerateQuestions}
         isLoading={isGeneratingQuestion || isGeneratingFeedback}
         status={status}
         difficulty={difficulty}
         generateQuestion={(difficulty) => {
+          if (!canGenerateQuestions) {
+            return;
+          }
+
           setQuestion("");
           setFeedback("");
           setAnswer(null);
@@ -100,6 +122,7 @@ export function NewQuestionClientPage({
         }}
       />
       <QuestionContainer
+        canGenerateQuestions={canGenerateQuestions}
         question={question}
         feedback={feedback}
         answer={answer}
@@ -111,12 +134,14 @@ export function NewQuestionClientPage({
 }
 
 function QuestionContainer({
+  canGenerateQuestions,
   question,
   feedback,
   answer,
   status,
   setAnswer,
 }: {
+  canGenerateQuestions: boolean;
   question: string | null;
   feedback: string | null;
   answer: string | null;
@@ -131,7 +156,9 @@ function QuestionContainer({
             <ScrollArea className="h-full min-w-48 ">
               {status === "init" && question == null ? (
                 <p className="md:text-lg flex items-center justify-center h-full p-6">
-                  Get started by selecting a question difficulty above.
+                  {canGenerateQuestions
+                    ? "Get started by selecting a question difficulty above."
+                    : "You have reached your plan limit for generated questions."}
                 </p>
               ) : question ? (
                 <MarkdownRenderer className="p-6">{question}</MarkdownRenderer>
@@ -171,6 +198,7 @@ function QuestionContainer({
 
 function Controls({
   answerBtnDisabled,
+  canGenerateQuestions,
   isLoading,
   status,
   difficulty,
@@ -179,6 +207,7 @@ function Controls({
   reset,
 }: {
   answerBtnDisabled: boolean;
+  canGenerateQuestions: boolean;
   isLoading: boolean;
   status: Status;
   difficulty: QuestionDifficulty | null;
@@ -210,7 +239,7 @@ function Controls({
         questionDifficulties.map((questionDifficulty) => (
           <Button
             key={questionDifficulty}
-            disabled={isLoading}
+            disabled={isLoading || !canGenerateQuestions}
             onClick={() => {
               generateQuestion(questionDifficulty);
             }}

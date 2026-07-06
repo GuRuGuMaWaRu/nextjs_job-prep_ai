@@ -11,6 +11,17 @@ import {
   FILE_TYPE_NOT_SUPPORTED_MESSAGE,
 } from "@/core/data/constants";
 
+export const UNEXPECTED_ERROR_MESSAGE = "An error occurred. Please try again.";
+
+/**
+ * Shows a generic toast for unexpected infrastructure failures.
+ * Use when a catch block should not expose internal error messages or
+ * domain tokens handled by {@link errorToast}.
+ */
+export function unexpectedErrorToast() {
+  toast.error(UNEXPECTED_ERROR_MESSAGE);
+}
+
 export async function errorToast(message: string) {
   if (message === PLAN_LIMIT_MESSAGE) {
     const toastId = toast.error("You have reached your plan limit.", {

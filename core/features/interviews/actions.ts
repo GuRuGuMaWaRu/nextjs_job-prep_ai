@@ -205,15 +205,10 @@ export async function getInterviewByIdAction(id: string, userId: string) {
 
 /**
  * Check if user can create an interview
- * Used for UI permission checks
+ * Used for UI permission checks; errors bubble to callers/error boundaries
  */
 export async function canCreateInterviewAction(): Promise<boolean> {
-  try {
-    return await checkInterviewPermission();
-  } catch (error) {
-    console.error("Error checking interview creation permission:", error);
-    return false;
-  }
+  return await checkInterviewPermission();
 }
 
 /**

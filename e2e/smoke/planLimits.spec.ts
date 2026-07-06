@@ -39,7 +39,7 @@ authedTest.describe("Plan limits", () => {
 
   authedTest.use({ authEmailPrefix: "questions-plan-limit-" });
   authedTest(
-    "free user at questions limit is redirected to upgrade",
+    "free user at questions limit sees PlanLimitAlert and cannot generate",
     async ({ authedPage, session }) => {
       const jobInfo = await createTestJobInfo(session.userId);
 
@@ -51,14 +51,28 @@ authedTest.describe("Plan limits", () => {
 
       await Promise.all(insertPromises);
 
-      await Promise.all([
-        authedPage.goto(`/app/jobInfo/${jobInfo.id}/questions`),
-        authedPage.waitForURL("/app/upgrade"),
-      ]);
+      const questionsUrl = `/app/jobInfo/${jobInfo.id}/questions`;
+
+      await authedPage.goto(questionsUrl);
 
       await expect(
-        authedPage.getByRole("heading", { name: "Upgrade your plan" }),
+        authedPage.getByText(
+          "You have reached your plan limit for generated questions.",
+        ),
       ).toBeVisible();
+      await expect(authedPage.getByText("Plan Limit Reached")).toBeVisible();
+
+      const upgradeLink = authedPage.getByRole("link", {
+        name: "Upgrade",
+        exact: true,
+      });
+
+      await expect(upgradeLink).toBeVisible();
+      await expect(upgradeLink).toHaveAttribute("href", "/app/upgrade");
+      await expect(authedPage).toHaveURL(questionsUrl);
+      await expect(
+        authedPage.getByRole("button", { name: "Easy", exact: true }),
+      ).toBeDisabled();
     },
   );
 

@@ -1,12 +1,11 @@
 import { Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
+import { canGenerateQuestionsAction } from "@/core/features/questions/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { routes } from "@/core/data/routes";
 
 import { NewQuestionClientPage } from "./_NewQuestionClientPage";
 
@@ -31,11 +30,16 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
   const { userId, redirectToSignIn } = await getCurrentUserAction();
   if (userId == null) return redirectToSignIn();
 
-  if (!(await checkQuestionsPermission())) redirect(routes.upgrade);
+  const canGenerateQuestions = await canGenerateQuestionsAction();
 
   // getJobInfoAction handles auth internally and throws on error
   const jobInfo = await getJobInfoAction(jobInfoId);
   if (jobInfo == null) return notFound();
 
-  return <NewQuestionClientPage jobInfo={jobInfo} />;
+  return (
+    <NewQuestionClientPage
+      jobInfo={jobInfo}
+      canGenerateQuestions={canGenerateQuestions}
+    />
+  );
 }

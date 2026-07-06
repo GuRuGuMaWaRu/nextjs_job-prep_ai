@@ -18,7 +18,7 @@ import {
   RATE_LIMIT_MESSAGE,
 } from "@/core/data/constants";
 
-import { errorToast } from "./errorToast";
+import { errorToast, unexpectedErrorToast } from "./errorToast";
 
 const mockToast = jest.mocked(toast);
 
@@ -92,5 +92,19 @@ describe("errorToast", () => {
 
     expect(mockToast.error).toHaveBeenCalledWith(message);
     expect(mockToast.dismiss).not.toHaveBeenCalled();
+  });
+});
+
+describe("unexpectedErrorToast", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("shows the generic unexpected error message", () => {
+    unexpectedErrorToast();
+
+    expect(mockToast.error).toHaveBeenCalledWith(
+      "An error occurred. Please try again.",
+    );
   });
 });

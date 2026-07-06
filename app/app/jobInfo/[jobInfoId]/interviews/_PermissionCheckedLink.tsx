@@ -3,9 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
-import { errorToast } from "@/core/lib/errorToast";
+import { errorToast, unexpectedErrorToast } from "@/core/lib/errorToast";
 import { PLAN_LIMIT_MESSAGE } from "@/core/data/constants";
 import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 
@@ -40,7 +38,7 @@ export function PermissionCheckedLink({
       router.push(href);
     } catch (error) {
       console.error(error);
-      toast.error("An error occurred. Please try again.");
+      unexpectedErrorToast();
     } finally {
       setIsChecking(false);
     }

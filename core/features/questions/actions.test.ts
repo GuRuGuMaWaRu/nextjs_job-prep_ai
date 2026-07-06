@@ -4,11 +4,17 @@ jest.mock("@/core/features/questions/service", () => ({
   insertQuestionService: jest.fn(),
 }));
 
+jest.mock("@/core/features/questions/permissions", () => ({
+  checkQuestionsPermission: jest.fn(),
+}));
+
 import {
+  canGenerateQuestionsAction,
   getQuestionByIdAction,
   getQuestionsAction,
   insertQuestionAction,
 } from "@/core/features/questions/actions";
+import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import {
   getQuestionByIdService,
   getQuestionsService,
@@ -20,6 +26,7 @@ import { makeQuestion } from "@/core/test-utils/factories";
 const mockGetQuestionsService = jest.mocked(getQuestionsService);
 const mockInsertQuestionService = jest.mocked(insertQuestionService);
 const mockGetQuestionByIdService = jest.mocked(getQuestionByIdService);
+const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
 
 describe("question actions", () => {
   beforeEach(() => {
@@ -80,5 +87,30 @@ describe("question actions", () => {
     mockGetQuestionByIdService.mockRejectedValue(error);
 
     await expect(getQuestionByIdAction("question-1")).rejects.toBe(error);
+  });
+});
+
+describe("canGenerateQuestionsAction", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns true when question generation is allowed", async () => {
+    mockCheckQuestionsPermission.mockResolvedValueOnce(true);
+
+    await expect(canGenerateQuestionsAction()).resolves.toBe(true);
+  });
+
+  it("returns false when question generation is denied", async () => {
+    mockCheckQuestionsPermission.mockResolvedValueOnce(false);
+
+    await expect(canGenerateQuestionsAction()).resolves.toBe(false);
+  });
+
+  it("bubbles permission check failures", async () => {
+    const error = new Error("db down");
+    mockCheckQuestionsPermission.mockRejectedValueOnce(error);
+
+    await expect(canGenerateQuestionsAction()).rejects.toBe(error);
   });
 });
