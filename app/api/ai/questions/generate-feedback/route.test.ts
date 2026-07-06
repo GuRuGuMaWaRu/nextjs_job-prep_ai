@@ -17,10 +17,6 @@ jest.mock("@/core/features/auth/actions", () => ({
   getCurrentUserAction: jest.fn(),
 }));
 
-jest.mock("@/core/features/questions/permissions", () => ({
-  checkQuestionsPermission: jest.fn(),
-}));
-
 jest.mock("@/core/features/questions/actions", () => ({
   getQuestionByIdAction: jest.fn(),
 }));
@@ -33,10 +29,9 @@ import arcjet, { request } from "@arcjet/next";
 
 import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
+import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeCurrentUser, makeQuestion } from "@/core/test-utils/factories";
 
@@ -48,7 +43,6 @@ const mockProtect = jest.mocked(
 );
 const mockRequest = jest.mocked(request);
 const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
-const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
 const mockGetQuestionByIdAction = jest.mocked(getQuestionByIdAction);
 const mockGenerateAiQuestionFeedback = jest.mocked(generateAiQuestionFeedback);
 
@@ -116,7 +110,6 @@ describe("POST /api/ai/questions/generate-feedback", () => {
     mockGetCurrentUserAction.mockResolvedValue(
       makeCurrentUser({ userId: TEST_USER_ID }),
     );
-    mockCheckQuestionsPermission.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
 
@@ -146,21 +139,7 @@ describe("POST /api/ai/questions/generate-feedback", () => {
     );
 
     await expectTextResponse(response, 401, "You are not logged in");
-    expect(mockCheckQuestionsPermission).not.toHaveBeenCalled();
     expect(mockProtect).not.toHaveBeenCalled();
-    expect(mockGenerateAiQuestionFeedback).not.toHaveBeenCalled();
-  });
-
-  it("returns the plan limit response when feedback generation is not allowed", async () => {
-    mockCheckQuestionsPermission.mockResolvedValueOnce(false);
-
-    const response = await POST(
-      buildJsonRequest({ prompt: "Use caching.", questionId }),
-    );
-
-    await expectTextResponse(response, 403, PLAN_LIMIT_MESSAGE);
-    expect(mockProtect).not.toHaveBeenCalled();
-    expect(mockGetQuestionByIdAction).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestionFeedback).not.toHaveBeenCalled();
   });
 

@@ -1,15 +1,13 @@
 import { z } from "zod";
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
+import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import {
   BadRequestError,
   DatabaseError,
-  PermissionError,
   RateLimitError,
   UnauthorizedError,
 } from "@/core/dal/errors";
@@ -42,10 +40,6 @@ export async function POST(req: Request) {
 
     if (userId == null) {
       throw new UnauthorizedError("You are not logged in");
-    }
-
-    if (!(await checkQuestionsPermission())) {
-      throw new PermissionError(PLAN_LIMIT_MESSAGE);
     }
 
     const body = await req.json();
@@ -86,10 +80,6 @@ export async function POST(req: Request) {
 
     if (error instanceof UnauthorizedError) {
       return new Response("You are not logged in", { status: 401 });
-    }
-
-    if (error instanceof PermissionError) {
-      return new Response(PLAN_LIMIT_MESSAGE, { status: 403 });
     }
 
     if (error instanceof DatabaseError) {
