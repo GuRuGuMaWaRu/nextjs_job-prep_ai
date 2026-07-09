@@ -23,7 +23,8 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - Resume analysis endpoint that evaluates ATS fit and job alignment.
 - Upgrade and subscription management through Stripe Checkout + Billing Portal.
 - Cancel-at-period-end reminder banner for Pro users who canceled but retain access until billing period end.
-- API protection via Arcjet on API routes.
+- API protection via Arcjet on API routes (middleware shield/bot limits plus per-user token buckets on AI-heavy endpoints).
+- User-friendly error toasts for plan limits, rate limits, Hume unavailability, and resume upload validation (`core/lib/errorToast.tsx`).
 
 ## Architecture Overview
 
@@ -46,7 +47,8 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
-- `core/data/constants.ts` - shared permission identifiers and plan limits (`PERMISSIONS`, `PLAN_LIMITS`)
+- `core/data/constants.ts` - shared permission identifiers, plan limits (`PERMISSIONS`, `PLAN_LIMITS`), and domain error tokens (`PLAN_LIMIT_MESSAGE`, `RATE_LIMIT_MESSAGE`, etc.)
+- `core/lib/errorToast.tsx` - maps domain error tokens to user-facing Sonner toasts
 - `proxy.ts` - middleware for auth redirect rules and Arcjet API protection
 
 ### Layered feature pattern
@@ -64,7 +66,7 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 
 1. Requests pass through `proxy.ts`.
 2. `/api/stripe/webhooks` and `/api/cron/*` skip Arcjet and session auth (`/api/stripe/webhooks` uses Stripe signature verification; cron routes require `Bearer ${CRON_SECRET}` in the handler).
-3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers).
+3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
 4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
 5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
 6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUserAction()` / `getCurrentUserWithProfileAction()`.
@@ -215,6 +217,9 @@ Open [http://localhost:3000](http://localhost:3000).
 - `core/data/constants.ts`
   - `PERMISSIONS` identifiers (`interviews`, `questions`, `resume_analyses`)
   - `PLAN_LIMITS` for `free` and `pro` (free: 1 completed voice interview, 10 generated questions, and 3 resume analyses lifetime — total row counts, not reset monthly; pro: unlimited / `null` limits)
+  - Domain error tokens returned by server actions and API routes (`PLAN_LIMIT_MESSAGE`, `RATE_LIMIT_MESSAGE`, `HUME_UNAVAILABLE_MESSAGE`, `FILE_SIZE_TOO_LARGE_MESSAGE`, `FILE_TYPE_NOT_SUPPORTED_MESSAGE`)
+- `core/lib/errorToast.tsx`
+  - Converts domain error tokens into user-facing Sonner toasts (plan-limit toasts include an upgrade link)
 - `core/features/auth/permissions.ts`
   - `hasPermission()` — centralized plan-limit checks against current usage counts
   - `getUserPlan()` and `getUserSubscriptionInfo()` for upgrade and billing UI
@@ -284,7 +289,7 @@ The smoke specs live in `e2e/smoke/`:
 - `landingPage.spec.ts` — public landing page content and sign-up/sign-in navigation.
 - `auth.spec.ts` — sign-up, sign-in, logout, protected-route redirects, and auth error states (wrong password, duplicate email).
 - `userFlow.spec.ts` — signed-in flows: navbar upgrade link, job info create/edit/delete, empty form validation, job info section navigation (interviews, questions, resume), and the upgrade page.
-- `planLimits.spec.ts` — free-plan interview limit UI (`PlanLimitAlert` and upgrade link), questions limit redirect, and resume analysis limit redirect to the upgrade page.
+- `planLimits.spec.ts` — free-plan interview and questions limit UI (`PlanLimitAlert`, disabled question generation, upgrade link), and resume analysis limit redirect to the upgrade page.
 - `aiQuestions.spec.ts` — mocked AI question generation (route interception), difficulty selection, question display, answer input, and mocked answer feedback.
 - `aiResume.spec.ts` — mocked resume analysis upload and streamed results display.
 
@@ -341,6 +346,9 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 ## Development Notes
 
 - Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
+- AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
+- Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
+- Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
 - Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
 - Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`); free-plan card limits are derived from `PLAN_LIMITS` in `core/data/constants.ts`.
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
