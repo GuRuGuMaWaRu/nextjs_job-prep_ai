@@ -31,7 +31,7 @@ export default async function UpgradePage(props: UpgradePageProps) {
   const rawError = searchParams.error;
   const errorMessage = getErrorMessage(rawError);
 
-  await syncSubscriptionOnUpgradePageLoad();
+  const subscriptionChanged = await syncSubscriptionOnUpgradePageLoad();
 
   const success = await checkSubscriptionSuccess(searchParams);
 
@@ -41,6 +41,7 @@ export default async function UpgradePage(props: UpgradePageProps) {
         success={success}
         canceled={canceled}
         canceledSubscription={canceledSubscription}
+        subscriptionChanged={subscriptionChanged}
       />
       <div className="mb-4">
         <BackLink href={routes.app}>To Dashboard</BackLink>

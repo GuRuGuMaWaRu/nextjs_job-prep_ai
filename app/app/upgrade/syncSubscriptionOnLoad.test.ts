@@ -51,6 +51,10 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
         stripeSubscriptionId: "sub_test_1",
       }),
     );
+    mockReconcileUserStripeSubscription.mockResolvedValue({
+      kind: "ok",
+      updated: false,
+    });
   });
 
   afterEach(() => {
@@ -58,7 +62,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
   });
 
   it("reconciles the current user's subscription when present", async () => {
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockReconcileUserStripeSubscription).toHaveBeenCalledWith(
       stripe,
@@ -67,10 +71,19 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
+  it("returns true when reconciliation updates subscription state", async () => {
+    mockReconcileUserStripeSubscription.mockResolvedValue({
+      kind: "ok",
+      updated: true,
+    });
+
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(true);
+  });
+
   it("skips reconciliation when Stripe is not configured", async () => {
     mockIsStripeConfigured.mockReturnValue(false);
 
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockGetStripe).not.toHaveBeenCalled();
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
@@ -82,7 +95,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
   it("skips reconciliation when Stripe is configured but unavailable", async () => {
     mockGetStripe.mockReturnValue(null);
 
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
     expect(mockGetUserByIdDb).not.toHaveBeenCalled();
@@ -93,7 +106,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
   it("skips reconciliation when no user is signed in", async () => {
     mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
 
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockGetUserByIdDb).not.toHaveBeenCalled();
     expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
@@ -108,7 +121,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
       }),
     );
 
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockGetUserByIdDb).toHaveBeenCalledWith(TEST_USER_ID);
     expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
@@ -119,7 +132,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
     const error = new Error("session failed");
     mockGetCurrentUser.mockRejectedValue(error);
 
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockGetUserByIdDb).not.toHaveBeenCalled();
     expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
@@ -133,7 +146,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
     const error = new Error("database failed");
     mockGetUserByIdDb.mockRejectedValue(error);
 
-    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
+    await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBe(false);
 
     expect(mockReconcileUserStripeSubscription).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
