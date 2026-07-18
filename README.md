@@ -16,13 +16,13 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - Public landing page with marketing content and pricing.
 - Email/password authentication with database-backed sessions.
-- OAuth sign-in via Google, GitHub, and Discord (optional per provider).
+- OAuth sign-in via Google, GitHub, and Discord (optional per provider), with query-param error banners, verified-email enforcement, and a last-used-provider hint when multiple providers are configured.
 - Job info management (create, edit, delete, view).
 - Interview flows per job info, including generated feedback.
 - Technical question generation and answer feedback.
 - Resume analysis endpoint that evaluates ATS fit and job alignment.
 - Upgrade and subscription management through Stripe Checkout + Billing Portal.
-- Cancel-at-period-end reminder banner for Pro users who canceled but retain access until billing period end.
+- Cancel-at-period-end reminder banner for Pro users who canceled but retain access until billing period end (dismissable per subscription period via `localStorage`).
 - API protection via Arcjet on API routes (middleware shield/bot limits plus per-user token buckets on AI-heavy endpoints).
 - User-friendly error toasts for plan limits, rate limits, Hume unavailability, and resume upload validation (`core/lib/errorToast.tsx`).
 
@@ -43,20 +43,23 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - `app/` - routes, layouts, pages, and route handlers (`app/api/**/route.ts`)
 - `core/features/` - feature modules with layered structure
+- `core/features/billing/` - Stripe client helpers, plan card copy, webhook utilities
+- `core/features/users/` - user DAL and Stripe subscription reconciliation helpers
+- `core/components/` - shared UI (`PlanLimitAlert`, `ThemeToggle`, shadcn wrappers)
 - `core/dal/` - shared DAL error types, helpers, and `ActionResult` shaping
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
 - `core/data/constants.ts` - shared permission identifiers, plan limits (`PERMISSIONS`, `PLAN_LIMITS`), and domain error tokens (`PLAN_LIMIT_MESSAGE`, `RATE_LIMIT_MESSAGE`, etc.)
 - `core/lib/errorToast.tsx` - maps domain error tokens to user-facing Sonner toasts
-- `proxy.ts` - middleware for auth redirect rules and Arcjet API protection
+- `proxy.ts` - Next.js request middleware for auth redirect rules and Arcjet API protection (there is no `middleware.ts`; the middleware export lives in this file)
 
 ### Layered feature pattern
 
 Most domain features are structured as:
 
-1. `actions.ts` - input validation + user-facing error shaping
-2. `service.ts` - business logic + permission checks
+1. `actions.ts` - input validation, plan-limit and rate-limit checks, user-facing error shaping
+2. `service.ts` - business logic and resource ownership checks
 3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
 4. `db.ts` - direct Drizzle queries
 
@@ -348,6 +351,10 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
 - AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
 - Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
+- Interview feedback generation does not consume the interview plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when creating new voice interviews.
+- Plan-limit UX differs by feature: interviews and questions show inline `PlanLimitAlert` on the page; resume analysis redirects to `/app/upgrade` at the page boundary when the free limit is reached.
+- Opening `/app/upgrade` triggers lazy Stripe subscription reconciliation (`syncSubscriptionOnUpgradePageLoad`) in addition to webhooks and the daily cron backstop.
+- Middleware Arcjet denials (shield, bot detection, sliding window) return HTTP 403; per-user token bucket denials on AI routes and server actions return HTTP 429 with `RATE_LIMIT_MESSAGE`.
 - Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
 - Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
 - Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`); free-plan card limits are derived from `PLAN_LIMITS` in `core/data/constants.ts`.
