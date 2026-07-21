@@ -86,7 +86,7 @@ export default async function middleware(req: NextRequest) {
   }
 
   const isPublic = isPublicRoute(pathname);
-  const hasSessionToken = !!req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const hasSessionToken = req.cookies.has(SESSION_COOKIE_NAME);
 
   if (isPublic && !hasSessionToken) {
     return NextResponse.next();

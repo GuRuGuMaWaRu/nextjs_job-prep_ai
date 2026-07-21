@@ -13,6 +13,7 @@ import {
   getUserSessionsDb,
   validateSessionDb,
 } from "@/core/features/auth/db";
+import { setSessionCookie } from "./cookies";
 
 export type Session = {
   id: string;
@@ -142,4 +143,9 @@ export async function getUserSessions(userId: string): Promise<Session[]> {
     console.error("Database error getting user sessions:", error);
     throw new DatabaseError("Failed to get user sessions", error);
   }
+}
+
+export async function startUserSession(userId: string): Promise<void> {
+  const session = await createSession(userId);
+  await setSessionCookie(session.token, session.expiresAt);
 }

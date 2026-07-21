@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { createHash } from "node:crypto";
 
 /**
  * Generate a cryptographically secure random token
@@ -25,4 +26,8 @@ export function generateUserId(): string {
  */
 export function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export function hashSessionToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
