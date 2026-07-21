@@ -30,7 +30,7 @@ import {
 } from "@/core/features/auth/oauth/oauthErrorReturn";
 import { getUserAction } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
-import type { CurrentUser } from "@/core/features/auth/types";
+import type { AuthUser, CurrentUser } from "@/core/features/auth/types";
 import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 type AuthFieldErrors = {
@@ -252,6 +252,41 @@ const getCurrentUserCached = cache(
  */
 export async function getCurrentUserAction(): Promise<CurrentUser> {
   return getCurrentUserCached(false);
+}
+
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<{
+  user: AuthUser | null;
+}> {
+  try {
+    const session = await getSessionCached();
+
+    if (!session) {
+      return {
+        user: null,
+      };
+    }
+
+    const user = await getUserAction(session.userId);
+
+    return {
+      user: user ?? null,
+    };
+  } catch (error) {
+    console.error("getCurrentUser: session or user load failed:", error);
+    return {
+      user: null,
+    };
+  }
+});
+
+export async function requireCurrentUserAction(): Promise<AuthUser> {
+  const { user } = await getCurrentUser();
+
+  if (!user) {
+    return redirect(routes.signIn);
+  }
+
+  return user;
 }
 
 /**

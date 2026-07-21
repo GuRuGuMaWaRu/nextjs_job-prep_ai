@@ -1,10 +1,8 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { requireCurrentUserAction } from "@/core/features/auth/actions";
 import type { AuthUser } from "@/core/features/auth/types";
-import { routes } from "@/core/data/routes";
 
 import { CancelAtPeriodEndBanner } from "./_CancelAtPeriodEndBanner";
 import { Navbar } from "./_Navbar";
@@ -23,9 +21,7 @@ async function AuthenticatedAppShell({
 }: {
   children: React.ReactNode;
 }) {
-  const { userId, user } = await getCurrentUserWithProfileAction();
-
-  if (userId == null || user == null) return redirect(routes.landing);
+  const user = await requireCurrentUserAction();
 
   return (
     <>
