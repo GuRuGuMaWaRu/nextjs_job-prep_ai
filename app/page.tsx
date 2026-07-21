@@ -1,6 +1,4 @@
-import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Mic, FileText, Brain, Check } from "lucide-react";
 
@@ -13,7 +11,6 @@ import {
 } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PRODUCT_FEATURES, PUBLIC_PLANS } from "@/core/features/billing/plans";
 import { routes } from "@/core/data/routes";
 
@@ -44,31 +41,12 @@ function Navbar() {
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <Suspense
-            fallback={
-              <Button variant="outline" asChild>
-                <Link href={routes.signIn}>Sign In</Link>
-              </Button>
-            }
-          >
-            <SignInButton />
-          </Suspense>
+          <Button variant="outline" asChild>
+            <Link href={routes.signIn}>Sign In</Link>
+          </Button>
         </div>
       </div>
     </nav>
-  );
-}
-
-async function SignInButton() {
-  const { userId } = await getCurrentUserAction();
-  const isUserLoggedIn = userId != null;
-
-  if (isUserLoggedIn) return redirect(routes.app);
-
-  return (
-    <Button variant="outline" asChild>
-      <Link href={routes.signIn}>Sign In</Link>
-    </Button>
   );
 }
 
@@ -137,8 +115,7 @@ function PricingSection() {
             key={plan.name}
             className={`relative transition-all ${
               plan.popular && "border-primary shadow-lg"
-            }`}
-          >
+            }`}>
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="px-2 py-0.5 text-xs font-semibold">
@@ -196,8 +173,7 @@ function Footer() {
         </Link>
         <Link
           href="mailto:contact@offerpilot.example.com"
-          className="hover:text-foreground transition-colors"
-        >
+          className="hover:text-foreground transition-colors">
           Contact us
         </Link>
       </div>
