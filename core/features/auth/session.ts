@@ -1,4 +1,4 @@
-import { generateSecureToken } from "@/core/features/auth/tokens";
+import { generateSecureToken, hashToken } from "@/core/features/auth/tokens";
 import {
   SESSION_DURATION_MS,
   SESSION_REFRESH_THRESHOLD_MS,
@@ -25,15 +25,20 @@ export type Session = {
 /**
  * Create a new session for a user
  * @param userId - User ID to create session for
- * @returns Session object with token
+ * @returns Session object with token (unhashed for use in cookies)
  */
 export async function createSession(userId: string): Promise<Session> {
   const token = generateSecureToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+  const hashedToken = hashToken(token);
 
   try {
-    const [session] = await createSessionDb({ userId, token, expiresAt });
-    return session;
+    const [session] = await createSessionDb({
+      userId,
+      token: hashedToken,
+      expiresAt,
+    });
+    return { ...session, token };
   } catch (error) {
     console.error("Database error creating session:", error);
     throw new DatabaseError("Failed to create session", error);
@@ -47,7 +52,8 @@ export async function createSession(userId: string): Promise<Session> {
  */
 export async function validateSession(token: string): Promise<Session | null> {
   try {
-    const session = await validateSessionDb(token);
+    const hashedToken = hashToken(token);
+    const session = await validateSessionDb(hashedToken);
 
     if (!session) {
       return null;
@@ -97,7 +103,8 @@ export async function extendSessionIfNeeded(
  */
 export async function deleteSession(token: string): Promise<void> {
   try {
-    await deleteSessionDb(token);
+    const hashedToken = hashToken(token);
+    await deleteSessionDb(hashedToken);
   } catch (error) {
     console.error("Database error deleting session:", error);
     throw new DatabaseError("Failed to delete session", error);
