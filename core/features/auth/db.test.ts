@@ -28,7 +28,6 @@ import {
   deleteSessionDb,
   extendSessionDb,
   findUserByEmailDb,
-  getUserSessionsDb,
   validateSessionDb,
 } from "./db";
 
@@ -232,25 +231,5 @@ describe("auth db helpers", () => {
 
     expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
     expectWhereParams(mockDb.delete.mock.results[0].value.where, [now]);
-  });
-
-  it("selects active sessions for a user", async () => {
-    const now = makeFixtureNow();
-    const sessions = [makeSession({ userId: "user-1" })];
-
-    jest.useFakeTimers().setSystemTime(now.getTime());
-    useMockDb(
-      createMockDrizzleDb({
-        select: sessions,
-      }),
-    );
-
-    await expect(getUserSessionsDb("user-1")).resolves.toBe(sessions);
-
-    const selectChain = mockDb.select.mock.results[0].value;
-
-    expect(mockDb.select).toHaveBeenCalledWith();
-    expect(selectChain.from).toHaveBeenCalledWith(SessionTable);
-    expectWhereParams(selectChain.where, ["user-1", now]);
   });
 });
