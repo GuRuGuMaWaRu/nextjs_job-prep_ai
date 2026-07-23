@@ -27,18 +27,26 @@ export async function createSessionDb(sessionData: {
   token: string;
   expiresAt: Date;
 }) {
-  return await db.insert(SessionTable).values(sessionData).returning();
+  return await db
+    .insert(SessionTable)
+    .values(sessionData)
+    .returning({ expiresAt: SessionTable.expiresAt });
 }
 
 export async function validateSessionDb(token: string) {
-  return (
-    (await db.query.SessionTable.findFirst({
-      where: and(
-        eq(SessionTable.token, token),
-        gt(SessionTable.expiresAt, new Date()),
-      ),
-    })) ?? null
-  );
+  const session = await db.query.SessionTable.findFirst({
+    where: and(
+      eq(SessionTable.token, token),
+      gt(SessionTable.expiresAt, new Date()),
+    ),
+    columns: {
+      id: true,
+      userId: true,
+      expiresAt: true,
+    },
+  });
+
+  return session ?? null;
 }
 
 export async function extendSessionDb(sessionId: string, expiresAt: Date) {
@@ -46,7 +54,11 @@ export async function extendSessionDb(sessionId: string, expiresAt: Date) {
     .update(SessionTable)
     .set({ expiresAt })
     .where(eq(SessionTable.id, sessionId))
-    .returning();
+    .returning({
+      id: SessionTable.id,
+      userId: SessionTable.userId,
+      expiresAt: SessionTable.expiresAt,
+    });
 }
 
 export async function deleteSessionDb(token: string) {

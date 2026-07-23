@@ -115,12 +115,12 @@ describe("session helpers", () => {
     });
 
     it("returns session object if session is valid", async () => {
-      const testSession = makeSession({
+      const testSession = {
+        id: "session-1",
         userId: TEST_USER_ID,
-        token: testHashedToken,
-        expiresAt: new Date(), // "2026-05-01"
-      });
-      mockValidateSessionDb.mockResolvedValue(testSession);
+        expiresAt: new Date("2026-05-01"), // "2026-05-01"
+      };
+      mockValidateSessionDb.mockResolvedValueOnce(testSession);
 
       const result = await validateSession(testToken);
 
@@ -130,7 +130,7 @@ describe("session helpers", () => {
     });
 
     it("returns null if session is not valid", async () => {
-      mockValidateSessionDb.mockResolvedValue(null);
+      mockValidateSessionDb.mockResolvedValueOnce(null);
 
       const result = await validateSession(testToken);
 
@@ -160,17 +160,18 @@ describe("session helpers", () => {
     });
 
     it("extends session if it is close to expiring", async () => {
-      const testSession = makeSession({
+      const testSession = {
+        id: "session-1",
         userId: TEST_USER_ID,
-        token: testHashedToken,
         expiresAt: new Date("2026-05-10"), // expires in just 5 days; session will be extended because the minimum is SESSION_REFRESH_THRESHOLD_MS (7 days)
-      });
+      };
       const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
       mockValidateSessionDb.mockResolvedValueOnce(testSession);
       mockExtendSessionDb.mockResolvedValueOnce([
         {
-          ...testSession,
+          id: testSession.id,
+          userId: testSession.userId,
           expiresAt: newExpiresAt,
         },
       ]);
@@ -190,11 +191,12 @@ describe("session helpers", () => {
     });
 
     it("returns unchanged session if extension is not needed", async () => {
-      const testSession = makeSession({
+      const testSession = {
+        id: "session-1",
         userId: TEST_USER_ID,
         token: testHashedToken,
         expiresAt: new Date("2026-06-15"), // not hitting extension path
-      });
+      };
 
       mockValidateSessionDb.mockResolvedValueOnce(testSession);
 
@@ -215,11 +217,11 @@ describe("session helpers", () => {
 
     it("throws DatabaseError in case of error", async () => {
       const dbError = new Error("update failed");
-      const testSession = makeSession({
+      const testSession = {
+        id: "session-1",
         userId: TEST_USER_ID,
-        token: testHashedToken,
         expiresAt: new Date(), // need to hit extension path to test this error
-      });
+      };
 
       mockValidateSessionDb.mockResolvedValueOnce(testSession);
       mockExtendSessionDb.mockRejectedValueOnce(dbError);

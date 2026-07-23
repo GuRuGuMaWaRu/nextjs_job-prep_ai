@@ -10,7 +10,6 @@ import {
   deleteExpiredSessionsDb,
   deleteSessionDb,
   extendSessionDb,
-  getUserSessionsDb,
   validateSessionDb,
 } from "@/core/features/auth/db";
 
@@ -22,12 +21,16 @@ export type Session = {
   createdAt: Date;
 };
 
+export type NewSession = Pick<Session, "token" | "expiresAt">;
+
+export type ActiveSession = Pick<Session, "id" | "userId" | "expiresAt">;
+
 /**
  * Create a new session for a user
  * @param userId - User ID to create session for
  * @returns Session object with token (unhashed for use in cookies)
  */
-export async function createSession(userId: string): Promise<Session> {
+export async function createSession(userId: string): Promise<NewSession> {
   const token = generateSecureToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
   const hashedToken = hashToken(token);
@@ -50,7 +53,9 @@ export async function createSession(userId: string): Promise<Session> {
  * @param token - Session token from cookie
  * @returns Session object if valid, null otherwise
  */
-export async function validateSession(token: string): Promise<Session | null> {
+export async function validateSession(
+  token: string,
+): Promise<ActiveSession | null> {
   try {
     const hashedToken = hashToken(token);
     const session = await validateSessionDb(hashedToken);
@@ -73,7 +78,7 @@ export async function validateSession(token: string): Promise<Session | null> {
  */
 export async function extendSessionIfNeeded(
   token: string,
-): Promise<Session | null> {
+): Promise<ActiveSession | null> {
   const session = await validateSession(token);
 
   if (!session) {
