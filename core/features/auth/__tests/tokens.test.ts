@@ -16,7 +16,7 @@ jest.mock("crypto", () => ({
 
 import crypto from "crypto";
 
-import { generateSecureToken, generateUserId, hashToken } from "./tokens";
+import { generateSecureToken, generateUserId, hashToken } from "../tokens";
 
 const mockCrypto = jest.mocked(crypto);
 

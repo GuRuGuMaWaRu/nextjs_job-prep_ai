@@ -29,7 +29,7 @@ import {
   extendSessionDb,
   findUserByEmailDb,
   validateSessionDb,
-} from "./db";
+} from "../db";
 
 const mockDb = db as unknown as MockDrizzleDb;
 
@@ -174,6 +174,11 @@ describe("auth db helpers", () => {
 
     expect(sessionQuery.findFirst).toHaveBeenCalledWith({
       where: expect.any(Object),
+      columns: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+      },
     });
     expectWhereParams(sessionQuery.findFirst, ["session-token", now]);
   });

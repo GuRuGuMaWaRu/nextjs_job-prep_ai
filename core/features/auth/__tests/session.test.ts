@@ -33,7 +33,7 @@ import {
   deleteSession,
   deleteAllUserSessions,
   deleteExpiredSessions,
-} from "./session";
+} from "../session";
 
 const mockCreateSessionDb = jest.mocked(createSessionDb);
 const mockDeleteAllUserSessionsDb = jest.mocked(deleteAllUserSessionsDb);

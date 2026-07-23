@@ -8,7 +8,7 @@ import {
   normalizePassword,
   validatePassword,
   verifyPassword,
-} from "./password";
+} from "../password";
 
 describe("normalizePassword", () => {
   it("normalizes canonically equivalent Unicode passwords to NFC", () => {

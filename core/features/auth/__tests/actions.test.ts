@@ -119,16 +119,16 @@ import {
   deleteSessionCookie,
   getSessionToken,
   setSessionCookie,
-} from "./cookies";
-import { createUserDb, findUserByEmailDb } from "./db";
-import { hashPassword, verifyPassword } from "./password";
+} from "../cookies";
+import { createUserDb, findUserByEmailDb } from "../db";
+import { hashPassword, verifyPassword } from "../password";
 import {
   createSession,
   deleteSession,
   extendSessionIfNeeded,
   validateSession,
-} from "./session";
-import { generateUserId } from "./tokens";
+} from "../session";
+import { generateUserId } from "../tokens";
 import { getUserAction } from "@/core/features/users/actions";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeSession } from "@/core/test-utils/factories/session";
@@ -142,7 +142,7 @@ import {
   signOutAction,
   signUpAction,
   validateSessionAction,
-} from "./actions";
+} from "../actions";
 
 const mockRedirect = jest.mocked(redirect);
 const mockRevalidatePath = jest.mocked(revalidatePath);

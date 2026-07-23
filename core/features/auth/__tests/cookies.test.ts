@@ -12,7 +12,7 @@ import {
   setSessionCookie,
   getSessionToken,
   deleteSessionCookie,
-} from "./cookies";
+} from "../cookies";
 
 const mockCookies = jest.mocked(cookies);
 
