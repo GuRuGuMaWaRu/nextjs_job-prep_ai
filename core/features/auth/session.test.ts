@@ -19,7 +19,6 @@ import {
   deleteExpiredSessionsDb,
   deleteSessionDb,
   extendSessionDb,
-  getUserSessionsDb,
   validateSessionDb,
 } from "@/core/features/auth/db";
 import { generateSecureToken, hashToken } from "@/core/features/auth/tokens";
@@ -35,7 +34,6 @@ import {
   deleteSession,
   deleteAllUserSessions,
   deleteExpiredSessions,
-  getUserSessions,
 } from "./session";
 
 const mockCreateSessionDb = jest.mocked(createSessionDb);
@@ -43,7 +41,6 @@ const mockDeleteAllUserSessionsDb = jest.mocked(deleteAllUserSessionsDb);
 const mockDeleteExpiredSessionsDb = jest.mocked(deleteExpiredSessionsDb);
 const mockDeleteSessionDb = jest.mocked(deleteSessionDb);
 const mockExtendSessionDb = jest.mocked(extendSessionDb);
-const mockGetUserSessionsDb = jest.mocked(getUserSessionsDb);
 const mockValidateSessionDb = jest.mocked(validateSessionDb);
 const mockGenerateSecureToken = jest.mocked(generateSecureToken);
 const mockHashToken = jest.mocked(hashToken);
@@ -310,47 +307,6 @@ describe("session helpers", () => {
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Database error deleting expired sessions:",
-        dbError,
-      );
-    });
-  });
-
-  describe("getUserSessions", () => {
-    it("returns sessions", async () => {
-      const sessions = [
-        makeSession({ id: "abc_1" }),
-        makeSession({ id: "abc_2" }),
-      ];
-
-      mockGetUserSessionsDb.mockResolvedValueOnce(sessions);
-
-      const result = await getUserSessions(TEST_USER_ID);
-
-      expect(mockGetUserSessionsDb).toHaveBeenCalledTimes(1);
-      expect(mockGetUserSessionsDb).toHaveBeenCalledWith(TEST_USER_ID);
-      expect(result).toEqual(sessions);
-    });
-
-    it("returns empty array if there are no sessions", async () => {
-      mockGetUserSessionsDb.mockResolvedValueOnce([]);
-
-      const result = await getUserSessions(TEST_USER_ID);
-
-      expect(mockGetUserSessionsDb).toHaveBeenCalledTimes(1);
-      expect(mockGetUserSessionsDb).toHaveBeenCalledWith(TEST_USER_ID);
-      expect(result).toEqual([]);
-    });
-
-    it("throws DatabaseError in case of error", async () => {
-      const dbError = new Error("select failed");
-
-      mockGetUserSessionsDb.mockRejectedValueOnce(dbError);
-
-      await expect(getUserSessions(TEST_USER_ID)).rejects.toMatchObject({
-        message: "Failed to get user sessions",
-      });
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Database error getting user sessions:",
         dbError,
       );
     });

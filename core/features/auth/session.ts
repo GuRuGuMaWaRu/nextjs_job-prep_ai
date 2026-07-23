@@ -136,17 +136,3 @@ export async function deleteExpiredSessions(): Promise<void> {
     throw new DatabaseError("Failed to delete expired sessions", error);
   }
 }
-
-/**
- * Get all active sessions for a user
- * @param userId - User ID
- * @returns Array of active sessions
- */
-export async function getUserSessions(userId: string): Promise<Session[]> {
-  try {
-    return await getUserSessionsDb(userId);
-  } catch (error) {
-    console.error("Database error getting user sessions:", error);
-    throw new DatabaseError("Failed to get user sessions", error);
-  }
-}

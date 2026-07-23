@@ -62,15 +62,3 @@ export async function deleteExpiredSessionsDb() {
     .delete(SessionTable)
     .where(lt(SessionTable.expiresAt, new Date()));
 }
-
-export async function getUserSessionsDb(userId: string) {
-  return await db
-    .select()
-    .from(SessionTable)
-    .where(
-      and(
-        eq(SessionTable.userId, userId),
-        gt(SessionTable.expiresAt, new Date()),
-      ),
-    );
-}
