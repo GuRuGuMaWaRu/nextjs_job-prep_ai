@@ -4,7 +4,6 @@ jest.mock("@/core/features/auth/db", () => ({
   deleteExpiredSessionsDb: jest.fn(),
   deleteSessionDb: jest.fn(),
   extendSessionDb: jest.fn(),
-  getUserSessionsDb: jest.fn(),
   validateSessionDb: jest.fn(),
 }));
 
