@@ -204,16 +204,20 @@ export async function signOutAction(): Promise<void> {
   redirect(routes.landing);
 }
 
-const getSessionCached = cache(async () => {
+const getSession = cache(async () => {
   const token = await getSessionToken();
-  if (!token) return null;
+
+  if (!token) {
+    return null;
+  }
+
   return extendSessionIfNeeded(token);
 });
 
 const getCurrentUserCached = cache(
   async (allData: boolean): Promise<CurrentUser> => {
     try {
-      const session = await getSessionCached();
+      const session = await getSession();
 
       if (!session) {
         return {
@@ -258,24 +262,18 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<{
   user: AuthUser | null;
 }> {
   try {
-    const session = await getSessionCached();
+    const session = await getSession();
 
     if (!session) {
-      return {
-        user: null,
-      };
+      return { user: null };
     }
 
     const user = await getUserAction(session.userId);
 
-    return {
-      user: user ?? null,
-    };
+    return { user: user ?? null };
   } catch (error) {
     console.error("getCurrentUser: session or user load failed:", error);
-    return {
-      user: null,
-    };
+    return { user: null };
   }
 });
 

@@ -120,6 +120,7 @@ export async function deleteSession(token: string): Promise<void> {
  * Delete all sessions for a user (logout from all devices)
  * @param userId - User ID to delete sessions for
  */
+//** TODO: currently not used anywhere */
 export async function deleteAllUserSessions(userId: string): Promise<void> {
   try {
     await deleteAllUserSessionsDb(userId);
@@ -133,6 +134,7 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
  * Delete expired sessions (cleanup job)
  * Should be run periodically
  */
+//** TODO: currently not used anywhere */
 export async function deleteExpiredSessions(): Promise<void> {
   try {
     await deleteExpiredSessionsDb();

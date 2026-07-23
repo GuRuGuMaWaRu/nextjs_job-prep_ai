@@ -14,6 +14,7 @@ import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
   const { userId, user } = await getCurrentUserWithProfileAction();
+
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers

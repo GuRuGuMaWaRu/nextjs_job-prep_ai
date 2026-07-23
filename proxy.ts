@@ -5,11 +5,9 @@ import { env } from "@/core/data/env/server";
 import { SESSION_COOKIE_NAME } from "@/core/features/auth/constants";
 import { routes } from "@/core/data/routes";
 
-//** Public routes that don't require authentication
 const EXACT_PUBLIC_ROUTES = ["/"];
 const PREFIX_PUBLIC_ROUTES = ["/sign-in", "/sign-up", "/api/oauth"];
 
-//** Check if route is public
 function isPublicRoute(pathname: string): boolean {
   if (EXACT_PUBLIC_ROUTES.includes(pathname)) {
     return true;
