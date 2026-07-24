@@ -1,5 +1,11 @@
-import { assertOAuthEmailLinkAllowed } from "@/core/features/auth/oauth/oauthLinkPolicy";
-import { OAuthUnverifiedEmailError } from "@/core/features/auth/oauth/errors";
+import {
+  assertLocalAccountVerifiedForEmailLink,
+  assertOAuthEmailLinkAllowed,
+} from "@/core/features/auth/oauth/oauthLinkPolicy";
+import {
+  OAuthUnverifiedAccountLinkError,
+  OAuthUnverifiedEmailError,
+} from "@/core/features/auth/oauth/errors";
 
 describe("assertOAuthEmailLinkAllowed", () => {
   const provider = "discord" as const;
@@ -21,6 +27,25 @@ describe("assertOAuthEmailLinkAllowed", () => {
         {
           emailVerified: true,
         },
+        provider,
+      ),
+    ).not.toThrow();
+  });
+});
+
+describe("assertLocalAccountVerifiedForEmailLink", () => {
+  const provider = "google" as const;
+
+  it("throws when the local account email is unverified", () => {
+    expect(() =>
+      assertLocalAccountVerifiedForEmailLink({ emailVerified: null }, provider),
+    ).toThrow(OAuthUnverifiedAccountLinkError);
+  });
+
+  it("allows linking when the local account email is already verified", () => {
+    expect(() =>
+      assertLocalAccountVerifiedForEmailLink(
+        { emailVerified: new Date(0) },
         provider,
       ),
     ).not.toThrow();

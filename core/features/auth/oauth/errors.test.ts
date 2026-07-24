@@ -8,6 +8,7 @@ import {
   OAuthMissingEmailError,
   OAuthNoVerifiedEmailError,
   OAuthNotConfiguredError,
+  OAuthUnverifiedAccountLinkError,
   OAuthUnverifiedEmailError,
   OAuthUserInfoHttpError,
 } from "@/core/features/auth/oauth/errors";
@@ -127,6 +128,12 @@ describe("OAuth errors", () => {
       name: "OAuthUnverifiedEmailError",
       message: "OAuth email is not verified by provider: google",
       provider: "google",
+    });
+    expect(new OAuthUnverifiedAccountLinkError("discord")).toMatchObject({
+      name: "OAuthUnverifiedAccountLinkError",
+      message:
+        "Cannot link OAuth account to an unverified local email account: discord",
+      provider: "discord",
     });
     expect(new OAuthNoVerifiedEmailError("github")).toMatchObject({
       name: "OAuthNoVerifiedEmailError",

@@ -117,6 +117,22 @@ class OAuthUnverifiedEmailError extends Error {
 }
 
 /**
+ * Thrown when email-based OAuth linking targets a local account that never verified
+ * ownership of that email (e.g. password signup without verification).
+ */
+class OAuthUnverifiedAccountLinkError extends Error {
+  readonly provider: OAuthProvider;
+
+  constructor(provider: OAuthProvider) {
+    super(
+      `Cannot link OAuth account to an unverified local email account: ${provider}`,
+    );
+    this.name = "OAuthUnverifiedAccountLinkError";
+    this.provider = provider;
+  }
+}
+
+/**
  * Thrown when the provider exposes no verified email (e.g. GitHub verified list empty).
  */
 class OAuthNoVerifiedEmailError extends Error {
@@ -138,5 +154,6 @@ export {
   InvalidCodeVerifierError,
   OAuthMissingEmailError,
   OAuthUnverifiedEmailError,
+  OAuthUnverifiedAccountLinkError,
   OAuthNoVerifiedEmailError,
 };

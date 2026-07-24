@@ -39,6 +39,18 @@ describe("OAuthQueryErrorBanner", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the unverified local account conflict message", () => {
+    mockOAuthError("oauth_email_in_use");
+
+    render(<OAuthQueryErrorBanner />);
+
+    expect(
+      screen.getByText(
+        "An account with this email already exists. Sign in with your email and password instead.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("prefers a form error over an OAuth query error", () => {
     mockOAuthError("oauth_failed");
 
