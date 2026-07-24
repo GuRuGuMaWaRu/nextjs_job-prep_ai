@@ -1,4 +1,6 @@
 import { requireUser } from "@/core/dal/helpers";
+import { NotFoundError } from "@/core/dal/errors";
+import { getJobInfoDal } from "@/core/features/jobInfos/dal";
 import {
   getQuestionByIdDal,
   getQuestionsDal,
@@ -9,14 +11,28 @@ import { QuestionDifficulty } from "@/core/drizzle/schema";
 /**
  * Service Layer for Questions
  * Handles: Business logic, permissions
- * Throws: UnauthorizedError, DatabaseError
+ * Throws: UnauthorizedError, NotFoundError, DatabaseError
  */
 
 /**
- * Get all questions for a job info
- * No auth required here - questions are accessible if you have the jobInfoId
+ * Ensure the signed-in user owns the job info before reading or writing questions.
+ */
+async function requireOwnedJobInfo(jobInfoId: string) {
+  const userId = await requireUser();
+  const jobInfo = await getJobInfoDal(jobInfoId, userId);
+
+  if (jobInfo == null) {
+    throw new NotFoundError("Job info not found or access denied");
+  }
+
+  return { userId, jobInfo };
+}
+
+/**
+ * Get all questions for a job info owned by the current user.
  */
 export async function getQuestionsService(jobInfoId: string) {
+  await requireOwnedJobInfo(jobInfoId);
   return await getQuestionsDal(jobInfoId);
 }
 
@@ -30,14 +46,15 @@ export async function getQuestionByIdService(questionId: string) {
 }
 
 /**
- * Insert a new question
- * No auth required here - called from AI generation which handles its own auth
+ * Insert a new question for a job info owned by the current user.
  */
 export async function insertQuestionService(
   question: string,
   jobInfoId: string,
   difficulty: QuestionDifficulty,
 ) {
+  await requireOwnedJobInfo(jobInfoId);
+
   return await insertQuestionDal({
     text: question,
     jobInfoId,
