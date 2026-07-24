@@ -11,6 +11,7 @@ import { getOAuthConfig } from "@/core/features/auth/oauth/config";
 import {
   OAuthMissingEmailError,
   OAuthNoVerifiedEmailError,
+  OAuthUnverifiedAccountLinkError,
   OAuthUnverifiedEmailError,
 } from "@/core/features/auth/oauth/errors";
 import {
@@ -68,6 +69,10 @@ export async function GET(
 
     if (error instanceof OAuthUnverifiedEmailError) {
       return await redirectWithOAuthError("oauth_unverified_email");
+    }
+
+    if (error instanceof OAuthUnverifiedAccountLinkError) {
+      return await redirectWithOAuthError("oauth_email_in_use");
     }
 
     if (error instanceof OAuthNoVerifiedEmailError) {

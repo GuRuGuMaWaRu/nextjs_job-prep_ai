@@ -8,6 +8,8 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
     "Sign-in did not return an email. Add or verify an email with that provider, or sign in another way.",
   oauth_unverified_email:
     "That sign-in email is not verified with the provider yet. Verify it in your provider account, then try again—or sign in with your existing method.",
+  oauth_email_in_use:
+    "An account with this email already exists. Sign in with your email and password instead.",
   oauth_no_verified_email:
     "No verified email was found for that account. Verify an email with the provider, or sign in another way.",
 };

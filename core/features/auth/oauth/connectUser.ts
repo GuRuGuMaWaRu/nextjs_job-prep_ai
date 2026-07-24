@@ -6,27 +6,10 @@ import { generateUserId } from "@/core/features/auth/tokens";
 import { db } from "@/core/drizzle/db";
 
 import type { ResolvedOAuthUser } from "./base";
-import { assertOAuthEmailLinkAllowed } from "./oauthLinkPolicy";
-
-type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-type UserRowEmailState = { id: string; emailVerified: Date | null };
-
-/**
- * When OAuth reports verified email but the DB row is still unverified, persist verification.
- */
-async function syncEmailVerifiedFromOAuthIfNeeded(
-  tx: DbTransaction,
-  userRow: UserRowEmailState,
-  oAuthUser: ResolvedOAuthUser,
-) {
-  if (oAuthUser.emailVerified && userRow.emailVerified == null) {
-    await tx
-      .update(UserTable)
-      .set({ emailVerified: new Date() })
-      .where(eq(UserTable.id, userRow.id));
-  }
-}
+import {
+  assertLocalAccountVerifiedForEmailLink,
+  assertOAuthEmailLinkAllowed,
+} from "./oauthLinkPolicy";
 
 /**
  * Links an OAuth identity to a user: reuse existing OAuth mapping, match by verified email, or create a user.
@@ -91,15 +74,14 @@ export function connectUserToAccount(
         }
 
         assertOAuthEmailLinkAllowed(oAuthUser, provider);
+        assertLocalAccountVerifiedForEmailLink(afterConflict, provider);
 
         user = { id: afterConflict.id };
-
-        await syncEmailVerifiedFromOAuthIfNeeded(tx, afterConflict, oAuthUser);
       }
     } else {
-      user = { id: existingByEmail.id };
+      assertLocalAccountVerifiedForEmailLink(existingByEmail, provider);
 
-      await syncEmailVerifiedFromOAuthIfNeeded(tx, existingByEmail, oAuthUser);
+      user = { id: existingByEmail.id };
     }
 
     await tx

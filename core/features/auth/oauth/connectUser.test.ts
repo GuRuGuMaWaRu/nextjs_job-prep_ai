@@ -17,18 +17,21 @@ import {
 } from "@core/test-utils/mocks/db";
 
 import { connectUserToAccount } from "@/core/features/auth/oauth/connectUser";
-import { OAuthUnverifiedEmailError } from "@/core/features/auth/oauth/errors";
+import {
+  OAuthUnverifiedAccountLinkError,
+  OAuthUnverifiedEmailError,
+} from "@/core/features/auth/oauth/errors";
 
 const mockTransaction = db.transaction as jest.MockedFunction<
   typeof db.transaction
 >;
 
-/** Shared tx shape: no OAuth link, email first null then row after insert conflict. */
-function createMockTxForInsertConflictRace() {
+/** Shared tx shape: no OAuth link, email first null then verified row after insert conflict. */
+function createMockTxForInsertConflictRace(emailVerified: Date | null) {
   const userQuery = createMockDrizzleTableQuery();
   userQuery.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
     id: "winner-id",
-    emailVerified: null,
+    emailVerified,
   });
 
   return createMockDrizzleDb({
@@ -80,11 +83,8 @@ describe("connectUserToAccount", () => {
     expect(mockTransaction).toHaveBeenCalledTimes(1);
   });
 
-  it("reuses user by email and updates emailVerified when needed", async () => {
-    const updateChain = createDrizzleMutationChainMock();
-    const updateMock = jest.fn().mockReturnValue({
-      set: updateChain.set,
-    });
+  it("rejects email-based linking when the local account is unverified", async () => {
+    const updateMock = jest.fn();
 
     mockTransaction.mockImplementation(async (fn) => {
       const tx = createMockDrizzleDb({
@@ -117,18 +117,12 @@ describe("connectUserToAccount", () => {
         },
         "google",
       ),
-    ).resolves.toEqual({ id: "by-email" });
+    ).rejects.toBeInstanceOf(OAuthUnverifiedAccountLinkError);
 
-    expect(mockTransaction).toHaveBeenCalledTimes(1);
-    expect(updateMock).toHaveBeenCalledWith(UserTable);
-    expect(updateChain.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        emailVerified: expect.any(Date),
-      }),
-    );
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
-  it("reuses user by email without updating when already verified", async () => {
+  it("reuses user by email when already verified", async () => {
     const verifiedAt = new Date(0);
     const updateMock = jest.fn();
 
@@ -275,9 +269,9 @@ describe("connectUserToAccount", () => {
     expect(tx.insert).not.toHaveBeenCalled();
   });
 
-  it("re-queries by email after insert conflict and completes sign-in", async () => {
+  it("re-queries by email after insert conflict and completes sign-in when verified", async () => {
     mockTransaction.mockImplementation(async (fn) => {
-      const tx = createMockTxForInsertConflictRace();
+      const tx = createMockTxForInsertConflictRace(new Date(0));
       return fn(tx as never);
     });
 
@@ -292,6 +286,25 @@ describe("connectUserToAccount", () => {
         "google",
       ),
     ).resolves.toEqual({ id: "winner-id" });
+  });
+
+  it("rejects insert-conflict linking when the conflicting account is unverified", async () => {
+    mockTransaction.mockImplementation(async (fn) => {
+      const tx = createMockTxForInsertConflictRace(null);
+      return fn(tx as never);
+    });
+
+    await expect(
+      connectUserToAccount(
+        {
+          id: "oauth-sub",
+          email: "race@b.com",
+          name: "R",
+          emailVerified: true,
+        },
+        "google",
+      ),
+    ).rejects.toBeInstanceOf(OAuthUnverifiedAccountLinkError);
   });
 
   it("throws when insert conflict re-query still finds no user row", async () => {

@@ -54,6 +54,7 @@ import { getOAuthConfig } from "@/core/features/auth/oauth/config";
 import {
   OAuthMissingEmailError,
   OAuthNoVerifiedEmailError,
+  OAuthUnverifiedAccountLinkError,
   OAuthUnverifiedEmailError,
 } from "@/core/features/auth/oauth/errors";
 import {
@@ -219,6 +220,7 @@ describe("GET /api/oauth/[provider]", () => {
   it.each([
     ["oauth_missing_email", new OAuthMissingEmailError(PROVIDER)],
     ["oauth_unverified_email", new OAuthUnverifiedEmailError(PROVIDER)],
+    ["oauth_email_in_use", new OAuthUnverifiedAccountLinkError(PROVIDER)],
     ["oauth_no_verified_email", new OAuthNoVerifiedEmailError(PROVIDER)],
   ])("redirects with %s for known OAuth email errors", async (key, error) => {
     mockFetchUser.mockRejectedValueOnce(error);
