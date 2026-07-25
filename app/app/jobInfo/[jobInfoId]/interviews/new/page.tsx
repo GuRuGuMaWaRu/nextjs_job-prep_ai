@@ -5,6 +5,7 @@ import { fetchAccessToken } from "hume";
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { BackLink } from "@/core/components/BackLink";
 import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { toClientSafeUserIdentity } from "@/core/features/auth/clientSafeUser";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { canCreateInterviewAction } from "@/core/features/interviews/actions";
 import { env } from "@/core/data/env/server";
@@ -53,7 +54,11 @@ async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
 
   return (
     <InterviewVoiceBoundary>
-      <StartCall accessToken={accessToken} jobInfo={jobInfo} user={user} />
+      <StartCall
+        accessToken={accessToken}
+        jobInfo={jobInfo}
+        user={toClientSafeUserIdentity(user)}
+      />
     </InterviewVoiceBoundary>
   );
 }

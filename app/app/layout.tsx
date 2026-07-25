@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { toClientSafeUser } from "@/core/features/auth/clientSafeUser";
 import type { AuthUser } from "@/core/features/auth/types";
 import { routes } from "@/core/data/routes";
 
@@ -29,7 +30,7 @@ async function AuthenticatedAppShell({
 
   return (
     <>
-      <Navbar user={user} />
+      <Navbar user={toClientSafeUser(user)} />
       <Suspense fallback={null}>
         <BannerWrapper user={user} />
       </Suspense>
