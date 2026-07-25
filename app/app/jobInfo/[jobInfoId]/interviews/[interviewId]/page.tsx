@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 import {
@@ -18,7 +18,7 @@ import {
   generateInterviewFeedbackAction,
   getInterviewByIdAction,
 } from "@/core/features/interviews/actions";
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
@@ -42,16 +42,14 @@ export default async function InterviewPage({
     return <InterviewNotFound jobInfoId={jobInfoId} />;
   }
 
-  const interview = getCurrentUserWithProfileAction().then(
-    async ({ userId, redirectToSignIn }) => {
-      if (userId == null) return redirectToSignIn();
+  const interview = getCurrentUser().then(async ({ user }) => {
+    if (user == null) return redirect(routes.signIn);
 
-      const interview = await getInterviewByIdAction(interviewId, userId);
-      if (interview == null) return notFound();
+    const interview = await getInterviewByIdAction(interviewId, user.id);
+    if (interview == null) return notFound();
 
-      return interview;
-    },
-  );
+    return interview;
+  });
 
   return (
     <div className="container my-4 space-y-4">
@@ -84,8 +82,7 @@ export default async function InterviewPage({
             result={(i) =>
               i.feedback == null ? (
                 <ActionButton
-                  action={generateInterviewFeedbackAction.bind(null, i.id)}
-                >
+                  action={generateInterviewFeedbackAction.bind(null, i.id)}>
                   Generate Feedback
                 </ActionButton>
               ) : (
@@ -103,8 +100,7 @@ export default async function InterviewPage({
           />
         </div>
         <Suspense
-          fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}
-        >
+          fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}>
           <SuspendedMessages interview={interview} />
         </Suspense>
       </div>
@@ -117,8 +113,8 @@ async function SuspendedMessages({
 }: {
   interview: Promise<{ humeChatId: string | null }>;
 }) {
-  const { user, redirectToSignIn } = await getCurrentUserWithProfileAction();
-  if (user == null) return redirectToSignIn();
+  const { user } = await getCurrentUser();
+  if (user == null) return redirect(routes.signIn);
   const { humeChatId } = await interview;
   if (humeChatId == null) return notFound();
 

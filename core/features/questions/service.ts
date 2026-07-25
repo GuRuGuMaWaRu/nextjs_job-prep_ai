@@ -25,8 +25,8 @@ export async function getQuestionsService(jobInfoId: string) {
  * Requires authentication
  */
 export async function getQuestionByIdService(questionId: string) {
-  const userId = await requireUser();
-  return await getQuestionByIdDal(questionId, userId);
+  const user = await requireUser();
+  return await getQuestionByIdDal(questionId, user.id);
 }
 
 /**

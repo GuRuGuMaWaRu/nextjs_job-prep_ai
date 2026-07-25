@@ -59,15 +59,3 @@ export function makeProUser(overrides: Partial<AuthUser> = {}): AuthUser {
     ...overrides,
   });
 }
-
-export function makeCurrentUser(
-  overrides: Partial<CurrentUser> = {},
-): CurrentUser {
-  return {
-    userId: TEST_USER_ID,
-    redirectToSignIn: jest.fn(() => {
-      throw new Error("redirect");
-    }),
-    ...overrides,
-  };
-}

@@ -1,5 +1,4 @@
-import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { getUserAction } from "@/core/features/users/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
 import { getQuestionCountDb } from "@/core/features/questions/db";
@@ -17,19 +16,13 @@ import { DatabaseError } from "@/core/dal/errors";
  * @returns true if user has the permission, false otherwise
  */
 export async function hasPermission(permission: Permission): Promise<boolean> {
-  const { userId } = await getCurrentUserAction();
+  const { user } = await getCurrentUser();
 
-  if (!userId) {
+  if (user == null) {
     return false;
   }
 
-  const user = await getUserAction(userId);
-
-  if (!user) {
-    return false;
-  }
-
-  const userPlan = (user.plan || "free") as UserPlan;
+  const userPlan = (user.plan as UserPlan) || "free";
   const permissionLimit = PLAN_LIMITS[userPlan][permission];
 
   if (permissionLimit === null) {
@@ -39,15 +32,15 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
   try {
     switch (permission) {
       case PERMISSIONS.INTERVIEWS:
-        const interviewCount = await getInterviewCountDb(userId);
+        const interviewCount = await getInterviewCountDb(user.id);
         return interviewCount < permissionLimit;
 
       case PERMISSIONS.QUESTIONS:
-        const questionCount = await getQuestionCountDb(userId);
+        const questionCount = await getQuestionCountDb(user.id);
         return questionCount < permissionLimit;
 
       case PERMISSIONS.RESUME_ANALYSES:
-        const resumeAnalysisCount = await getResumeAnalysisCountDb(userId);
+        const resumeAnalysisCount = await getResumeAnalysisCountDb(user.id);
         return resumeAnalysisCount < permissionLimit;
 
       default:
@@ -64,15 +57,13 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
  * @returns The user's plan or "free" if not found
  */
 export async function getUserPlan(): Promise<UserPlan> {
-  const { userId } = await getCurrentUserAction();
+  const { user } = await getCurrentUser();
 
-  if (!userId) {
+  if (user == null) {
     return "free";
   }
 
-  const user = await getUserAction(userId);
-
-  return (user?.plan as UserPlan) || "free";
+  return (user.plan as UserPlan) || "free";
 }
 
 export type SubscriptionInfo = {
@@ -86,16 +77,14 @@ export type SubscriptionInfo = {
  * for users whose subscription is in a non-terminal but non-active state.
  */
 export async function getUserSubscriptionInfo(): Promise<SubscriptionInfo> {
-  const { userId } = await getCurrentUserAction();
+  const { user } = await getCurrentUser();
 
-  if (!userId) {
+  if (user == null) {
     return { plan: "free", hasExistingSubscription: false };
   }
 
-  const user = await getUserAction(userId);
-
   return {
-    plan: (user?.plan as UserPlan) || "free",
-    hasExistingSubscription: !!user?.stripeSubscriptionId,
+    plan: (user.plan as UserPlan) || "free",
+    hasExistingSubscription: user.stripeSubscriptionId != null,
   };
 }

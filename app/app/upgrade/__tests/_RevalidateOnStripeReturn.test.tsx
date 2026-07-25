@@ -1,4 +1,4 @@
-jest.mock("./actions", () => ({
+jest.mock("../actions", () => ({
   revalidateUpgradePage: jest.fn(),
 }));
 
@@ -10,8 +10,8 @@ import { useRouter } from "next/navigation";
 
 import { render, waitFor } from "@/core/test-utils/render";
 
-import { RevalidateOnStripeReturn } from "./_RevalidateOnStripeReturn";
-import { revalidateUpgradePage } from "./actions";
+import { RevalidateOnStripeReturn } from "../_RevalidateOnStripeReturn";
+import { revalidateUpgradePage } from "../actions";
 
 const mockRevalidateUpgradePage = jest.mocked(revalidateUpgradePage);
 const mockUseRouter = jest.mocked(useRouter);

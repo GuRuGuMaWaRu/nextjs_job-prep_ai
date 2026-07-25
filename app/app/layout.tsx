@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
-import { requireCurrentUserAction } from "@/core/features/auth/actions";
+import { requireCurrentUser } from "@/core/features/auth/helpers";
 import type { AuthUser } from "@/core/features/auth/types";
 
 import { CancelAtPeriodEndBanner } from "./_CancelAtPeriodEndBanner";
@@ -21,7 +21,7 @@ async function AuthenticatedAppShell({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireCurrentUserAction();
+  const user = await requireCurrentUser();
 
   return (
     <>

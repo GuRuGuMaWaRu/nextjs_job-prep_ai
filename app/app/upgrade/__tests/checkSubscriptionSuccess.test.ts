@@ -1,5 +1,5 @@
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
+jest.mock("@/core/features/auth/helpers", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/billing/stripe", () => ({
@@ -12,16 +12,16 @@ jest.mock("@/core/features/billing/webhookHelpers", () => ({
 
 import type Stripe from "stripe";
 
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { getStripe } from "@/core/features/billing/stripe";
 import { fulfillCheckoutSession } from "@/core/features/billing/webhookHelpers";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import {
-  makeCurrentUser,
   makeStripeCheckoutSession,
+  makeUser,
 } from "@/core/test-utils/factories";
 
-import { checkSubscriptionSuccess } from "./checkSubscriptionSuccess";
+import { checkSubscriptionSuccess } from "../checkSubscriptionSuccess";
 
 const retrieveCheckoutSession = jest.fn<
   Promise<Stripe.Checkout.Session>,
@@ -36,7 +36,7 @@ const stripe = {
   },
 } as unknown as Stripe;
 
-const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetStripe = jest.mocked(getStripe);
 const mockFulfillCheckoutSession = jest.mocked(fulfillCheckoutSession);
 
@@ -45,9 +45,9 @@ describe("checkSubscriptionSuccess", () => {
     jest.clearAllMocks();
 
     mockGetStripe.mockReturnValue(stripe);
-    mockGetCurrentUser.mockResolvedValue(
-      makeCurrentUser({ userId: TEST_USER_ID }),
-    );
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: TEST_USER_ID }),
+    });
     mockFulfillCheckoutSession.mockResolvedValue(true);
   });
 

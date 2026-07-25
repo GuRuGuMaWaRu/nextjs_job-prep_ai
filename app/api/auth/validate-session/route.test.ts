@@ -1,5 +1,5 @@
-jest.mock("@/core/features/auth/actions", () => ({
-  validateSessionAction: jest.fn(),
+jest.mock("@/core/features/auth/session", () => ({
+  getSessionByToken: jest.fn(),
 }));
 
 jest.mock("@/core/features/auth/cookies", () => ({
@@ -7,18 +7,19 @@ jest.mock("@/core/features/auth/cookies", () => ({
   getSessionToken: jest.fn(),
 }));
 
-import { validateSessionAction } from "@/core/features/auth/actions";
+import { getSessionByToken } from "@/core/features/auth/session";
 import {
   deleteSessionCookie,
   getSessionToken,
 } from "@/core/features/auth/cookies";
+
 import { TEST_USER_ID } from "@core/test-utils/constants";
 import { makeSession } from "@core/test-utils/factories";
 
 import { GET } from "./route";
 
-const mockValidateSessionAction = validateSessionAction as jest.MockedFunction<
-  typeof validateSessionAction
+const mockGetSessionByToken = getSessionByToken as jest.MockedFunction<
+  typeof getSessionByToken
 >;
 const mockDeleteSessionCookie = deleteSessionCookie as jest.MockedFunction<
   typeof deleteSessionCookie
@@ -40,53 +41,42 @@ function expectRedirect(response: Response, location: string): void {
 
 describe("GET /api/auth/validate-session", () => {
   beforeEach(() => {
-    mockValidateSessionAction.mockReset();
+    mockGetSessionByToken.mockReset();
     mockDeleteSessionCookie.mockReset();
     mockGetSessionToken.mockReset();
   });
 
   it("redirects to the landing page when the session token is missing", async () => {
-    mockGetSessionToken.mockResolvedValueOnce(null);
+    mockGetSessionToken.mockResolvedValue(null);
 
     const response = await GET(buildRequest());
 
     expectRedirect(response, "http://localhost:3000/");
-    expect(mockValidateSessionAction).not.toHaveBeenCalled();
+    expect(mockGetSessionByToken).not.toHaveBeenCalled();
     expect(mockDeleteSessionCookie).not.toHaveBeenCalled();
   });
 
-  it("deletes the cookie and redirects to the landing page when the token is invalid", async () => {
+  it("deletes the cookie and redirects to the landing page when the session is invalid", async () => {
     const session = makeSession({ userId: TEST_USER_ID });
-    mockGetSessionToken.mockResolvedValueOnce(session.token);
-    mockValidateSessionAction.mockResolvedValueOnce(false);
+    mockGetSessionToken.mockResolvedValue(session.token);
+    mockGetSessionByToken.mockResolvedValue(null);
 
     const response = await GET(buildRequest());
 
     expectRedirect(response, "http://localhost:3000/");
-    expect(mockValidateSessionAction).toHaveBeenCalledWith(session.token);
+    expect(mockGetSessionByToken).toHaveBeenCalledWith(session.token);
     expect(mockDeleteSessionCookie).toHaveBeenCalledTimes(1);
   });
 
   it("redirects to the app when the session token is valid", async () => {
     const session = makeSession({ userId: TEST_USER_ID });
-    mockGetSessionToken.mockResolvedValueOnce(session.token);
-    mockValidateSessionAction.mockResolvedValueOnce(true);
+    mockGetSessionToken.mockResolvedValue(session.token);
+    mockGetSessionByToken.mockResolvedValue(session);
 
     const response = await GET(buildRequest());
 
     expectRedirect(response, "http://localhost:3000/app");
-    expect(mockValidateSessionAction).toHaveBeenCalledWith(session.token);
+    expect(mockGetSessionByToken).toHaveBeenCalledWith(session.token);
     expect(mockDeleteSessionCookie).not.toHaveBeenCalled();
-  });
-
-  it("treats validation action failures as invalid sessions", async () => {
-    const session = makeSession({ userId: TEST_USER_ID });
-    mockGetSessionToken.mockResolvedValueOnce(session.token);
-    mockValidateSessionAction.mockResolvedValueOnce(false);
-
-    const response = await GET(buildRequest());
-
-    expectRedirect(response, "http://localhost:3000/");
-    expect(mockDeleteSessionCookie).toHaveBeenCalledTimes(1);
   });
 });

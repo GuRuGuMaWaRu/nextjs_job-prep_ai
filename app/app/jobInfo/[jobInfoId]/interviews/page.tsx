@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRightIcon, PlusIcon } from "lucide-react";
 
@@ -16,7 +17,7 @@ import {
   getInterviewsAction,
 } from "@/core/features/interviews/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
 
@@ -42,10 +43,10 @@ export default async function InterviewsPage({
 }
 
 async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
-  const { userId, redirectToSignIn } = await getCurrentUserAction();
-  if (userId == null) return redirectToSignIn();
+  const { user } = await getCurrentUser();
+  if (user == null) return redirect(routes.signIn);
 
-  const interviews = await getInterviewsAction(jobInfoId, userId);
+  const interviews = await getInterviewsAction(jobInfoId, user.id);
   const hasPermissionForInterviews = await canCreateInterviewAction();
 
   return (
@@ -59,8 +60,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
         <PermissionCheckedLink
           className="transition-opacity"
-          href={routes.newInterview(jobInfoId)}
-        >
+          href={routes.newInterview(jobInfoId)}>
           <Card className="h-full flex items-center justify-center border-dashed border-3 bg-transparent hover:border-primary/50 transition-colors shadow-none">
             <div className="text-lg flex items-center gap-2">
               <PlusIcon className="size-6" />
@@ -79,16 +79,16 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
             <Link
               className="hover:scale-[1.02] transition-[transform_opacity]"
               href={routes.interview(jobInfoId, interview.id)}
-              key={interview.id}
-            >
+              key={interview.id}>
               <Card className="h-full">
                 <div className="flex items-center justify-between h-full">
                   <CardHeader className="gap-1 grow">
                     <CardTitle className="text-lg flex gap-4">
                       {formatDateTime(interview.createdAt)}
                       <Badge
-                        variant={interview.feedback ? "primary" : "destructive"}
-                      >
+                        variant={
+                          interview.feedback ? "primary" : "destructive"
+                        }>
                         {interview.feedback
                           ? `With feedback - ${rating}/10`
                           : "No feedback"}

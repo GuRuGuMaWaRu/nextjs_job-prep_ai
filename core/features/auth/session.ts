@@ -10,7 +10,7 @@ import {
   deleteExpiredSessionsDb,
   deleteSessionDb,
   extendSessionDb,
-  validateSessionDb,
+  getSessionByTokenDb,
 } from "@/core/features/auth/db";
 
 export type Session = {
@@ -53,12 +53,12 @@ export async function createSession(userId: string): Promise<NewSession> {
  * @param token - Session token from cookie
  * @returns Session object if valid, null otherwise
  */
-export async function validateSession(
+export async function getSessionByToken(
   token: string,
 ): Promise<ActiveSession | null> {
   try {
     const hashedToken = hashToken(token);
-    const session = await validateSessionDb(hashedToken);
+    const session = await getSessionByTokenDb(hashedToken);
 
     if (!session) {
       return null;
@@ -79,7 +79,7 @@ export async function validateSession(
 export async function extendSessionIfNeeded(
   token: string,
 ): Promise<ActiveSession | null> {
-  const session = await validateSession(token);
+  const session = await getSessionByToken(token);
 
   if (!session) {
     return null;

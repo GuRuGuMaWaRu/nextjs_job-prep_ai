@@ -1,6 +1,5 @@
 "use server";
 
-import { cache } from "react";
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -12,12 +11,7 @@ import {
   getSessionToken,
   deleteSessionCookie,
 } from "@/core/features/auth/cookies";
-import {
-  createSession,
-  deleteSession,
-  extendSessionIfNeeded,
-  validateSession,
-} from "@/core/features/auth/session";
+import { createSession, deleteSession } from "@/core/features/auth/session";
 import { generateUserId } from "@/core/features/auth/tokens";
 import { createUserDb, findUserByEmailDb } from "@/core/features/auth/db";
 import { signInSchema, signUpSchema } from "@/core/features/auth/schemas";
@@ -28,9 +22,7 @@ import {
   setOAuthErrorReturnForNextOAuth,
   type OAuthErrorReturn,
 } from "@/core/features/auth/oauth/oauthErrorReturn";
-import { getUserAction } from "@/core/features/users/actions";
 import { routes } from "@/core/data/routes";
-import type { AuthUser, CurrentUser } from "@/core/features/auth/types";
 import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 
 type AuthFieldErrors = {
@@ -202,115 +194,6 @@ export async function signOutAction(): Promise<void> {
 
   // Redirect to landing page
   redirect(routes.landing);
-}
-
-const getSession = cache(async () => {
-  const token = await getSessionToken();
-
-  if (!token) {
-    return null;
-  }
-
-  return extendSessionIfNeeded(token);
-});
-
-const getCurrentUserCached = cache(
-  async (allData: boolean): Promise<CurrentUser> => {
-    try {
-      const session = await getSession();
-
-      if (!session) {
-        return {
-          userId: null,
-          redirectToSignIn: () => redirect(routes.signIn),
-        };
-      }
-
-      const userId = session.userId;
-
-      return {
-        userId,
-        user: allData
-          ? ((await getUserAction(userId)) ?? undefined)
-          : undefined,
-        redirectToSignIn: () => redirect(routes.signIn),
-      };
-    } catch (error) {
-      console.error(
-        "getCurrentUserCached: session or user load failed:",
-        error,
-      );
-
-      return {
-        userId: null,
-        redirectToSignIn: () => redirect(routes.signIn),
-      };
-    }
-  },
-);
-
-/**
- * Get the current authenticated user from session (session row only; no user table fetch).
- *
- * @returns Object with userId, optional user data, and redirectToSignIn helper
- */
-export async function getCurrentUserAction(): Promise<CurrentUser> {
-  return getCurrentUserCached(false);
-}
-
-export const getCurrentUser = cache(async function getCurrentUser(): Promise<{
-  user: AuthUser | null;
-}> {
-  try {
-    const session = await getSession();
-
-    if (!session) {
-      return { user: null };
-    }
-
-    const user = await getUserAction(session.userId);
-
-    return { user: user ?? null };
-  } catch (error) {
-    console.error("getCurrentUser: session or user load failed:", error);
-    return { user: null };
-  }
-});
-
-export async function requireCurrentUserAction(): Promise<AuthUser> {
-  const { user } = await getCurrentUser();
-
-  if (!user) {
-    return redirect(routes.signIn);
-  }
-
-  return user;
-}
-
-/**
- * Same as {@link getCurrentUserAction} but loads the full user row from the database.
- *
- * @returns Object with userId, user, and redirectToSignIn helper
- */
-export async function getCurrentUserWithProfileAction(): Promise<CurrentUser> {
-  return getCurrentUserCached(true);
-}
-
-export async function validateSessionAction(token: string): Promise<boolean> {
-  try {
-    const session = await validateSession(token);
-
-    if (!session) {
-      await deleteSessionCookie();
-
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Session validation error:", error);
-    return false;
-  }
 }
 
 export type SignInWithOAuthOptions = {

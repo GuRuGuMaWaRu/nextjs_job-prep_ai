@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/core/components/ui/card";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
+import { routes } from "@/core/data/routes";
 
 export default async function JobInfoEditPage({
   params,
@@ -22,8 +23,7 @@ export default async function JobInfoEditPage({
       <Card>
         <CardContent>
           <Suspense
-            fallback={<Loader2 className="animate-spin size-24 mx-auto" />}
-          >
+            fallback={<Loader2 className="animate-spin size-24 mx-auto" />}>
             <SuspendedForm jobInfoId={jobInfoId} />
           </Suspense>
         </CardContent>
@@ -33,16 +33,14 @@ export default async function JobInfoEditPage({
 }
 
 async function SuspendedForm({ jobInfoId }: { jobInfoId: string }) {
-  const jobInfo = await getCurrentUserAction().then(
-    async ({ userId, redirectToSignIn }) => {
-      if (userId == null) return redirectToSignIn();
+  const jobInfo = await getCurrentUser().then(async ({ user }) => {
+    if (user == null) return redirect(routes.signIn);
 
-      const jobInfo = await getJobInfoAction(jobInfoId);
-      if (jobInfo == null) return notFound();
+    const jobInfo = await getJobInfoAction(jobInfoId);
+    if (jobInfo == null) return notFound();
 
-      return jobInfo;
-    },
-  );
+    return jobInfo;
+  });
 
   return <JobInfoForm jobInfo={jobInfo} />;
 }

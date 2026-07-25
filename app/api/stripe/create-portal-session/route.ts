@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -12,7 +12,7 @@ import {
 import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
-  const { userId, user } = await getCurrentUserWithProfileAction();
+  const { user } = await getCurrentUser();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       ? NextResponse.json({ redirectUrl })
       : NextResponse.redirect(redirectUrl, 302);
 
-  if (!userId) {
+  if (user == null) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("unauthorized", baseUrl),
     );
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!user?.stripeCustomerId) {
+  if (user.stripeCustomerId == null) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("no_customer", baseUrl),
     );

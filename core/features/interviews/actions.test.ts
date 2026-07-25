@@ -13,8 +13,8 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
+jest.mock("@/core/features/auth/helpers", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/interviews/permissions", () => ({
@@ -39,7 +39,7 @@ import {
   UnauthorizedError,
 } from "@/core/dal/errors";
 import arcjet, { request } from "@arcjet/next";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
 import {
   canCreateInterviewAction,
@@ -60,7 +60,7 @@ import {
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeCurrentUser } from "@/core/test-utils/factories/user";
+import { makeUser } from "@/core/test-utils/factories/user";
 import { makeInterview, makeJobInfo } from "@/core/test-utils/factories";
 
 const mockArcjet = jest.mocked(arcjet);
@@ -71,7 +71,7 @@ const mockFeedbackProtect = jest.mocked(
   mockArcjet.mock.results[1].value.protect as jest.Mock,
 );
 const mockRequest = jest.mocked(request);
-const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockCheckInterviewPermission = jest.mocked(checkInterviewPermission);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockCreateInterviewService = jest.mocked(createInterviewService);
@@ -92,9 +92,9 @@ describe("interview actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    mockGetCurrentUser.mockResolvedValue(
-      makeCurrentUser({ userId: TEST_USER_ID }),
-    );
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: TEST_USER_ID }),
+    });
     mockCheckInterviewPermission.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
@@ -107,7 +107,7 @@ describe("interview actions", () => {
 
   describe("createInterviewAction", () => {
     it("returns a login message when the user is unauthenticated", async () => {
-      mockGetCurrentUser.mockResolvedValue(makeCurrentUser({ userId: null }));
+      mockGetCurrentUser.mockResolvedValue({ user: null });
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
@@ -394,9 +394,7 @@ describe("interview actions", () => {
     });
 
     it("returns unauthorized when the user is not signed in", async () => {
-      mockGetCurrentUser.mockResolvedValueOnce(
-        makeCurrentUser({ userId: null }),
-      );
+      mockGetCurrentUser.mockResolvedValueOnce({ user: null });
 
       await expect(
         generateInterviewFeedbackAction("interview-1"),

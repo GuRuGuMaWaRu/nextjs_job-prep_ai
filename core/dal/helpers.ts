@@ -1,7 +1,5 @@
-import {
-  getCurrentUserAction,
-  getCurrentUserWithProfileAction,
-} from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
+import type { AuthUser } from "@/core/features/auth/types";
 import { UnauthorizedError } from "@/core/dal/errors";
 
 /**
@@ -12,28 +10,11 @@ import { UnauthorizedError } from "@/core/dal/errors";
  * Require authenticated user, throw if not logged in
  * Use this in Service layer when auth is required
  */
-export async function requireUser(): Promise<string> {
-  const { userId } = await getCurrentUserAction();
+export async function requireUser(): Promise<AuthUser> {
+  const { user } = await getCurrentUser();
+  if (user == null) throw new UnauthorizedError();
 
-  if (!userId) {
-    throw new UnauthorizedError();
-  }
-
-  return userId;
-}
-
-/**
- * Require user with full data
- * Throws UnauthorizedError if not authenticated
- */
-export async function requireUserWithData() {
-  const { userId, user } = await getCurrentUserWithProfileAction();
-
-  if (!userId || !user) {
-    throw new UnauthorizedError();
-  }
-
-  return { userId, user };
+  return user;
 }
 
 /**

@@ -5,7 +5,7 @@ jest.mock("@/core/features/auth/permissions", () => ({
 import { hasPermission } from "@/core/features/auth/permissions";
 import { PERMISSIONS } from "@/core/data/constants";
 
-import { checkQuestionsPermission } from "./permissions";
+import { checkQuestionsPermission } from "../permissions";
 
 const mockHasPermission = jest.mocked(hasPermission);
 

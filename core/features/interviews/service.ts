@@ -1,7 +1,7 @@
 import { refresh } from "next/cache";
 
 import { PermissionError } from "@/core/dal/errors";
-import { requireUser, requireUserWithData } from "@/core/dal/helpers";
+import { requireUser } from "@/core/dal/helpers";
 import {
   getInterviewByIdDal,
   getInterviewsDal,
@@ -63,7 +63,7 @@ export async function updateInterviewService(
   id: string,
   data: { humeChatId?: string; duration?: string },
 ) {
-  const userId = await requireUser();
+  const user = await requireUser();
 
   // Verify ownership
   const interview = await getInterviewByIdDal(id);
@@ -72,7 +72,7 @@ export async function updateInterviewService(
     throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notFoundOrNoAccess);
   }
 
-  if (interview.jobInfo.userId !== userId) {
+  if (interview.jobInfo.userId !== user.id) {
     throw new PermissionError(INTERVIEW_SERVICE_ERRORS.updateForbidden);
   }
 
@@ -84,10 +84,10 @@ export async function updateInterviewService(
  * Requires authentication and ownership
  */
 export async function generateInterviewFeedbackService(interviewId: string) {
-  const { userId, user } = await requireUserWithData();
+  const user = await requireUser();
 
   // Get interview with ownership check
-  const interview = await getInterviewByIdService(interviewId, userId);
+  const interview = await getInterviewByIdService(interviewId, user.id);
 
   if (!interview) {
     throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notFoundOrNoAccess);

@@ -33,7 +33,7 @@ export async function createSessionDb(sessionData: {
     .returning({ expiresAt: SessionTable.expiresAt });
 }
 
-export async function validateSessionDb(token: string) {
+export async function getSessionByTokenDb(token: string) {
   const session = await db.query.SessionTable.findFirst({
     where: and(
       eq(SessionTable.token, token),

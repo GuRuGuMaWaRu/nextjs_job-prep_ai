@@ -1,5 +1,4 @@
-import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { getUserByIdDb } from "@/core/features/users/db";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
 import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 
@@ -22,17 +21,12 @@ export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
       return;
     }
 
-    const { userId } = await getCurrentUserAction();
-    if (!userId) {
+    const { user } = await getCurrentUser();
+    if (user == null || user.stripeSubscriptionId == null) {
       return;
     }
 
-    const user = await getUserByIdDb(userId);
-    if (!user?.stripeSubscriptionId) {
-      return;
-    }
-
-    await reconcileUserStripeSubscription(stripe, userId);
+    await reconcileUserStripeSubscription(stripe, user.id);
   } catch (error) {
     console.error("Error syncing subscription:", error);
     // Revalidation runs in RevalidateOnStripeReturn after redirect, not during render.

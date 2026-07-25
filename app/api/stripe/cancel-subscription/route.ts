@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -16,7 +16,7 @@ import { routes } from "@/core/data/routes";
  * subscription ends.
  */
 export async function POST(request: Request) {
-  const { userId, user } = await getCurrentUserWithProfileAction();
+  const { user } = await getCurrentUser();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       ? NextResponse.json({ redirectUrl })
       : NextResponse.redirect(redirectUrl, 302);
 
-  if (!userId) {
+  if (user == null) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("unauthorized", baseUrl),
     );
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!user?.stripeSubscriptionId) {
+  if (user.stripeSubscriptionId == null) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("no_subscription", baseUrl),
     );

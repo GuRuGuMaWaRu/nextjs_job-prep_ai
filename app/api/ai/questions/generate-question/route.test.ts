@@ -42,8 +42,8 @@ jest.mock("ai", () => ({
   ),
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
+jest.mock("@/core/features/auth/helpers", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/jobInfos/actions", () => ({
@@ -66,7 +66,7 @@ jest.mock("@/core/services/ai/questions", () => ({
 import arcjet, { request } from "@arcjet/next";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import {
   getQuestionsAction,
@@ -83,9 +83,9 @@ import {
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import {
-  makeCurrentUser,
   makeJobInfo,
   makeQuestion,
+  makeUser,
 } from "@/core/test-utils/factories";
 
 import { POST } from "./route";
@@ -99,7 +99,7 @@ const mockCreateUIMessageStream = jest.mocked(createUIMessageStream);
 const mockCreateUIMessageStreamResponse = jest.mocked(
   createUIMessageStreamResponse,
 );
-const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockGetQuestionsAction = jest.mocked(getQuestionsAction);
 const mockInsertQuestionAction = jest.mocked(insertQuestionAction);
@@ -146,9 +146,9 @@ describe("POST /api/ai/questions/generate-question", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCurrentUserAction.mockResolvedValue(
-      makeCurrentUser({ userId: TEST_USER_ID }),
-    );
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: TEST_USER_ID }),
+    });
     mockCheckQuestionsPermission.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
@@ -195,9 +195,9 @@ describe("POST /api/ai/questions/generate-question", () => {
   });
 
   it("returns 401 when the current user is unauthenticated", async () => {
-    mockGetCurrentUserAction.mockResolvedValueOnce(
-      makeCurrentUser({ userId: null }),
-    );
+    mockGetCurrentUser.mockResolvedValueOnce({
+      user: null,
+    });
 
     const response = await POST(
       buildJsonRequest({ prompt: "medium", jobInfoId }),

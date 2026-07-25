@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { validateSessionAction } from "@/core/features/auth/actions";
+import { getSessionByToken } from "@/core/features/auth/session";
 import {
   deleteSessionCookie,
   getSessionToken,
@@ -14,9 +14,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(routes.landing, request.url));
   }
 
-  const isValid = await validateSessionAction(token);
+  const session = await getSessionByToken(token);
 
-  if (!isValid) {
+  if (!session) {
     await deleteSessionCookie();
     return NextResponse.redirect(new URL(routes.landing, request.url));
   }

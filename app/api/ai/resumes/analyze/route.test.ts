@@ -13,8 +13,8 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
+jest.mock("@/core/features/auth/helpers", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/jobInfos/actions", () => ({
@@ -48,7 +48,7 @@ jest.mock("@/core/services/ai/resumes/ai", () => ({
 import arcjet, { request } from "@arcjet/next";
 import { z } from "zod";
 
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
@@ -60,7 +60,7 @@ import {
 } from "@/core/dal/errors";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeCurrentUser, makeJobInfo } from "@/core/test-utils/factories";
+import { makeJobInfo, makeUser } from "@/core/test-utils/factories";
 
 import { POST } from "./route";
 
@@ -69,7 +69,7 @@ const mockProtect = jest.mocked(
   mockArcjet.mock.results[0].value.protect as jest.Mock,
 );
 const mockRequest = jest.mocked(request);
-const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockReserveResumeAnalysisUsage = jest.mocked(reserveResumeAnalysisUsage);
 const mockAnalyzeResumeForJob = jest.mocked(analyzeResumeForJob);
@@ -146,9 +146,9 @@ describe("POST /api/ai/resumes/analyze", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCurrentUserAction.mockResolvedValue(
-      makeCurrentUser({ userId: TEST_USER_ID }),
-    );
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: TEST_USER_ID }),
+    });
     mockGetJobInfoAction.mockResolvedValue(
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
@@ -191,9 +191,9 @@ describe("POST /api/ai/resumes/analyze", () => {
   });
 
   it("returns 401 when the current user is unauthenticated", async () => {
-    mockGetCurrentUserAction.mockResolvedValueOnce(
-      makeCurrentUser({ userId: null }),
-    );
+    mockGetCurrentUser.mockResolvedValueOnce({
+      user: null,
+    });
 
     const response = await POST(buildFormRequest());
 

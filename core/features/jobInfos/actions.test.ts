@@ -15,11 +15,6 @@ jest.mock("@/core/features/jobInfos/service", () => ({
   updateJobInfoService: jest.fn(),
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
-  getCurrentUserWithProfileAction: jest.fn(),
-}));
-
 import { revalidatePath } from "next/cache";
 
 import { routes } from "@/core/data/routes";

@@ -2,9 +2,8 @@ jest.mock("next/cache", () => ({
   refresh: jest.fn(),
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
-  getCurrentUserWithProfileAction: jest.fn(),
+jest.mock("@/core/features/auth/helpers", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/interviews/dal", () => ({
@@ -21,10 +20,7 @@ jest.mock("@/core/services/ai/interviews", () => ({
 import { refresh } from "next/cache";
 
 import { PermissionError } from "@/core/dal/errors";
-import {
-  getCurrentUserAction,
-  getCurrentUserWithProfileAction,
-} from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import {
   getInterviewByIdDal,
   getInterviewsDal,
@@ -50,13 +46,9 @@ import {
   makeJobInfo,
   makeUser,
 } from "@/core/test-utils/factories";
-import { makeCurrentUser } from "@/core/test-utils/factories/user";
 
 const mockRefresh = jest.mocked(refresh);
-const mockGetCurrentUser = jest.mocked(getCurrentUserAction);
-const mockGetCurrentUserWithProfile = jest.mocked(
-  getCurrentUserWithProfileAction,
-);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetInterviewByIdDal = jest.mocked(getInterviewByIdDal);
 const mockGetInterviewsDal = jest.mocked(getInterviewsDal);
 const mockInsertInterviewDal = jest.mocked(insertInterviewDal);
@@ -82,15 +74,9 @@ function mockNoInterviewFound() {
 describe("interview service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(
-      makeCurrentUser({ userId: SIGNED_IN_USER_ID }),
-    );
-    mockGetCurrentUserWithProfile.mockResolvedValue(
-      makeCurrentUser({
-        userId: SIGNED_IN_USER_ID,
-        user: makeUser({ id: SIGNED_IN_USER_ID, name: SIGNED_IN_USER_NAME }),
-      }),
-    );
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: SIGNED_IN_USER_ID }),
+    });
   });
 
   it("returns an interview when the requested user owns its job info", async () => {
@@ -189,6 +175,10 @@ describe("interview service", () => {
   });
 
   it("generates and stores feedback for a completed owned interview", async () => {
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: SIGNED_IN_USER_ID, name: SIGNED_IN_USER_NAME }),
+    });
+
     const interview = makeInterview({
       humeChatId: "chat-test-1",
       jobInfo: makeJobInfo({ userId: SIGNED_IN_USER_ID }),

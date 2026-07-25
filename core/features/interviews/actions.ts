@@ -5,7 +5,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { env } from "@/core/data/env/server";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
@@ -75,8 +75,8 @@ export async function createInterviewAction({
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    const { userId } = await getCurrentUserAction();
-    if (userId == null) {
+    const { user } = await getCurrentUser();
+    if (user == null) {
       return {
         success: false,
         message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
@@ -94,7 +94,7 @@ export async function createInterviewAction({
 
     // Check rate limit
     const decision = await aj.protect(await request(), {
-      userId,
+      userId: user.id,
       requested: 1,
     });
     if (decision.isDenied()) {
@@ -227,8 +227,8 @@ export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
   try {
-    const { userId } = await getCurrentUserAction();
-    if (userId == null) {
+    const { user } = await getCurrentUser();
+    if (user == null) {
       return {
         success: false,
         message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
@@ -236,7 +236,7 @@ export async function generateInterviewFeedbackAction(
     }
 
     const decision = await feedbackAj.protect(await request(), {
-      userId,
+      userId: user.id,
       requested: 1,
     });
     if (decision.isDenied()) {

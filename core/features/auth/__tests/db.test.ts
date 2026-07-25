@@ -28,7 +28,7 @@ import {
   deleteSessionDb,
   extendSessionDb,
   findUserByEmailDb,
-  validateSessionDb,
+  getSessionByTokenDb,
 } from "../db";
 
 const mockDb = db as unknown as MockDrizzleDb;
@@ -88,153 +88,169 @@ describe("auth db helpers", () => {
     jest.clearAllMocks();
   });
 
-  it("finds a user by normalized email", async () => {
-    const user = makeUser({ email: "person@test.local" });
-    const userQuery = createMockDrizzleTableQuery({ findFirst: user });
+  describe("findUserByEmailDb", () => {
+    it("finds a user by normalized email", async () => {
+      const user = makeUser({ email: "person@test.local" });
+      const userQuery = createMockDrizzleTableQuery({ findFirst: user });
 
-    useMockDb(
-      createMockDrizzleDb({
-        query: {
-          UserTable: userQuery,
-        },
-      }),
-    );
+      useMockDb(
+        createMockDrizzleDb({
+          query: {
+            UserTable: userQuery,
+          },
+        }),
+      );
 
-    await expect(findUserByEmailDb("PERSON@Test.Local")).resolves.toBe(user);
+      await expect(findUserByEmailDb("PERSON@Test.Local")).resolves.toBe(user);
 
-    expect(userQuery.findFirst).toHaveBeenCalledWith({
-      where: expect.any(Object),
-    });
-    expectWhereParams(userQuery.findFirst, ["person@test.local"]);
-  });
-
-  it("creates users with auth defaults", async () => {
-    const userData = {
-      id: "user-1",
-      name: "Ada Lovelace",
-      email: "ada@test.local",
-      passwordHash: "hashed-password",
-    };
-
-    useMockDb(createMockDrizzleDb());
-
-    await createUserDb(userData);
-
-    expect(mockDb.insert).toHaveBeenCalledWith(UserTable);
-    expect(mockDb.insert.mock.results[0].value.values).toHaveBeenCalledWith({
-      ...userData,
-      image: null,
-      emailVerified: null,
+      expect(userQuery.findFirst).toHaveBeenCalledWith({
+        where: expect.any(Object),
+      });
+      expectWhereParams(userQuery.findFirst, ["person@test.local"]);
     });
   });
 
-  it("creates sessions and returns inserted rows", async () => {
-    const session = makeSession({ id: "session-1" });
+  describe("createUserDb", () => {
+    it("creates users with auth defaults", async () => {
+      const userData = {
+        id: "user-1",
+        name: "Ada Lovelace",
+        email: "ada@test.local",
+        passwordHash: "hashed-password",
+      };
 
-    useMockDb(
-      createMockDrizzleDb({
-        insert: [session],
-      }),
-    );
+      useMockDb(createMockDrizzleDb());
 
-    await expect(
-      createSessionDb({
+      await createUserDb(userData);
+
+      expect(mockDb.insert).toHaveBeenCalledWith(UserTable);
+      expect(mockDb.insert.mock.results[0].value.values).toHaveBeenCalledWith({
+        ...userData,
+        image: null,
+        emailVerified: null,
+      });
+    });
+  });
+
+  describe("createSessionDb", () => {
+    it("creates sessions and returns inserted rows", async () => {
+      const session = makeSession({ id: "session-1" });
+
+      useMockDb(
+        createMockDrizzleDb({
+          insert: [session],
+        }),
+      );
+
+      await expect(
+        createSessionDb({
+          userId: session.userId,
+          token: session.token,
+          expiresAt: session.expiresAt,
+        }),
+      ).resolves.toEqual([session]);
+
+      const insertChain = mockDb.insert.mock.results[0].value;
+
+      expect(mockDb.insert).toHaveBeenCalledWith(SessionTable);
+      expect(insertChain.values).toHaveBeenCalledWith({
         userId: session.userId,
         token: session.token,
         expiresAt: session.expiresAt,
-      }),
-    ).resolves.toEqual([session]);
-
-    const insertChain = mockDb.insert.mock.results[0].value;
-
-    expect(mockDb.insert).toHaveBeenCalledWith(SessionTable);
-    expect(insertChain.values).toHaveBeenCalledWith({
-      userId: session.userId,
-      token: session.token,
-      expiresAt: session.expiresAt,
+      });
+      expect(insertChain.returning).toHaveBeenCalledTimes(1);
     });
-    expect(insertChain.returning).toHaveBeenCalledTimes(1);
   });
 
-  it("validates a non-expired session by token", async () => {
-    const now = makeFixtureNow();
-    const session = makeSession({ token: "session-token" });
-    const sessionQuery = createMockDrizzleTableQuery({ findFirst: session });
+  describe("getSessionByTokenDb", () => {
+    it("validates a non-expired session by token", async () => {
+      const now = makeFixtureNow();
+      const session = makeSession({ token: "session-token" });
+      const sessionQuery = createMockDrizzleTableQuery({ findFirst: session });
 
-    jest.useFakeTimers().setSystemTime(now.getTime());
-    useMockDb(
-      createMockDrizzleDb({
-        query: {
-          SessionTable: sessionQuery,
+      jest.useFakeTimers().setSystemTime(now.getTime());
+      useMockDb(
+        createMockDrizzleDb({
+          query: {
+            SessionTable: sessionQuery,
+          },
+        }),
+      );
+
+      await expect(getSessionByTokenDb("session-token")).resolves.toBe(session);
+
+      expect(sessionQuery.findFirst).toHaveBeenCalledWith({
+        where: expect.any(Object),
+        columns: {
+          id: true,
+          userId: true,
+          expiresAt: true,
         },
-      }),
-    );
-
-    await expect(validateSessionDb("session-token")).resolves.toBe(session);
-
-    expect(sessionQuery.findFirst).toHaveBeenCalledWith({
-      where: expect.any(Object),
-      columns: {
-        id: true,
-        userId: true,
-        expiresAt: true,
-      },
+      });
+      expectWhereParams(sessionQuery.findFirst, ["session-token", now]);
     });
-    expectWhereParams(sessionQuery.findFirst, ["session-token", now]);
   });
 
-  it("extends a session expiry and returns updated rows", async () => {
-    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-    const expiresAt = new Date(makeFixtureNow().getTime() + oneWeekMs);
-    const updatedSession = makeSession({ id: "session-1", expiresAt });
+  describe("extendSessionDb", () => {
+    it("extends a session expiry and returns updated rows", async () => {
+      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+      const expiresAt = new Date(makeFixtureNow().getTime() + oneWeekMs);
+      const updatedSession = makeSession({ id: "session-1", expiresAt });
 
-    useMockDb(
-      createMockDrizzleDb({
-        update: [updatedSession],
-      }),
-    );
+      useMockDb(
+        createMockDrizzleDb({
+          update: [updatedSession],
+        }),
+      );
 
-    await expect(extendSessionDb("session-1", expiresAt)).resolves.toEqual([
-      updatedSession,
-    ]);
+      await expect(extendSessionDb("session-1", expiresAt)).resolves.toEqual([
+        updatedSession,
+      ]);
 
-    const updateChain = mockDb.update.mock.results[0].value;
+      const updateChain = mockDb.update.mock.results[0].value;
 
-    expect(mockDb.update).toHaveBeenCalledWith(SessionTable);
-    expect(updateChain.set).toHaveBeenCalledWith({ expiresAt });
-    expectWhereParams(updateChain.where, ["session-1"]);
-    expect(updateChain.returning).toHaveBeenCalledTimes(1);
+      expect(mockDb.update).toHaveBeenCalledWith(SessionTable);
+      expect(updateChain.set).toHaveBeenCalledWith({ expiresAt });
+      expectWhereParams(updateChain.where, ["session-1"]);
+      expect(updateChain.returning).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it("deletes one session by token", async () => {
-    useMockDb(createMockDrizzleDb());
+  describe("deleteSessionDb", () => {
+    it("deletes one session by token", async () => {
+      useMockDb(createMockDrizzleDb());
 
-    await deleteSessionDb("session-token");
+      await deleteSessionDb("session-token");
 
-    expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
-    expectWhereParams(mockDb.delete.mock.results[0].value.where, [
-      "session-token",
-    ]);
+      expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
+      expectWhereParams(mockDb.delete.mock.results[0].value.where, [
+        "session-token",
+      ]);
+    });
   });
 
-  it("deletes all sessions for a user", async () => {
-    useMockDb(createMockDrizzleDb());
+  describe("deleteAllUserSessionsDb", () => {
+    it("deletes all sessions for a user", async () => {
+      useMockDb(createMockDrizzleDb());
 
-    await deleteAllUserSessionsDb("user-1");
+      await deleteAllUserSessionsDb("user-1");
 
-    expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
-    expectWhereParams(mockDb.delete.mock.results[0].value.where, ["user-1"]);
+      expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
+      expectWhereParams(mockDb.delete.mock.results[0].value.where, ["user-1"]);
+    });
   });
 
-  it("deletes expired sessions relative to current time", async () => {
-    const now = makeFixtureNow();
+  describe("deleteExpiredSessionsDb", () => {
+    it("deletes expired sessions relative to current time", async () => {
+      const now = makeFixtureNow();
 
-    jest.useFakeTimers().setSystemTime(now.getTime());
-    useMockDb(createMockDrizzleDb());
+      jest.useFakeTimers().setSystemTime(now.getTime());
+      useMockDb(createMockDrizzleDb());
 
-    await deleteExpiredSessionsDb();
+      await deleteExpiredSessionsDb();
 
-    expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
-    expectWhereParams(mockDb.delete.mock.results[0].value.where, [now]);
+      expect(mockDb.delete).toHaveBeenCalledWith(SessionTable);
+      expectWhereParams(mockDb.delete.mock.results[0].value.where, [now]);
+    });
   });
 });

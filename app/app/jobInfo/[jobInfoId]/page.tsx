@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 
 import { Badge } from "@/core/components/ui/badge";
@@ -15,7 +15,7 @@ import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { routes } from "@/core/data/routes";
 import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 
@@ -54,16 +54,14 @@ export default async function JobInfoPage({
 
   assertUUIDor404(jobInfoId);
 
-  const jobInfo = getCurrentUserAction().then(
-    async ({ userId, redirectToSignIn }) => {
-      if (userId == null) return redirectToSignIn();
+  const jobInfo = getCurrentUser().then(async ({ user }) => {
+    if (user == null) return redirect(routes.signIn);
 
-      const jobInfo = await getJobInfoAction(jobInfoId);
-      if (jobInfo == null) return notFound();
+    const jobInfo = await getJobInfoAction(jobInfoId);
+    if (jobInfo == null) return notFound();
 
-      return jobInfo;
-    },
-  );
+    return jobInfo;
+  });
 
   return (
     <div className="container max-w-5xl my-4 space-y-4">
@@ -112,8 +110,7 @@ export default async function JobInfoPage({
             <Link
               className="hover:scale-[1.02] transition-[transform_opacity]"
               href={`${routes.jobInfo(jobInfoId)}/${option.href}`}
-              key={option.href}
-            >
+              key={option.href}>
               <Card className="h-full flex flex-row items-start justify-between">
                 <CardHeader className="grow">
                   <CardTitle>{option.label}</CardTitle>

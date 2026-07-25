@@ -4,7 +4,7 @@ import {
   PermissionError,
   UnauthorizedError,
   ValidationError,
-} from "./errors";
+} from "../errors";
 
 describe("DAL errors", () => {
   it("uses the default unauthorized message when none is provided", () => {

@@ -28,7 +28,7 @@ export async function createJobInfoService(
   data: z.infer<typeof jobInfoSchema>,
 ) {
   // Get authenticated user (throws if not logged in)
-  const userId = await requireUser();
+  const user = await requireUser();
 
   // Business rule: Could check plan limits here
   // For now, all authenticated users can create job infos
@@ -36,7 +36,7 @@ export async function createJobInfoService(
   // Call DAL to persist data
   const jobInfo = await createJobInfoDal({
     ...data,
-    userId,
+    userId: user.id,
   });
 
   return jobInfo;
@@ -50,15 +50,15 @@ export async function updateJobInfoService(
   id: string,
   data: z.infer<typeof jobInfoSchema>,
 ) {
-  const userId = await requireUser();
+  const user = await requireUser();
 
-  const existingJobInfo = await getJobInfoDal(id, userId);
+  const existingJobInfo = await getJobInfoDal(id, user.id);
 
   if (!existingJobInfo) {
     throw new NotFoundError(JOB_INFO_SERVICE_ERRORS.notFoundOrNoEditPermission);
   }
 
-  if (existingJobInfo.userId !== userId) {
+  if (existingJobInfo.userId !== user.id) {
     throw new PermissionError(JOB_INFO_SERVICE_ERRORS.editForbidden);
   }
 
@@ -73,9 +73,9 @@ export async function updateJobInfoService(
  * Returns null if not found or user doesn't own it
  */
 export async function getJobInfoService(id: string) {
-  const userId = await requireUser();
+  const user = await requireUser();
   // This checks both auth and ownership, returns null if not found
-  return await getJobInfoDal(id, userId);
+  return await getJobInfoDal(id, user.id);
 }
 
 /**
@@ -91,8 +91,8 @@ export async function getJobInfoByIdService(id: string) {
  * Enforces: User must be authenticated
  */
 export async function getJobInfosService() {
-  const userId = await requireUser();
-  return await getJobInfosDal(userId);
+  const user = await requireUser();
+  return await getJobInfosDal(user.id);
 }
 
 /**
@@ -101,15 +101,15 @@ export async function getJobInfosService() {
  * Used as a permission check before performing operations
  */
 export async function verifyJobInfoAccessService(jobInfoId: string) {
-  const userId = await requireUser();
+  const user = await requireUser();
 
-  const jobInfo = await getJobInfoDal(jobInfoId, userId);
+  const jobInfo = await getJobInfoDal(jobInfoId, user.id);
 
   if (!jobInfo) {
     throw new NotFoundError(JOB_INFO_SERVICE_ERRORS.notFoundOrNoAccess);
   }
 
-  return { jobInfo, userId };
+  return { jobInfo, userId: user.id };
 }
 
 /**
@@ -117,9 +117,9 @@ export async function verifyJobInfoAccessService(jobInfoId: string) {
  * Used in pages to remove a job info + all related interviews and questions
  */
 export async function removeJobInfoService(id: string) {
-  const userId = await requireUser();
+  const user = await requireUser();
 
-  const jobInfo = await getJobInfoDal(id, userId);
+  const jobInfo = await getJobInfoDal(id, user.id);
 
   if (!jobInfo) {
     throw new NotFoundError(

@@ -13,8 +13,8 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
+jest.mock("@/core/features/auth/helpers", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/questions/actions", () => ({
@@ -27,13 +27,13 @@ jest.mock("@/core/services/ai/questions", () => ({
 
 import arcjet, { request } from "@arcjet/next";
 
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
 import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeCurrentUser, makeQuestion } from "@/core/test-utils/factories";
+import { makeQuestion, makeUser } from "@/core/test-utils/factories";
 
 import { POST } from "./route";
 
@@ -42,7 +42,7 @@ const mockProtect = jest.mocked(
   mockArcjet.mock.results[0].value.protect as jest.Mock,
 );
 const mockRequest = jest.mocked(request);
-const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetQuestionByIdAction = jest.mocked(getQuestionByIdAction);
 const mockGenerateAiQuestionFeedback = jest.mocked(generateAiQuestionFeedback);
 
@@ -107,9 +107,9 @@ describe("POST /api/ai/questions/generate-feedback", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCurrentUserAction.mockResolvedValue(
-      makeCurrentUser({ userId: TEST_USER_ID }),
-    );
+    mockGetCurrentUser.mockResolvedValue({
+      user: makeUser({ id: TEST_USER_ID }),
+    });
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
 
@@ -130,9 +130,9 @@ describe("POST /api/ai/questions/generate-feedback", () => {
   });
 
   it("returns 401 when the current user is unauthenticated", async () => {
-    mockGetCurrentUserAction.mockResolvedValueOnce(
-      makeCurrentUser({ userId: null }),
-    );
+    mockGetCurrentUser.mockResolvedValueOnce({
+      user: null,
+    });
 
     const response = await POST(
       buildJsonRequest({ prompt: "Use caching.", questionId }),

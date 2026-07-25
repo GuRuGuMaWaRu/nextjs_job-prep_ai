@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/features/auth/helpers";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -13,9 +13,8 @@ import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
-  const { userId, user } = await getCurrentUserWithProfileAction();
+  const { user } = await getCurrentUser();
 
-  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers
       .get("content-type")
@@ -28,7 +27,7 @@ export async function POST(request: Request) {
       ? NextResponse.json({ redirectUrl })
       : NextResponse.redirect(redirectUrl, 302);
 
-  if (!userId) {
+  if (user == null) {
     return createRedirectResponse(
       getUpgradeErrorRedirect("unauthorized", baseUrl),
     );
@@ -69,13 +68,7 @@ export async function POST(request: Request) {
     return createRedirectResponse(getUpgradeErrorRedirect("config", baseUrl));
   }
 
-  if (!user) {
-    return createRedirectResponse(
-      getUpgradeErrorRedirect("user_not_found", baseUrl),
-    );
-  }
-
-  if (user.plan === "pro" || user.stripeSubscriptionId) {
+  if (user.plan === "pro" || user.stripeSubscriptionId != null) {
     const errorCode =
       user.plan === "pro" ? "already_pro" : "existing_subscription";
     return createRedirectResponse(getUpgradeErrorRedirect(errorCode, baseUrl));
@@ -97,16 +90,18 @@ export async function POST(request: Request) {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
-    metadata: { userId },
+    metadata: { userId: user.id },
   };
 
-  if (user.stripeCustomerId) {
+  if (user.stripeCustomerId != null) {
     sessionParams.customer = user.stripeCustomerId;
   } else {
     sessionParams.customer_email = user.email;
   }
 
+  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   let session: Stripe.Checkout.Session;
+
   try {
     session = await stripe.checkout.sessions.create(
       sessionParams,
