@@ -1,11 +1,12 @@
 import { BrainCircuitIcon } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
+import type { ClientSafeUserIdentity } from "@/core/features/auth/clientSafeUser";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 
 interface CondensedMessagesProps {
   messages: { isUser: boolean; content: string[] }[];
-  user: { name: string; image: string | null };
+  user: ClientSafeUserIdentity;
   className?: string;
   maxFft?: number;
 }

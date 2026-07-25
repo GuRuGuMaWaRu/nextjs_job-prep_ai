@@ -19,6 +19,7 @@ import {
   getInterviewByIdAction,
 } from "@/core/features/interviews/actions";
 import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { toClientSafeUserIdentity } from "@/core/features/auth/clientSafeUser";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
@@ -129,7 +130,7 @@ async function SuspendedMessages({
   return (
     <CondensedMessages
       messages={condensedMessages}
-      user={user}
+      user={toClientSafeUserIdentity(user)}
       className="max-w-5xl mx-auto"
     />
   );

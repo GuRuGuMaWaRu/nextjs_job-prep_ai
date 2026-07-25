@@ -23,6 +23,7 @@ import { Button } from "@/core/components/ui/button";
 import { UserAvatar } from "@/core/features/users/components/UserAvatar";
 import { routes } from "@/core/data/routes";
 import { signOutAction } from "@/core/features/auth/actions";
+import type { ClientSafeUser } from "@/core/features/auth/clientSafeUser";
 
 const navLinks = [
   { name: "Interviews", href: "interviews", Icon: SpeechIcon },
@@ -30,11 +31,7 @@ const navLinks = [
   { name: "Resume", href: "resume", Icon: FileSlidersIcon },
 ];
 
-export function Navbar({
-  user,
-}: {
-  user: { name: string; email: string; image: string | null };
-}) {
+export function Navbar({ user }: { user: ClientSafeUser }) {
   const { jobInfoId } = useParams();
   const pathName = usePathname();
 

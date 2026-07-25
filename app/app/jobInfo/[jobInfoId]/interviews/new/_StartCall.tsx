@@ -23,6 +23,7 @@ import { errorToast } from "@/core/lib/errorToast";
 import { env } from "@/core/data/env/client";
 import { routes } from "@/core/data/routes";
 import { HUME_UNAVAILABLE_MESSAGE } from "@/core/data/constants";
+import type { ClientSafeUserIdentity } from "@/core/features/auth/clientSafeUser";
 
 export function StartCall({
   accessToken,
@@ -34,7 +35,7 @@ export function StartCall({
     typeof JobInfoTable.$inferSelect,
     "id" | "title" | "description" | "experienceLevel"
   >;
-  user: { name: string; image: string | null };
+  user: ClientSafeUserIdentity;
 }) {
   const router = useRouter();
   const {
