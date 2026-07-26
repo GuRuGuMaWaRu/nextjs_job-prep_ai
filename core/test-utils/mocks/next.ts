@@ -23,6 +23,7 @@
 export type NextCacheMock = {
   revalidatePath: jest.Mock;
   revalidateTag: jest.Mock;
+  updateTag: jest.Mock;
   cacheTag: jest.Mock;
   unstable_cache: jest.Mock;
   unstable_noStore: jest.Mock;
@@ -33,12 +34,14 @@ export type NextCacheMock = {
  *
  * - `unstable_cache` returns the underlying function untouched so cached
  *   reads behave like direct calls in tests.
- * - `cacheTag` and `revalidateTag/Path` are bare `jest.fn()`s for assertions.
+ * - `cacheTag`, `updateTag`, and `revalidateTag/Path` are bare `jest.fn()`s
+ *   for assertions.
  */
 export function createNextCacheMock(): NextCacheMock {
   return {
     revalidatePath: jest.fn(),
     revalidateTag: jest.fn(),
+    updateTag: jest.fn(),
     cacheTag: jest.fn(),
     unstable_cache: jest.fn(
       <TArgs extends unknown[], TReturn>(

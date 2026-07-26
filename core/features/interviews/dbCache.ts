@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 import { getGlobalTag, getIdTag, getJobInfoTag } from "@/core/lib/dataCache";
 
@@ -14,6 +14,13 @@ export function getInterviewIdTag(id: string) {
   return getIdTag("interviews", id);
 }
 
+/**
+ * Expire interview cache tags immediately after mutations.
+ *
+ * Uses `updateTag` (not `revalidateTag(..., "max")`) so the post-call redirect
+ * to the interview detail page cannot serve a stale row with `humeChatId: null`
+ * and hard-404 via SuspendedMessages.
+ */
 export function revalidateInterviewCache({
   id,
   jobInfoId,
@@ -21,7 +28,7 @@ export function revalidateInterviewCache({
   id: string;
   jobInfoId: string;
 }) {
-  revalidateTag(getInterviewGlobalTag(), "max");
-  revalidateTag(getInterviewJobInfoTag(jobInfoId), "max");
-  revalidateTag(getInterviewIdTag(id), "max");
+  updateTag(getInterviewGlobalTag());
+  updateTag(getInterviewJobInfoTag(jobInfoId));
+  updateTag(getInterviewIdTag(id));
 }
