@@ -110,16 +110,30 @@ export function StartCall({
     });
   };
 
-  const handleEndInterview = () => {
+  const handleEndInterview = async () => {
     disconnect();
 
     if (interviewId == null) {
-      return router.push(routes.interviews(jobInfo.id));
+      router.push(routes.interviews(jobInfo.id));
+      return;
+    }
+
+    // Await the final write before navigating so the detail page cannot
+    // read a pre-completion row (humeChatId still null) and hard-404.
+    const finalUpdate: { humeChatId?: string; duration?: string } = {};
+
+    if (chatMetadata?.chatId != null) {
+      finalUpdate.humeChatId = chatMetadata.chatId;
     }
 
     if (durationRef.current != null) {
-      updateInterviewAction(interviewId, { duration: durationRef.current });
+      finalUpdate.duration = durationRef.current;
     }
+
+    if (finalUpdate.humeChatId != null || finalUpdate.duration != null) {
+      await updateInterviewAction(interviewId, finalUpdate);
+    }
+
     router.push(routes.interview(jobInfo.id, interviewId));
   };
 

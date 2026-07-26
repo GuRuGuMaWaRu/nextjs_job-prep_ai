@@ -13,6 +13,7 @@ describe("createNextCacheMock", () => {
 
     expect(jest.isMockFunction(mock.revalidatePath)).toBe(true);
     expect(jest.isMockFunction(mock.revalidateTag)).toBe(true);
+    expect(jest.isMockFunction(mock.updateTag)).toBe(true);
     expect(jest.isMockFunction(mock.cacheTag)).toBe(true);
     expect(jest.isMockFunction(mock.unstable_noStore)).toBe(true);
   });
