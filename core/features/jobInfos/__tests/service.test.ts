@@ -11,7 +11,7 @@ jest.mock("@/core/features/jobInfos/dal", () => ({
   updateJobInfoDal: jest.fn(),
 }));
 
-import { NotFoundError, PermissionError } from "@/core/dal/errors";
+import { NotFoundError, PermissionError } from "@/core/lib/errors";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   createJobInfoDal,

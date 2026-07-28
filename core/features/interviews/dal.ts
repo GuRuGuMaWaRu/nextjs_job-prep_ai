@@ -1,6 +1,6 @@
 import { cacheTag } from "next/cache";
 
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 import {
   getInterviewByIdDb,
   getInterviewsDb,

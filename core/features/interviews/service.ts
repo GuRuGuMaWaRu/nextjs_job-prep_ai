@@ -1,7 +1,7 @@
 import { refresh } from "next/cache";
 
-import { PermissionError } from "@/core/dal/errors";
-import { requireUser } from "@/core/dal/helpers";
+import { PermissionError } from "@/core/lib/errors";
+import { requireUser } from "@/core/lib/requireUser";
 import {
   getInterviewByIdDal,
   getInterviewsDal,

@@ -13,14 +13,14 @@ import {
   removeJobInfoService,
 } from "@/core/features/jobInfos/service";
 import { JOB_INFO_ACTION_MESSAGES } from "@/core/features/jobInfos/actionMessages";
-import { ActionResult } from "@/core/dal/helpers";
+import { ActionResult } from "@/core/lib/types";
 import { JobInfoTable } from "@/core/drizzle/schema";
 import {
   DatabaseError,
   NotFoundError,
   PermissionError,
   UnauthorizedError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 
 /**
  * Action Layer for JobInfo

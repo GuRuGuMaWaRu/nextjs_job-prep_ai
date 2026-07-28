@@ -8,7 +8,7 @@ import {
   type Permission,
   PLAN_LIMITS,
 } from "@/core/data/constants";
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 
 /**
  * Check if the current user has a specific permission

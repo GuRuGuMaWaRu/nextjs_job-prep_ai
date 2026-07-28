@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import type { AuthUser } from "@/core/features/auth/types";
-import { UnauthorizedError } from "@/core/dal/errors";
+import { UnauthorizedError } from "@/core/lib/errors";
 
 export async function requireUser(): Promise<AuthUser> {
   const user = await getCurrentUser();
@@ -11,13 +11,3 @@ export async function requireUser(): Promise<AuthUser> {
 
   return user;
 }
-
-export type ActionResult<T = void> =
-  | {
-      success: true;
-      data: T;
-    }
-  | {
-      success: false;
-      message: string;
-    };

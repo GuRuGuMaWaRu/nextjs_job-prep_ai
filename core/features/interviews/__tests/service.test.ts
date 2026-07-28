@@ -19,7 +19,7 @@ jest.mock("@/core/services/ai/interviews", () => ({
 
 import { refresh } from "next/cache";
 
-import { PermissionError } from "@/core/dal/errors";
+import { PermissionError } from "@/core/lib/errors";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getInterviewByIdDal,

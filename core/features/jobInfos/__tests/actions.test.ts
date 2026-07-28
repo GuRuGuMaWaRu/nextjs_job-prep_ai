@@ -23,7 +23,7 @@ import {
   NotFoundError,
   PermissionError,
   UnauthorizedError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import {
   createJobInfoAction,
   getJobInfoAction,

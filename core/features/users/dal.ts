@@ -1,4 +1,4 @@
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 import { UserTable } from "@/core/drizzle/schema";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import {

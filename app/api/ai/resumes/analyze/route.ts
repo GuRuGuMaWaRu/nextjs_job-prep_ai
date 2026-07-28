@@ -12,7 +12,7 @@ import {
   PermissionError,
   RateLimitError,
   UnauthorizedError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { env } from "@/core/data/env/server";
 
 /**

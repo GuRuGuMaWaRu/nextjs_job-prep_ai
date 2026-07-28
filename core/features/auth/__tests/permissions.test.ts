@@ -25,7 +25,7 @@ import { getResumeAnalysisCountDb } from "@/core/features/resumeAnalysis/db";
 
 import { makeProUser, makeUser } from "@/core/test-utils/factories/user";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetInterviewCountDb = jest.mocked(getInterviewCountDb);

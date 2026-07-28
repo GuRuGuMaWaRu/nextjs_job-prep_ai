@@ -30,7 +30,7 @@ import arcjet, { request } from "@arcjet/next";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
-import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
+import { DatabaseError, UnauthorizedError } from "@/core/lib/errors";
 import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeQuestion, makeUser } from "@/core/test-utils/factories";

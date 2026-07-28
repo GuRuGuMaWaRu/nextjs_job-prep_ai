@@ -10,7 +10,7 @@ import { hasPermission } from "@/core/features/auth/permissions";
 import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
 
 import { tryInsertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 

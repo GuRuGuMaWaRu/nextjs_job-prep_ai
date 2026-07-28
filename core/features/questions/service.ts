@@ -1,4 +1,4 @@
-import { requireUser } from "@/core/dal/helpers";
+import { requireUser } from "@/core/lib/requireUser";
 import {
   getQuestionByIdDal,
   getQuestionsDal,

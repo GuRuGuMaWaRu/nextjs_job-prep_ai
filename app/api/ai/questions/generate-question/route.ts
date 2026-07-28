@@ -19,7 +19,7 @@ import {
   UnauthorizedError,
   BadRequestError,
   RateLimitError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { env } from "@/core/data/env/server";
 
 /**

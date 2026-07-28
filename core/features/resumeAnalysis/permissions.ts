@@ -1,7 +1,7 @@
 import { hasPermission } from "@/core/features/auth/permissions";
 import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
 import type { UserPlan } from "@/core/drizzle/schema/user";
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 
 import { tryInsertResumeAnalysisDb } from "./db";
 

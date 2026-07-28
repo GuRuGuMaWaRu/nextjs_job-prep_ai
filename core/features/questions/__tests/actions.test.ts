@@ -20,7 +20,7 @@ import {
   getQuestionsService,
   insertQuestionService,
 } from "@/core/features/questions/service";
-import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
+import { DatabaseError, UnauthorizedError } from "@/core/lib/errors";
 import { makeQuestion } from "@/core/test-utils/factories";
 
 const mockGetQuestionsService = jest.mocked(getQuestionsService);

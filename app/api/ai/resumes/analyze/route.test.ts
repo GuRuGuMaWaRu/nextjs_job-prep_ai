@@ -57,7 +57,7 @@ import {
   DatabaseError,
   NotFoundError,
   PermissionError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeJobInfo, makeUser } from "@/core/test-utils/factories";

@@ -9,8 +9,8 @@ import {
   updateJobInfoDal,
   removeJobInfoDal,
 } from "@/core/features/jobInfos/dal";
-import { NotFoundError, PermissionError } from "@/core/dal/errors";
-import { requireUser } from "@/core/dal/helpers";
+import { NotFoundError, PermissionError } from "@/core/lib/errors";
+import { requireUser } from "@/core/lib/requireUser";
 import { JOB_INFO_SERVICE_ERRORS } from "@/core/features/jobInfos/serviceErrors";
 
 /**
