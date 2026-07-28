@@ -93,7 +93,7 @@ describe("billing Stripe helpers", () => {
           process.execPath,
           [
             join(process.cwd(), "node_modules", "jest", "bin", "jest.js"),
-            "core/features/billing/stripe.test.ts",
+            "core/features/billing/__tests/stripe.test.ts",
             "--runInBand",
             "--no-cache",
             "--testNamePattern=returns localhost only",
