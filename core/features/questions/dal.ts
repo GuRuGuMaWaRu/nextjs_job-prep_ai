@@ -22,12 +22,12 @@ import { QuestionTable } from "@/core/drizzle/schema";
 /**
  * Get all questions for a job info
  */
-export async function getQuestionsDal(jobInfoId: string) {
+export async function getQuestionsDal(jobInfoId: string, userId: string) {
   "use cache";
   cacheTag(getQuestionJobInfoTag(jobInfoId));
 
   try {
-    return await getQuestionsDb(jobInfoId);
+    return await getQuestionsDb(jobInfoId, userId);
   } catch (error) {
     console.error("Database error getting questions:", error);
     throw new DatabaseError("Failed to fetch questions from database", error);

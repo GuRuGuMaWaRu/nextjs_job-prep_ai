@@ -8,25 +8,32 @@ jest.mock("@/core/features/questions/dal", () => ({
   insertQuestionDal: jest.fn(),
 }));
 
+jest.mock("@/core/features/jobInfos/dal", () => ({
+  getJobInfoDal: jest.fn(),
+}));
+
+import { NotFoundError, UnauthorizedError } from "@/core/lib/errors";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getQuestionByIdDal,
   getQuestionsDal,
   insertQuestionDal,
 } from "@/core/features/questions/dal";
+import { getJobInfoDal } from "@/core/features/jobInfos/dal";
 import {
   getQuestionByIdService,
   getQuestionsService,
   insertQuestionService,
 } from "@/core/features/questions/service";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeQuestion } from "@/core/test-utils/factories";
+import { makeJobInfo, makeQuestion } from "@/core/test-utils/factories";
 import { makeUser } from "@/core/test-utils/factories/user";
 
 const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetQuestionsDal = jest.mocked(getQuestionsDal);
 const mockGetQuestionByIdDal = jest.mocked(getQuestionByIdDal);
 const mockInsertQuestionDal = jest.mocked(insertQuestionDal);
+const mockGetJobInfoDal = jest.mocked(getJobInfoDal);
 
 describe("question services", () => {
   beforeEach(() => {
@@ -35,14 +42,26 @@ describe("question services", () => {
   });
 
   describe("getQuestionsService", () => {
-    it("gets questions for a job info without requiring authentication", async () => {
+    it("gets questions for a job info using the signed-in user id", async () => {
       const questions = [makeQuestion({ jobInfoId: "job-info-1" })];
       mockGetQuestionsDal.mockResolvedValue(questions);
 
       await expect(getQuestionsService("job-info-1")).resolves.toBe(questions);
 
-      expect(mockGetCurrentUser).not.toHaveBeenCalled();
-      expect(mockGetQuestionsDal).toHaveBeenCalledWith("job-info-1");
+      expect(mockGetQuestionsDal).toHaveBeenCalledWith(
+        "job-info-1",
+        TEST_USER_ID,
+      );
+    });
+
+    it("rejects when the user is not signed in", async () => {
+      mockGetCurrentUser.mockResolvedValue(null);
+
+      await expect(getQuestionsService("job-info-1")).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+
+      expect(mockGetQuestionsDal).not.toHaveBeenCalled();
     });
   });
 
@@ -61,26 +80,70 @@ describe("question services", () => {
         TEST_USER_ID,
       );
     });
+
+    it("rejects when the user is not signed in", async () => {
+      mockGetCurrentUser.mockResolvedValue(null);
+
+      await expect(getQuestionByIdService("question-1")).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+
+      expect(mockGetQuestionByIdDal).not.toHaveBeenCalled();
+    });
   });
 
   describe("insertQuestionService", () => {
-    it("inserts a question with its job info and difficulty", async () => {
+    it("inserts a question after verifying job info ownership", async () => {
       const text = "What tradeoff would you make?";
       const jobInfoId = "job-info-1";
       const difficulty = "hard";
-
+      const jobInfo = makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID });
       const question = makeQuestion({ text, jobInfoId, difficulty });
+
+      mockGetJobInfoDal.mockResolvedValue(jobInfo);
       mockInsertQuestionDal.mockResolvedValue(question);
 
       await expect(
         insertQuestionService(text, jobInfoId, difficulty),
       ).resolves.toBe(question);
 
+      expect(mockGetJobInfoDal).toHaveBeenCalledWith(jobInfoId, TEST_USER_ID);
       expect(mockInsertQuestionDal).toHaveBeenCalledWith({
         text,
         jobInfoId,
         difficulty,
       });
+    });
+
+    it("rejects insert when the job info is not accessible", async () => {
+      mockGetJobInfoDal.mockResolvedValue(
+        null as unknown as Awaited<ReturnType<typeof getJobInfoDal>>,
+      );
+
+      await expect(
+        insertQuestionService(
+          "What tradeoff would you make?",
+          "job-info-1",
+          "hard",
+        ),
+      ).rejects.toBeInstanceOf(NotFoundError);
+
+      expect(mockInsertQuestionDal).not.toHaveBeenCalled();
+    });
+
+    it("rejects when the user is not signed in", async () => {
+      mockGetCurrentUser.mockResolvedValue(null);
+
+      await expect(
+        insertQuestionService(
+          "What tradeoff would you make?",
+          "job-info-1",
+          "hard",
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedError);
+
+      expect(mockGetJobInfoDal).not.toHaveBeenCalled();
+      expect(mockInsertQuestionDal).not.toHaveBeenCalled();
     });
   });
 });
