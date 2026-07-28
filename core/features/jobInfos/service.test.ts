@@ -1,4 +1,4 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -12,7 +12,7 @@ jest.mock("@/core/features/jobInfos/dal", () => ({
 }));
 
 import { NotFoundError, PermissionError } from "@/core/dal/errors";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   createJobInfoDal,
   getJobInfoByIdDal,
@@ -55,9 +55,7 @@ const OTHER_USER_ID = TEST_OTHER_USER_ID;
 describe("job info service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: SIGNED_IN_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: SIGNED_IN_USER_ID }));
   });
 
   it("creates a job info for the signed-in user", async () => {

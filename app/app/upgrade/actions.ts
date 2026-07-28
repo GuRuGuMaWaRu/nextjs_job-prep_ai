@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
+import { revalidateUserCache } from "@/core/features/users/cache";
 import { routes } from "@/core/data/routes";
 
 /**
@@ -12,6 +12,11 @@ import { routes } from "@/core/data/routes";
  */
 export async function revalidateUpgradePage() {
   revalidatePath(routes.upgrade);
-  const { user } = await getCurrentUser();
-  if (user != null) revalidateUserCache(user.id);
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return;
+  }
+
+  revalidateUserCache(user.id);
 }

@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
 import { getQuestionCountDb } from "@/core/features/questions/db";
@@ -16,13 +16,13 @@ import { DatabaseError } from "@/core/dal/errors";
  * @returns true if user has the permission, false otherwise
  */
 export async function hasPermission(permission: Permission): Promise<boolean> {
-  const { user } = await getCurrentUser();
+  const user = await getCurrentUser();
 
   if (user == null) {
     return false;
   }
 
-  const userPlan = (user.plan as UserPlan) || "free";
+  const userPlan = user.plan;
   const permissionLimit = PLAN_LIMITS[userPlan][permission];
 
   if (permissionLimit === null) {
@@ -57,13 +57,13 @@ export async function hasPermission(permission: Permission): Promise<boolean> {
  * @returns The user's plan or "free" if not found
  */
 export async function getUserPlan(): Promise<UserPlan> {
-  const { user } = await getCurrentUser();
+  const user = await getCurrentUser();
 
   if (user == null) {
-    return "free";
+    return "free" as UserPlan;
   }
 
-  return (user.plan as UserPlan) || "free";
+  return user.plan;
 }
 
 export type SubscriptionInfo = {
@@ -77,14 +77,14 @@ export type SubscriptionInfo = {
  * for users whose subscription is in a non-terminal but non-active state.
  */
 export async function getUserSubscriptionInfo(): Promise<SubscriptionInfo> {
-  const { user } = await getCurrentUser();
+  const user = await getCurrentUser();
 
   if (user == null) {
-    return { plan: "free", hasExistingSubscription: false };
+    return { plan: "free" as UserPlan, hasExistingSubscription: false };
   }
 
   return {
-    plan: (user.plan as UserPlan) || "free",
+    plan: user.plan,
     hasExistingSubscription: user.stripeSubscriptionId != null,
   };
 }

@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getStripe } from "@/core/features/billing/stripe";
 import { fulfillCheckoutSession } from "@/core/features/billing/webhookHelpers";
 
@@ -20,8 +20,11 @@ export async function checkSubscriptionSuccess(searchParams: SearchParams) {
 
   if (sessionId && stripe) {
     try {
-      const { user } = await getCurrentUser();
-      if (user == null) return false;
+      const user = await getCurrentUser();
+
+      if (user == null) {
+        return false;
+      }
 
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       const isPaidCheckoutForCurrentUser =

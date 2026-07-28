@@ -1,8 +1,4 @@
-import type { AuthUser, CurrentUser } from "@/core/features/auth/types";
-import {
-  TEST_FIXTURE_NOW_ISO,
-  TEST_USER_ID,
-} from "@/core/test-utils/constants";
+import type { AuthUser, User } from "@/core/features/auth/types";
 
 let userCounter = 0;
 
@@ -12,20 +8,14 @@ function nextUserIndex(): number {
 }
 
 function buildUser(index: number, overrides: Partial<AuthUser>): AuthUser {
-  const now = new Date(TEST_FIXTURE_NOW_ISO);
-
   return {
     id: `user-${index}`,
     name: `Test User ${index}`,
     email: `user-${index}@test.local`,
     image: null,
-    passwordHash: null,
-    emailVerified: now,
     plan: "free",
     stripeCustomerId: null,
     stripeSubscriptionId: null,
-    createdAt: now,
-    updatedAt: now,
     ...overrides,
   };
 }
@@ -38,7 +28,7 @@ function buildUser(index: number, overrides: Partial<AuthUser>): AuthUser {
  *
  * Never use real customer emails in fixtures; defaults use `@test.local`.
  */
-export function makeUser(overrides: Partial<AuthUser> = {}): AuthUser {
+export function makeUser(overrides: Partial<User> = {}): AuthUser {
   return buildUser(nextUserIndex(), overrides);
 }
 
@@ -58,4 +48,20 @@ export function makeProUser(overrides: Partial<AuthUser> = {}): AuthUser {
     stripeSubscriptionId: `sub_test_${index}`,
     ...overrides,
   });
+}
+
+export function makeUserWithPassword(
+  userOverrides: Partial<AuthUser>,
+  passwordOverrides: Partial<User> = {},
+): User {
+  const index = nextUserIndex();
+
+  return {
+    ...buildUser(index, {
+      ...userOverrides,
+    }),
+    passwordHash: "password",
+    emailVerified: new Date(),
+    ...passwordOverrides,
+  };
 }

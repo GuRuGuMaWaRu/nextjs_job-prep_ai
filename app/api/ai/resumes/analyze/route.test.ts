@@ -13,7 +13,7 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -48,7 +48,7 @@ jest.mock("@/core/services/ai/resumes/ai", () => ({
 import arcjet, { request } from "@arcjet/next";
 import { z } from "zod";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
@@ -146,9 +146,7 @@ describe("POST /api/ai/resumes/analyze", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
     mockGetJobInfoAction.mockResolvedValue(
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
@@ -191,9 +189,7 @@ describe("POST /api/ai/resumes/analyze", () => {
   });
 
   it("returns 401 when the current user is unauthenticated", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce({
-      user: null,
-    });
+    mockGetCurrentUser.mockResolvedValue(null);
 
     const response = await POST(buildFormRequest());
 
@@ -283,6 +279,7 @@ describe("POST /api/ai/resumes/analyze", () => {
     expect(mockGetJobInfoAction).toHaveBeenCalledWith(jobInfoId);
     expect(mockReserveResumeAnalysisUsage).toHaveBeenCalledWith(
       TEST_USER_ID,
+      "free",
       jobInfoId,
     );
     expect(mockAnalyzeResumeForJob).toHaveBeenCalledWith({

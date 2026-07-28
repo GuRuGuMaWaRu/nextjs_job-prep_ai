@@ -10,7 +10,7 @@ import {
   deleteExpiredSessionsDb,
   deleteSessionDb,
   extendSessionDb,
-  getSessionByTokenDb,
+  getActiveSessionDb,
 } from "@/core/features/auth/db";
 
 export type Session = {
@@ -49,16 +49,16 @@ export async function createSession(userId: string): Promise<NewSession> {
 }
 
 /**
- * Validate a session token and return session data
+ * Get a session by token and return session data
  * @param token - Session token from cookie
- * @returns Session object if valid, null otherwise
+ * @returns Session object if found, null otherwise
  */
-export async function getSessionByToken(
+export async function getActiveSession(
   token: string,
 ): Promise<ActiveSession | null> {
   try {
     const hashedToken = hashToken(token);
-    const session = await getSessionByTokenDb(hashedToken);
+    const session = await getActiveSessionDb(hashedToken);
 
     if (!session) {
       return null;
@@ -66,8 +66,8 @@ export async function getSessionByToken(
 
     return session;
   } catch (error) {
-    console.error("Database error validating session:", error);
-    throw new DatabaseError("Failed to validate session", error);
+    console.error("Database error getting active session:", error);
+    throw new DatabaseError("Failed to get active session", error);
   }
 }
 
@@ -79,7 +79,7 @@ export async function getSessionByToken(
 export async function extendSessionIfNeeded(
   token: string,
 ): Promise<ActiveSession | null> {
-  const session = await getSessionByToken(token);
+  const session = await getActiveSession(token);
 
   if (!session) {
     return null;

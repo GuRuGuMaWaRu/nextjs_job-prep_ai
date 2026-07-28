@@ -19,7 +19,7 @@ jest.mock("@/core/features/billing/stripe", () => ({
   isStripeConfigured: jest.fn(),
 }));
 
-jest.mock("@/core/features/users/dbCache", () => ({
+jest.mock("@/core/features/users/cache", () => ({
   revalidateUserCache: jest.fn(),
 }));
 
@@ -29,7 +29,7 @@ import { NextRequest } from "next/server";
 import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 import { getUserIdsWithStripeSubscriptionDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
+import { revalidateUserCache } from "@/core/features/users/cache";
 import { TEST_OTHER_USER_ID, TEST_USER_ID } from "@/core/test-utils/constants";
 import { createTestServerEnv } from "@/core/test-utils/env";
 

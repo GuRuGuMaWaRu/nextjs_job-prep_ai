@@ -6,19 +6,13 @@ jest.mock("@/core/features/resumeAnalysis/db", () => ({
   tryInsertResumeAnalysisDb: jest.fn(),
 }));
 
-jest.mock("@/core/features/users/actions", () => ({
-  getUserAction: jest.fn(),
-}));
-
 import { hasPermission } from "@/core/features/auth/permissions";
 import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
 
 import { tryInsertResumeAnalysisDb } from "@/core/features/resumeAnalysis/db";
-import { getUserAction } from "@/core/features/users/actions";
 import { DatabaseError } from "@/core/dal/errors";
 
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeProUser, makeUser } from "@/core/test-utils/factories";
 
 import {
   checkResumeAnalysisPermission,
@@ -26,7 +20,6 @@ import {
 } from "./permissions";
 
 const mockHasPermission = jest.mocked(hasPermission);
-const mockGetUserAction = jest.mocked(getUserAction);
 const mockTryInsertResumeAnalysisDb = jest.mocked(tryInsertResumeAnalysisDb);
 
 const SIGNED_IN_USER_ID = TEST_USER_ID;
@@ -90,25 +83,12 @@ describe("reserveResumeAnalysisUsage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockHasPermission.mockResolvedValue(true);
-    mockGetUserAction.mockResolvedValue(makeUser({ plan: "free" }));
   });
 
   it("returns false when the user lacks permissions", async () => {
     mockHasPermission.mockResolvedValueOnce(false);
     await expect(
-      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, jobInfoId),
-    ).resolves.toBe(false);
-
-    expect(mockGetUserAction).not.toHaveBeenCalled();
-    expect(mockTryInsertResumeAnalysisDb).not.toHaveBeenCalled();
-  });
-
-  it("returns false when the signed-in user cannot be loaded", async () => {
-    mockHasPermission.mockResolvedValueOnce(true);
-    mockGetUserAction.mockResolvedValueOnce(null);
-
-    await expect(
-      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, jobInfoId),
+      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, "free", jobInfoId),
     ).resolves.toBe(false);
 
     expect(mockTryInsertResumeAnalysisDb).not.toHaveBeenCalled();
@@ -119,7 +99,7 @@ describe("reserveResumeAnalysisUsage", () => {
     mockTryInsertResumeAnalysisDb.mockResolvedValue({ id: "analysis-id" });
 
     await expect(
-      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, jobInfoId),
+      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, "free", jobInfoId),
     ).resolves.toBe(true);
 
     expect(mockTryInsertResumeAnalysisDb).toHaveBeenCalledWith({
@@ -131,11 +111,10 @@ describe("reserveResumeAnalysisUsage", () => {
 
   it("returns true when a pro user successfully reserves quota", async () => {
     mockHasPermission.mockResolvedValueOnce(true);
-    mockGetUserAction.mockResolvedValueOnce(makeProUser());
     mockTryInsertResumeAnalysisDb.mockResolvedValue({ id: "analysis-id" });
 
     await expect(
-      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, jobInfoId),
+      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, "pro", jobInfoId),
     ).resolves.toBe(true);
 
     expect(mockTryInsertResumeAnalysisDb).toHaveBeenCalledWith({
@@ -150,7 +129,7 @@ describe("reserveResumeAnalysisUsage", () => {
     mockTryInsertResumeAnalysisDb.mockResolvedValue(null);
 
     await expect(
-      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, jobInfoId),
+      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, "free", jobInfoId),
     ).resolves.toBe(false);
   });
 
@@ -161,7 +140,7 @@ describe("reserveResumeAnalysisUsage", () => {
     );
 
     await expect(
-      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, jobInfoId),
+      reserveResumeAnalysisUsage(SIGNED_IN_USER_ID, "free", jobInfoId),
     ).rejects.toThrow(DatabaseError);
   });
 });

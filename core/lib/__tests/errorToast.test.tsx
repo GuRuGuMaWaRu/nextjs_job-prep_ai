@@ -18,7 +18,7 @@ import {
   RATE_LIMIT_MESSAGE,
 } from "@/core/data/constants";
 
-import { errorToast, unexpectedErrorToast } from "./errorToast";
+import { errorToast, unexpectedErrorToast } from "../errorToast";
 
 const mockToast = jest.mocked(toast);
 

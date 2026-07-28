@@ -140,7 +140,8 @@ export async function syncSubscriptionFromStripe(
   customerId: string,
 ): Promise<string | null> {
   const user = await getUserByStripeCustomerIdDb(customerId);
-  if (!user) {
+
+  if (user === null) {
     throw new Error(
       `syncSubscriptionFromStripe: no user for customer ${customerId} - will retry`,
     );
@@ -207,7 +208,8 @@ export async function reconcileUserStripeSubscription(
   userId: string,
 ): Promise<ReconcileStripeSubscriptionResult> {
   const user = await getUserByIdDb(userId);
-  if (!user?.stripeSubscriptionId) {
+
+  if (!user || !user.stripeSubscriptionId) {
     return { kind: "skipped", reason: "no_subscription" };
   }
 

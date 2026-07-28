@@ -3,6 +3,7 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { UserTable } from "@/core/drizzle/schema";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { db } from "@/core/drizzle/db";
+import type { AuthUser } from "@/core/features/auth/types";
 
 type UpdateUserPlanAndStripeIdsPayload = {
   plan: UserPlan;
@@ -38,12 +39,21 @@ export async function deleteUserDb(id: string) {
   await db.delete(UserTable).where(eq(UserTable.id, id));
 }
 
-export async function getUserByIdDb(id: string) {
+export async function getUserByIdDb(id: string): Promise<AuthUser | null> {
   const user = await db.query.UserTable.findFirst({
     where: eq(UserTable.id, id),
+    columns: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      plan: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+    },
   });
 
-  return user;
+  return user ?? null;
 }
 
 /**
@@ -59,9 +69,18 @@ export async function getUserIdsWithStripeSubscriptionDb(limit = 500) {
   return rows.map((r) => r.id);
 }
 
-export async function getUserByStripeCustomerIdDb(stripeCustomerId: string) {
+export async function getUserByStripeCustomerIdDb(
+  stripeCustomerId: string,
+): Promise<Pick<
+  AuthUser,
+  "id" | "stripeCustomerId" | "stripeSubscriptionId"
+> | null> {
   const users = await db
-    .select()
+    .select({
+      id: UserTable.id,
+      stripeCustomerId: UserTable.stripeCustomerId,
+      stripeSubscriptionId: UserTable.stripeSubscriptionId,
+    })
     .from(UserTable)
     .where(eq(UserTable.stripeCustomerId, stripeCustomerId));
 

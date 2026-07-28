@@ -1,4 +1,4 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -13,7 +13,7 @@ jest.mock("@/core/features/billing/stripe", () => ({
   isStripeConfigured: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -76,9 +76,7 @@ describe("POST /api/stripe/cancel-subscription", () => {
     mockStripe.subscriptions.update.mockReset();
 
     mockGetCurrentUser.mockReset();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeProUser({ id: TEST_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeProUser({ id: TEST_USER_ID }));
 
     mockGetStripe.mockReset();
     mockGetStripe.mockReturnValue(asStripeClient(mockStripe));
@@ -100,9 +98,7 @@ describe("POST /api/stripe/cancel-subscription", () => {
   });
 
   it("redirects unauthenticated users to the upgrade unauthorized error", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: null,
-    });
+    mockGetCurrentUser.mockResolvedValue(null);
 
     const response = await POST(buildJsonRequest());
 
@@ -115,13 +111,13 @@ describe("POST /api/stripe/cancel-subscription", () => {
   });
 
   it("redirects when the current user has no Stripe subscription id", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-cancel-missing@test.local",
         stripeSubscriptionId: null,
       }),
-    });
+    );
 
     const response = await POST(buildJsonRequest());
 
@@ -158,12 +154,12 @@ describe("POST /api/stripe/cancel-subscription", () => {
   });
 
   it("sets the current subscription to cancel at period end", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({
         id: TEST_USER_ID,
         stripeSubscriptionId: "sub_test_cancel",
       }),
-    });
+    );
 
     mockStripe.subscriptions.update.mockResolvedValue({});
 
@@ -181,12 +177,12 @@ describe("POST /api/stripe/cancel-subscription", () => {
   });
 
   it("redirects with 302 when JSON is not requested", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({
         id: TEST_USER_ID,
         stripeSubscriptionId: "sub_test_cancel",
       }),
-    });
+    );
     mockGetStripeBaseUrl.mockReturnValue(null);
     mockGetIdempotencyKeyFromRequest.mockResolvedValue(undefined);
     mockStripe.subscriptions.update.mockResolvedValue({});

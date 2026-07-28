@@ -2,7 +2,7 @@ jest.mock("next/cache", () => ({
   refresh: jest.fn(),
 }));
 
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -20,7 +20,7 @@ jest.mock("@/core/services/ai/interviews", () => ({
 import { refresh } from "next/cache";
 
 import { PermissionError } from "@/core/dal/errors";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getInterviewByIdDal,
   getInterviewsDal,
@@ -74,9 +74,7 @@ function mockNoInterviewFound() {
 describe("interview service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: SIGNED_IN_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: SIGNED_IN_USER_ID }));
   });
 
   it("returns an interview when the requested user owns its job info", async () => {
@@ -175,9 +173,9 @@ describe("interview service", () => {
   });
 
   it("generates and stores feedback for a completed owned interview", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: SIGNED_IN_USER_ID, name: SIGNED_IN_USER_NAME }),
-    });
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({ id: SIGNED_IN_USER_ID, name: SIGNED_IN_USER_NAME }),
+    );
 
     const interview = makeInterview({
       humeChatId: "chat-test-1",

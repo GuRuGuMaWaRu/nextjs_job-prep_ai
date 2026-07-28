@@ -13,7 +13,7 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -27,7 +27,7 @@ jest.mock("@/core/services/ai/questions", () => ({
 
 import arcjet, { request } from "@arcjet/next";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
 import { DatabaseError, UnauthorizedError } from "@/core/dal/errors";
@@ -107,9 +107,7 @@ describe("POST /api/ai/questions/generate-feedback", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
 
@@ -130,9 +128,7 @@ describe("POST /api/ai/questions/generate-feedback", () => {
   });
 
   it("returns 401 when the current user is unauthenticated", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce({
-      user: null,
-    });
+    mockGetCurrentUser.mockResolvedValueOnce(null);
 
     const response = await POST(
       buildJsonRequest({ prompt: "Use caching.", questionId }),

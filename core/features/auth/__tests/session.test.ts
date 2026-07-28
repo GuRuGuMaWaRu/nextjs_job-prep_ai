@@ -9,7 +9,7 @@ jest.mock("@/core/features/auth/db", () => ({
   deleteExpiredSessionsDb: jest.fn(),
   deleteSessionDb: jest.fn(),
   extendSessionDb: jest.fn(),
-  getSessionByTokenDb: jest.fn(),
+  getActiveSessionDb: jest.fn(),
 }));
 
 import { generateSecureToken, hashToken } from "@/core/features/auth/tokens";
@@ -19,7 +19,7 @@ import {
   deleteExpiredSessionsDb,
   deleteSessionDb,
   extendSessionDb,
-  getSessionByTokenDb,
+  getActiveSessionDb,
 } from "@/core/features/auth/db";
 import { SESSION_DURATION_MS } from "@/core/features/auth/constants";
 
@@ -28,7 +28,7 @@ import { makeSession } from "@/core/test-utils/factories";
 
 import {
   createSession,
-  getSessionByToken,
+  getActiveSession,
   extendSessionIfNeeded,
   deleteSession,
   deleteAllUserSessions,
@@ -42,7 +42,7 @@ const mockDeleteAllUserSessionsDb = jest.mocked(deleteAllUserSessionsDb);
 const mockDeleteExpiredSessionsDb = jest.mocked(deleteExpiredSessionsDb);
 const mockDeleteSessionDb = jest.mocked(deleteSessionDb);
 const mockExtendSessionDb = jest.mocked(extendSessionDb);
-const mockGetSessionByTokenDb = jest.mocked(getSessionByTokenDb);
+const mockGetActiveSessionDb = jest.mocked(getActiveSessionDb);
 
 function mockDeleteResult() {
   return { rows: [], rowCount: 1, command: "", oid: 1, fields: [] };
@@ -108,7 +108,7 @@ describe("session helpers", () => {
     });
   });
 
-  describe("getSessionByToken", () => {
+  describe("getActiveSession", () => {
     beforeEach(() => {
       jest.useFakeTimers().setSystemTime(new Date("2026-05-01").getTime());
       mockHashToken.mockReturnValue(testHashedToken);
@@ -120,34 +120,34 @@ describe("session helpers", () => {
         userId: TEST_USER_ID,
         expiresAt: new Date("2026-05-01"), // "2026-05-01"
       };
-      mockGetSessionByTokenDb.mockResolvedValueOnce(testSession);
+      mockGetActiveSessionDb.mockResolvedValueOnce(testSession);
 
-      const result = await getSessionByToken(testToken);
+      const result = await getActiveSession(testToken);
 
       expect(mockHashToken).toHaveBeenCalledWith(testToken);
-      expect(mockGetSessionByTokenDb).toHaveBeenCalledWith(testHashedToken);
+      expect(mockGetActiveSessionDb).toHaveBeenCalledWith(testHashedToken);
       expect(result).toEqual(testSession);
     });
 
     it("returns null if session is not valid", async () => {
-      mockGetSessionByTokenDb.mockResolvedValueOnce(null);
+      mockGetActiveSessionDb.mockResolvedValueOnce(null);
 
-      const result = await getSessionByToken(testToken);
+      const result = await getActiveSession(testToken);
 
-      expect(mockGetSessionByTokenDb).toHaveBeenCalledWith(testHashedToken);
+      expect(mockGetActiveSessionDb).toHaveBeenCalledWith(testHashedToken);
       expect(result).toBeNull();
     });
 
     it("throws DatabaseError in case of error", async () => {
       const dbError = new Error("find failed");
 
-      mockGetSessionByTokenDb.mockRejectedValueOnce(dbError);
+      mockGetActiveSessionDb.mockRejectedValueOnce(dbError);
 
-      await expect(getSessionByToken(testToken)).rejects.toMatchObject({
-        message: "Failed to validate session",
+      await expect(getActiveSession(testToken)).rejects.toMatchObject({
+        message: "Failed to get active session",
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Database error validating session:",
+        "Database error getting active session:",
         dbError,
       );
     });
@@ -167,7 +167,7 @@ describe("session helpers", () => {
       };
       const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-      mockGetSessionByTokenDb.mockResolvedValueOnce(testSession);
+      mockGetActiveSessionDb.mockResolvedValueOnce(testSession);
       mockExtendSessionDb.mockResolvedValueOnce([
         {
           id: testSession.id,
@@ -198,7 +198,7 @@ describe("session helpers", () => {
         expiresAt: new Date("2026-06-15"), // not hitting extension path
       };
 
-      mockGetSessionByTokenDb.mockResolvedValueOnce(testSession);
+      mockGetActiveSessionDb.mockResolvedValueOnce(testSession);
 
       const result = await extendSessionIfNeeded(testToken);
 
@@ -207,7 +207,7 @@ describe("session helpers", () => {
     });
 
     it("returns null if session is invalid", async () => {
-      mockGetSessionByTokenDb.mockResolvedValueOnce(null);
+      mockGetActiveSessionDb.mockResolvedValueOnce(null);
 
       const result = await extendSessionIfNeeded(testToken);
 
@@ -223,7 +223,7 @@ describe("session helpers", () => {
         expiresAt: new Date(), // need to hit extension path to test this error
       };
 
-      mockGetSessionByTokenDb.mockResolvedValueOnce(testSession);
+      mockGetActiveSessionDb.mockResolvedValueOnce(testSession);
       mockExtendSessionDb.mockRejectedValueOnce(dbError);
 
       await expect(extendSessionIfNeeded(testToken)).rejects.toMatchObject({

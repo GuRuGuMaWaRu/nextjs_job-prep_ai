@@ -6,7 +6,7 @@ import {
   makeUser,
 } from "@core/test-utils/factories";
 
-jest.mock("./db", () => ({
+jest.mock("@/core/features/users/db", () => ({
   getUserByIdDb: jest.fn(),
   getUserByStripeCustomerIdDb: jest.fn(),
   updateUserPlanAndStripeIdsIfSubscriptionMatchesDb: jest.fn(),
@@ -16,11 +16,11 @@ import {
   getUserByIdDb,
   getUserByStripeCustomerIdDb,
   updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
-} from "./db";
+} from "@/core/features/users/db";
 import {
   reconcileUserStripeSubscription,
   syncSubscriptionFromStripe,
-} from "./stripeSync";
+} from "../stripeSync";
 
 const mockGetUserByIdDb = jest.mocked(getUserByIdDb);
 const mockGetUserByStripeCustomerIdDb = jest.mocked(

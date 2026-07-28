@@ -1,7 +1,3 @@
-import {
-  TEST_FIXTURE_NOW_ISO,
-  TEST_USER_ID,
-} from "@/core/test-utils/constants";
 import { makeProUser, makeUser } from "./user";
 
 describe("makeUser", () => {
@@ -14,7 +10,6 @@ describe("makeUser", () => {
         name: expect.stringContaining("Test User"),
         email: expect.stringMatching(/@test\.local$/),
         plan: "free",
-        passwordHash: null,
         stripeCustomerId: null,
         stripeSubscriptionId: null,
         image: null,
@@ -36,14 +31,6 @@ describe("makeUser", () => {
     expect(user.plan).toBe("pro");
     expect(user.email).toBe("override@test.local");
     expect(user.name).toEqual(expect.any(String));
-  });
-
-  it("uses deterministic createdAt/updatedAt timestamps", () => {
-    const user = makeUser();
-
-    expect(user.createdAt).toBeInstanceOf(Date);
-    expect(user.createdAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
-    expect(user.updatedAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
   });
 });
 

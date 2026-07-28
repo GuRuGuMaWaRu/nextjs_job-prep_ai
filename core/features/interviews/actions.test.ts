@@ -13,7 +13,7 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -39,7 +39,7 @@ import {
   UnauthorizedError,
 } from "@/core/dal/errors";
 import arcjet, { request } from "@arcjet/next";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
 import {
   canCreateInterviewAction,
@@ -92,9 +92,7 @@ describe("interview actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
     mockCheckInterviewPermission.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
@@ -107,7 +105,7 @@ describe("interview actions", () => {
 
   describe("createInterviewAction", () => {
     it("returns a login message when the user is unauthenticated", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: null });
+      mockGetCurrentUser.mockResolvedValue(null);
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
@@ -394,7 +392,7 @@ describe("interview actions", () => {
     });
 
     it("returns unauthorized when the user is not signed in", async () => {
-      mockGetCurrentUser.mockResolvedValueOnce({ user: null });
+      mockGetCurrentUser.mockResolvedValue(null);
 
       await expect(
         generateInterviewFeedbackAction("interview-1"),

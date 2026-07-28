@@ -11,8 +11,8 @@ import {
   getInterviewIdTag,
   getInterviewJobInfoTag,
   revalidateInterviewCache,
-} from "@/core/features/interviews/dbCache";
-import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
+} from "@/core/features/interviews/cache";
+import { getJobInfoIdTag } from "@/core/features/jobInfos/cache";
 import { InterviewTable } from "@/core/drizzle/schema";
 
 /**

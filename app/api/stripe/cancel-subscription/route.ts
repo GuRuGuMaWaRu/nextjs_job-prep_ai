@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -9,6 +8,7 @@ import {
   isStripeConfigured,
 } from "@/core/features/billing/stripe";
 import { routes } from "@/core/data/routes";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 
 /**
  * Cancels the current user's Pro subscription at the end of the billing period.
@@ -16,7 +16,7 @@ import { routes } from "@/core/data/routes";
  * subscription ends.
  */
 export async function POST(request: Request) {
-  const { user } = await getCurrentUser();
+  const user = await getCurrentUser();
   const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers

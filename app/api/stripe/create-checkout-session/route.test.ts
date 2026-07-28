@@ -6,7 +6,7 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -21,7 +21,7 @@ jest.mock("@/core/features/billing/stripe", () => ({
   isStripeConfigured: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -97,13 +97,13 @@ describe("POST /api/stripe/create-checkout-session", () => {
     mockStripe.products.retrieve.mockReset();
 
     mockGetCurrentUser.mockReset();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-checkout@test.local",
         stripeCustomerId: "cus_test_checkout",
       }),
-    });
+    );
 
     mockGetStripe.mockReset();
     mockGetStripe.mockReturnValue(asStripeClient(mockStripe));
@@ -125,9 +125,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
   });
 
   it("redirects unauthenticated users to the upgrade unauthorized error", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: null,
-    });
+    mockGetCurrentUser.mockResolvedValue(null);
 
     const response = await POST(buildJsonRequest());
 
@@ -140,9 +138,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
   });
 
   it("redirects when the user is not found", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: null,
-    });
+    mockGetCurrentUser.mockResolvedValue(null);
 
     const response = await POST(buildJsonRequest());
 
@@ -242,13 +238,13 @@ describe("POST /api/stripe/create-checkout-session", () => {
   });
 
   it("redirects users who already have a Pro plan", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValueOnce(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-checkout-pro@test.local",
         plan: "pro",
       }),
-    });
+    );
 
     const response = await POST(buildJsonRequest());
 
@@ -260,13 +256,13 @@ describe("POST /api/stripe/create-checkout-session", () => {
   });
 
   it("redirects users who already have a Stripe subscription", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValueOnce(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-checkout-subscribed@test.local",
         stripeSubscriptionId: "sub_test_existing",
       }),
-    });
+    );
 
     const response = await POST(buildJsonRequest());
 
@@ -323,13 +319,13 @@ describe("POST /api/stripe/create-checkout-session", () => {
   });
 
   it("creates a checkout session with the user's email when no Stripe customer exists", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce({
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValueOnce(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-checkout-email@test.local",
         stripeCustomerId: null,
       }),
-    });
+    );
     mockStripe.checkout.sessions.create.mockResolvedValueOnce({
       url: "https://stripe.test/checkout/email",
     });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -13,7 +13,7 @@ import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 
 export async function POST(request: Request) {
-  const { user } = await getCurrentUser();
+  const user = await getCurrentUser();
 
   const wantsJson =
     request.headers

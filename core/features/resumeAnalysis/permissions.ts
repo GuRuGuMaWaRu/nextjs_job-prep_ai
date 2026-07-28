@@ -1,6 +1,5 @@
 import { hasPermission } from "@/core/features/auth/permissions";
 import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
-import { getUserAction } from "@/core/features/users/actions";
 import type { UserPlan } from "@/core/drizzle/schema/user";
 import { DatabaseError } from "@/core/dal/errors";
 
@@ -24,6 +23,7 @@ export async function checkResumeAnalysisPermission(): Promise<boolean> {
  */
 export async function reserveResumeAnalysisUsage(
   userId: string,
+  userPlan: UserPlan,
   jobInfoId: string,
 ): Promise<boolean> {
   const canAnalyze = await checkResumeAnalysisPermission();
@@ -31,14 +31,6 @@ export async function reserveResumeAnalysisUsage(
   if (!canAnalyze) {
     return false;
   }
-
-  const user = await getUserAction(userId);
-
-  if (!user) {
-    return false;
-  }
-
-  const userPlan = (user.plan || "free") as UserPlan;
 
   const reserved = await tryInsertResumeAnalysisDb({
     userId,

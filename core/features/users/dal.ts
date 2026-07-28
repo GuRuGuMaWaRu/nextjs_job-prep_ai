@@ -7,7 +7,7 @@ import {
   updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
   upsertUserDb,
 } from "@/core/features/users/db";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
+import { revalidateUserCache } from "@/core/features/users/cache";
 
 type UpdateUserPlanAndStripeIdsPayload = {
   plan: UserPlan;

@@ -3,7 +3,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import {
   BadRequestError,
@@ -36,7 +36,7 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { user } = await getCurrentUser();
+    const user = await getCurrentUser();
 
     if (user == null) {
       throw new UnauthorizedError("You are not logged in");

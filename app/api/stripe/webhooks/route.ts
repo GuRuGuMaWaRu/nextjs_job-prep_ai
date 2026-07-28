@@ -28,7 +28,7 @@ import {
 } from "@/core/features/billing/webhookHelpers";
 import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
+import { revalidateUserCache } from "@/core/features/users/cache";
 import { getStripe } from "@/core/features/billing/stripe";
 import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 

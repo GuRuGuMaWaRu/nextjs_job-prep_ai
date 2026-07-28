@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/core/components/ui/card";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { routes } from "@/core/data/routes";
 
 export default async function JobInfoEditPage({
@@ -33,11 +33,15 @@ export default async function JobInfoEditPage({
 }
 
 async function SuspendedForm({ jobInfoId }: { jobInfoId: string }) {
-  const jobInfo = await getCurrentUser().then(async ({ user }) => {
-    if (user == null) return redirect(routes.signIn);
+  const jobInfo = await getCurrentUser().then(async (user) => {
+    if (user == null) {
+      return redirect(routes.signIn);
+    }
 
-    const jobInfo = await getJobInfoAction(jobInfoId);
-    if (jobInfo == null) return notFound();
+    const jobInfo = await getJobInfoAction(jobInfoId); //** TODO: ot this could be getJobInfoAction that requires the user and redirects to Sign In internally, but then does this redirect to NotFound in the page body?*/
+    if (jobInfo == null) {
+      return notFound();
+    }
 
     return jobInfo;
   });

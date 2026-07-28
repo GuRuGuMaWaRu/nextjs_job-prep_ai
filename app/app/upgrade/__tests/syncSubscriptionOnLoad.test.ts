@@ -1,4 +1,4 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -11,7 +11,7 @@ jest.mock("@/core/features/billing/stripe", () => ({
   isStripeConfigured: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
@@ -36,9 +36,9 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
     mockIsStripeConfigured.mockReturnValue(true);
     mockGetStripe.mockReturnValue(stripe);
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID, stripeSubscriptionId: "sub_test_1" }),
-    });
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({ id: TEST_USER_ID, stripeSubscriptionId: "sub_test_1" }),
+    );
   });
 
   afterEach(() => {
@@ -79,7 +79,7 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
   });
 
   it("skips reconciliation when no user is signed in", async () => {
-    mockGetCurrentUser.mockResolvedValue({ user: null });
+    mockGetCurrentUser.mockResolvedValue(null);
 
     await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
 
@@ -88,9 +88,9 @@ describe("syncSubscriptionOnUpgradePageLoad", () => {
   });
 
   it("skips reconciliation when the user has no Stripe subscription id", async () => {
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID, stripeSubscriptionId: null }),
-    });
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({ id: TEST_USER_ID, stripeSubscriptionId: null }),
+    );
 
     await expect(syncSubscriptionOnUpgradePageLoad()).resolves.toBeUndefined();
 

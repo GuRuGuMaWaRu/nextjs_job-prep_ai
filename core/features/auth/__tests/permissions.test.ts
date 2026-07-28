@@ -1,4 +1,4 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -12,7 +12,7 @@ jest.mock("@/core/features/resumeAnalysis/db", () => ({
   getResumeAnalysisCountDb: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getUserPlan,
   getUserSubscriptionInfo,
@@ -39,9 +39,7 @@ describe("auth permission helpers", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: SIGNED_IN_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: SIGNED_IN_USER_ID }));
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
   });
 
@@ -69,7 +67,7 @@ describe("auth permission helpers", () => {
 
   describe("hasPermission", () => {
     it("denies permissions when the signed-in user cannot be loaded", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: null });
+      mockGetCurrentUser.mockResolvedValue(null);
 
       await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(false);
     });
@@ -122,23 +120,8 @@ describe("auth permission helpers", () => {
       },
     );
 
-    it("treats an empty stored plan as the free plan for permission checks", async () => {
-      mockGetCurrentUser.mockResolvedValue({
-        user: makeUser({ plan: "" }),
-      });
-      mockGetInterviewCountDb.mockResolvedValueOnce(0);
-      mockGetQuestionCountDb.mockResolvedValueOnce(0);
-      mockGetResumeAnalysisCountDb.mockResolvedValueOnce(0);
-
-      await expect(hasPermission(PERMISSIONS.INTERVIEWS)).resolves.toBe(true);
-      await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(true);
-      await expect(hasPermission(PERMISSIONS.RESUME_ANALYSES)).resolves.toBe(
-        true,
-      );
-    });
-
     it("grants permissions for pro users", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: makeProUser() });
+      mockGetCurrentUser.mockResolvedValue(makeProUser());
 
       await expect(hasPermission(PERMISSIONS.INTERVIEWS)).resolves.toBe(true);
       await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(true);
@@ -162,7 +145,7 @@ describe("auth permission helpers", () => {
     });
 
     it("denies unsupported runtime permissions", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: makeProUser() });
+      mockGetCurrentUser.mockResolvedValue(makeProUser());
       // Simulates an untyped caller crossing the module boundary.
       const unsupportedPermission = "unsupported" as Parameters<
         typeof hasPermission
@@ -173,19 +156,13 @@ describe("auth permission helpers", () => {
 
   describe("getUserPlan", () => {
     it("defaults missing user records to the free plan", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: null });
-
-      await expect(getUserPlan()).resolves.toBe("free");
-    });
-
-    it("defaults missing user plan to the free plan", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: makeUser({ plan: "" }) });
+      mockGetCurrentUser.mockResolvedValue(null);
 
       await expect(getUserPlan()).resolves.toBe("free");
     });
 
     it("returns the user's plan", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: makeProUser() });
+      mockGetCurrentUser.mockResolvedValue(makeProUser());
 
       await expect(getUserPlan()).resolves.toBe("pro");
     });
@@ -193,16 +170,7 @@ describe("auth permission helpers", () => {
 
   describe("getUserSubscriptionInfo", () => {
     it("returns subscription info for anonymous users without loading a user", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: null });
-
-      await expect(getUserSubscriptionInfo()).resolves.toEqual({
-        plan: "free",
-        hasExistingSubscription: false,
-      });
-    });
-
-    it("defaults missing plan and subscription fields in subscription info", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: makeUser({ plan: "" }) });
+      mockGetCurrentUser.mockResolvedValue(null);
 
       await expect(getUserSubscriptionInfo()).resolves.toEqual({
         plan: "free",
@@ -211,9 +179,9 @@ describe("auth permission helpers", () => {
     });
 
     it("reports the current plan and whether a Stripe subscription exists", async () => {
-      mockGetCurrentUser.mockResolvedValue({
-        user: makeProUser({ stripeSubscriptionId: "sub_test_1" }),
-      });
+      mockGetCurrentUser.mockResolvedValue(
+        makeProUser({ stripeSubscriptionId: "sub_test_1" }),
+      );
 
       await expect(getUserSubscriptionInfo()).resolves.toEqual({
         plan: "pro",

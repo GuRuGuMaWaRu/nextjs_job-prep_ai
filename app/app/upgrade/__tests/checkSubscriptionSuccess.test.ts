@@ -1,4 +1,4 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -12,7 +12,7 @@ jest.mock("@/core/features/billing/webhookHelpers", () => ({
 
 import type Stripe from "stripe";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getStripe } from "@/core/features/billing/stripe";
 import { fulfillCheckoutSession } from "@/core/features/billing/webhookHelpers";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
@@ -45,9 +45,7 @@ describe("checkSubscriptionSuccess", () => {
     jest.clearAllMocks();
 
     mockGetStripe.mockReturnValue(stripe);
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
     mockFulfillCheckoutSession.mockResolvedValue(true);
   });
 

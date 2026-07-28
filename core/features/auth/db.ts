@@ -6,6 +6,17 @@ import { SessionTable, UserTable } from "@/core/drizzle/schema";
 export async function findUserByEmailDb(email: string) {
   return await db.query.UserTable.findFirst({
     where: eq(UserTable.email, email.toLowerCase()),
+    columns: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      plan: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+      passwordHash: true,
+      emailVerified: true,
+    },
   });
 }
 
@@ -33,7 +44,7 @@ export async function createSessionDb(sessionData: {
     .returning({ expiresAt: SessionTable.expiresAt });
 }
 
-export async function getSessionByTokenDb(token: string) {
+export async function getActiveSessionDb(token: string) {
   const session = await db.query.SessionTable.findFirst({
     where: and(
       eq(SessionTable.token, token),

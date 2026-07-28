@@ -13,7 +13,7 @@ import {
   getJobInfoGlobalTag,
   revalidateJobInfoAndRelatedItemsCache,
   revalidateJobInfoCache,
-} from "@/core/features/jobInfos/dbCache";
+} from "@/core/features/jobInfos/cache";
 import { DatabaseError } from "@/core/dal/errors";
 import { ActionResult } from "@/core/dal/helpers";
 import { JobInfoTable } from "@/core/drizzle/schema";

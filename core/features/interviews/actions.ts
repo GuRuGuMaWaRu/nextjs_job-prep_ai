@@ -5,7 +5,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { env } from "@/core/data/env/server";
 import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
@@ -75,7 +75,7 @@ export async function createInterviewAction({
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    const { user } = await getCurrentUser();
+    const user = await getCurrentUser();
     if (user == null) {
       return {
         success: false,
@@ -227,7 +227,7 @@ export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
   try {
-    const { user } = await getCurrentUser();
+    const user = await getCurrentUser();
     if (user == null) {
       return {
         success: false,

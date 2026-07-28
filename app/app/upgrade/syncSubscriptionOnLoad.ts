@@ -1,14 +1,10 @@
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
 import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 
 /**
  * Aligns plan and Stripe subscription fields with Stripe when the user opens the
  * Upgrade page (lazy reconciliation if webhooks were missed).
- *
- * Uses a direct DB read to detect `stripeSubscriptionId` so a stale cached
- * `getUserAction` result cannot skip a needed sync. Errors are swallowed so the page
- * still renders; Stage 1 cron remains a backstop.
  */
 export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
   try {
@@ -21,7 +17,8 @@ export async function syncSubscriptionOnUpgradePageLoad(): Promise<void> {
       return;
     }
 
-    const { user } = await getCurrentUser();
+    const user = await getCurrentUser();
+
     if (user == null || user.stripeSubscriptionId == null) {
       return;
     }

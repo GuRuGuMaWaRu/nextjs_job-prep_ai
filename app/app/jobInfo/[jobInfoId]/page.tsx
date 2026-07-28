@@ -15,7 +15,7 @@ import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { routes } from "@/core/data/routes";
 import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 
@@ -54,11 +54,15 @@ export default async function JobInfoPage({
 
   assertUUIDor404(jobInfoId);
 
-  const jobInfo = getCurrentUser().then(async ({ user }) => {
-    if (user == null) return redirect(routes.signIn);
+  const jobInfo = getCurrentUser().then(async (user) => {
+    if (user == null) {
+      return redirect(routes.signIn);
+    }
 
-    const jobInfo = await getJobInfoAction(jobInfoId);
-    if (jobInfo == null) return notFound();
+    const jobInfo = await getJobInfoAction(jobInfoId); //** TODO: ot this could be getJobInfoAction that requires the user and redirects to Sign In internally, but then does this redirect to NotFound in the page body?*/
+    if (jobInfo == null) {
+      return notFound();
+    }
 
     return jobInfo;
   });

@@ -6,14 +6,14 @@ jest.mock("@/core/features/users/db", () => ({
   getUserByIdDb: jest.fn(),
 }));
 
-jest.mock("@/core/features/users/dbCache", () => ({
+jest.mock("@/core/features/users/cache", () => ({
   getUserIdTag: jest.fn(),
 }));
 
 import { cacheTag } from "next/cache";
 
 import { getUserByIdDb } from "@/core/features/users/db";
-import { getUserIdTag } from "@/core/features/users/dbCache";
+import { getUserIdTag } from "@/core/features/users/cache";
 import { getUserService } from "@/core/features/users/service";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeUser } from "@/core/test-utils/factories";

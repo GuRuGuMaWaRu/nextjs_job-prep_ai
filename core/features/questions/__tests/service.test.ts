@@ -1,4 +1,4 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
@@ -8,7 +8,7 @@ jest.mock("@/core/features/questions/dal", () => ({
   insertQuestionDal: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getQuestionByIdDal,
   getQuestionsDal,
@@ -31,9 +31,7 @@ const mockInsertQuestionDal = jest.mocked(insertQuestionDal);
 describe("question services", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue({
-      user: makeUser({ id: TEST_USER_ID }),
-    });
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
   });
 
   describe("getQuestionsService", () => {

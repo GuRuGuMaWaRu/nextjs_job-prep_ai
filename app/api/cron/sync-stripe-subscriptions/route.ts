@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/core/data/env/server";
 import { getUserIdsWithStripeSubscriptionDb } from "@/core/features/users/db";
 import { reconcileUserStripeSubscription } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
+import { revalidateUserCache } from "@/core/features/users/cache";
 import { getStripe, isStripeConfigured } from "@/core/features/billing/stripe";
 
 const BATCH_LIMIT = 500;

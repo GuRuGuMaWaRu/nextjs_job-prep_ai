@@ -18,7 +18,7 @@ import {
 } from "@core/test-utils/mocks/db";
 import { TEST_FIXTURE_NOW_ISO } from "@/core/test-utils/constants";
 import { makeSession } from "@core/test-utils/factories/session";
-import { makeUser } from "@core/test-utils/factories/user";
+import { makeUserWithPassword } from "@core/test-utils/factories/user";
 
 import {
   createSessionDb,
@@ -28,7 +28,7 @@ import {
   deleteSessionDb,
   extendSessionDb,
   findUserByEmailDb,
-  getSessionByTokenDb,
+  getActiveSessionDb,
 } from "../db";
 
 const mockDb = db as unknown as MockDrizzleDb;
@@ -90,7 +90,7 @@ describe("auth db helpers", () => {
 
   describe("findUserByEmailDb", () => {
     it("finds a user by normalized email", async () => {
-      const user = makeUser({ email: "person@test.local" });
+      const user = makeUserWithPassword({ email: "person@test.local" });
       const userQuery = createMockDrizzleTableQuery({ findFirst: user });
 
       useMockDb(
@@ -101,10 +101,23 @@ describe("auth db helpers", () => {
         }),
       );
 
-      await expect(findUserByEmailDb("PERSON@Test.Local")).resolves.toBe(user);
+      await expect(findUserByEmailDb("PERSON@Test.Local")).resolves.toEqual(
+        user,
+      );
 
       expect(userQuery.findFirst).toHaveBeenCalledWith({
         where: expect.any(Object),
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          plan: true,
+          stripeCustomerId: true,
+          stripeSubscriptionId: true,
+          passwordHash: true,
+          emailVerified: true,
+        },
       });
       expectWhereParams(userQuery.findFirst, ["person@test.local"]);
     });
@@ -162,7 +175,7 @@ describe("auth db helpers", () => {
     });
   });
 
-  describe("getSessionByTokenDb", () => {
+  describe("getActiveSessionDb", () => {
     it("validates a non-expired session by token", async () => {
       const now = makeFixtureNow();
       const session = makeSession({ token: "session-token" });
@@ -177,7 +190,7 @@ describe("auth db helpers", () => {
         }),
       );
 
-      await expect(getSessionByTokenDb("session-token")).resolves.toBe(session);
+      await expect(getActiveSessionDb("session-token")).resolves.toBe(session);
 
       expect(sessionQuery.findFirst).toHaveBeenCalledWith({
         where: expect.any(Object),

@@ -4,11 +4,11 @@ import { getGlobalTag, getIdTag, getUserTag } from "@/core/lib/dataCache";
 import {
   getInterviewGlobalTag,
   getInterviewJobInfoTag,
-} from "@/core/features/interviews/dbCache";
+} from "@/core/features/interviews/cache";
 import {
   getQuestionGlobalTag,
   getQuestionJobInfoTag,
-} from "@/core/features/questions/dbCache";
+} from "@/core/features/questions/cache";
 
 export function getJobInfoGlobalTag() {
   return getGlobalTag("jobInfos");

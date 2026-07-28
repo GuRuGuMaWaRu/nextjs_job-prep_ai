@@ -1,21 +1,26 @@
-type AuthUser = {
+import type { UserPlan } from "@/core/drizzle/schema/user";
+
+type User = {
   id: string;
   name: string;
   email: string;
   image: string | null;
-  passwordHash: string | null;
-  emailVerified: Date | null;
-  plan: string;
+  plan: UserPlan;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  passwordHash: string | null;
+  emailVerified: Date | null;
 };
 
-type CurrentUser = {
-  userId: string | null;
-  user?: AuthUser;
-  redirectToSignIn: () => never;
-};
+type AuthUser = Pick<
+  User,
+  | "id"
+  | "name"
+  | "email"
+  | "image"
+  | "plan"
+  | "stripeCustomerId"
+  | "stripeSubscriptionId"
+>;
 
-export type { AuthUser, CurrentUser };
+export type { User, AuthUser };

@@ -79,6 +79,11 @@ import {
   setOAuthErrorReturnForNextOAuth,
 } from "@/core/features/auth/oauth/oauthErrorReturn";
 import type { Cookies } from "@/core/features/auth/oauth/types";
+
+import { TEST_USER_ID } from "@/core/test-utils/constants";
+import { makeSession } from "@/core/test-utils/factories/session";
+import { makeUserWithPassword } from "@/core/test-utils/factories/user";
+
 import {
   deleteSessionCookie,
   getSessionToken,
@@ -88,10 +93,6 @@ import { createUserDb, findUserByEmailDb } from "../db";
 import { hashPassword, verifyPassword } from "../password";
 import { createSession, deleteSession } from "../session";
 import { generateUserId } from "../tokens";
-import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeSession } from "@/core/test-utils/factories/session";
-import { makeUser } from "@/core/test-utils/factories/user";
-
 import {
   signInAction,
   signInWithOAuthAction,
@@ -240,7 +241,7 @@ describe("auth actions", () => {
     });
 
     it("returns duplicate email errors without hashing or creating a session", async () => {
-      const existingUser = makeUser({ email: "ada@test.local" });
+      const existingUser = makeUserWithPassword({ email: "ada@test.local" });
       mockFindUserByEmailDb.mockResolvedValueOnce(existingUser);
 
       const result = await signUpAction(
@@ -373,11 +374,15 @@ describe("auth actions", () => {
 
     it("returns a generic sign-in error for a bad password", async () => {
       mockFindUserByEmailDb.mockResolvedValueOnce(
-        makeUser({
-          id: TEST_USER_ID,
-          email: "ada@test.local",
-          passwordHash: "stored-hash",
-        }),
+        makeUserWithPassword(
+          {
+            id: TEST_USER_ID,
+            email: "ada@test.local",
+          },
+          {
+            passwordHash: "stored-hash",
+          },
+        ),
       );
       mockVerifyPassword.mockResolvedValueOnce(false);
 
@@ -425,11 +430,15 @@ describe("auth actions", () => {
 
     it("returns a generic sign-in error when the user has no password hash", async () => {
       mockFindUserByEmailDb.mockResolvedValueOnce(
-        makeUser({
-          id: TEST_USER_ID,
-          email: "ada@test.local",
-          passwordHash: null,
-        }),
+        makeUserWithPassword(
+          {
+            id: TEST_USER_ID,
+            email: "ada@test.local",
+          },
+          {
+            passwordHash: null,
+          },
+        ),
       );
 
       const result = await signInAction(
@@ -452,11 +461,15 @@ describe("auth actions", () => {
     it("creates a session and redirects after successful sign-in", async () => {
       const session = makeSession({ userId: TEST_USER_ID });
       mockFindUserByEmailDb.mockResolvedValueOnce(
-        makeUser({
-          id: TEST_USER_ID,
-          email: "ada@test.local",
-          passwordHash: "stored-hash",
-        }),
+        makeUserWithPassword(
+          {
+            id: TEST_USER_ID,
+            email: "ada@test.local",
+          },
+          {
+            passwordHash: "stored-hash",
+          },
+        ),
       );
       mockCreateSession.mockResolvedValueOnce(session);
 

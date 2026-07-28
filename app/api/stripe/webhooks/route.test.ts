@@ -45,7 +45,7 @@ jest.mock("@/core/features/users/stripeSync", () => ({
   syncSubscriptionFromStripe: jest.fn(),
 }));
 
-jest.mock("@/core/features/users/dbCache", () => ({
+jest.mock("@/core/features/users/cache", () => ({
   revalidateUserCache: jest.fn(),
 }));
 
@@ -59,7 +59,7 @@ import {
   unclaimEvent,
 } from "@/core/features/billing/webhookHelpers";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
+import { revalidateUserCache } from "@/core/features/users/cache";
 
 import { POST } from "./route";
 

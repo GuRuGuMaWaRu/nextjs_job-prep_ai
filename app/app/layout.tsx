@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
+import { routes } from "@/core/data/routes";
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
-import { requireCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import type { AuthUser } from "@/core/features/auth/types";
 
 import { CancelAtPeriodEndBanner } from "./_CancelAtPeriodEndBanner";
@@ -21,7 +23,11 @@ async function AuthenticatedAppShell({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireCurrentUser();
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return redirect(routes.api.evictSession);
+  }
 
   return (
     <>

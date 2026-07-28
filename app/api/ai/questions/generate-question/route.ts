@@ -5,7 +5,7 @@ import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { questionDifficulties } from "@/core/drizzle/schema";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestion } from "@/core/services/ai/questions";
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import {
@@ -47,7 +47,7 @@ const JOB_ACCESS_DENIED_MESSAGE = "You do not have permission to do this";
 
 export async function POST(req: Request) {
   try {
-    const { user } = await getCurrentUser();
+    const user = await getCurrentUser();
 
     if (user == null) {
       throw new UnauthorizedError("You are not logged in");

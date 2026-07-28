@@ -1,6 +1,6 @@
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
@@ -33,7 +33,7 @@ const aj = arcjet({
 
 export async function POST(req: Request) {
   try {
-    const { user } = await getCurrentUser();
+    const user = await getCurrentUser();
 
     if (user == null) {
       throw new UnauthorizedError("You are not logged in");
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!(await reserveResumeAnalysisUsage(user.id, jobInfoId))) {
+    if (!(await reserveResumeAnalysisUsage(user.id, user.plan, jobInfoId))) {
       return new Response(PLAN_LIMIT_MESSAGE, {
         status: 403,
       });

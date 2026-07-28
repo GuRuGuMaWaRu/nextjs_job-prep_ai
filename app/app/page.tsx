@@ -6,8 +6,7 @@ import { JobInfos } from "@/core/features/jobInfos/components/JobInfos";
 export default function AppPage() {
   return (
     <Suspense
-      fallback={<FullScreenLoader className="m-auto h-screen-header" />}
-    >
+      fallback={<FullScreenLoader className="m-auto h-screen-header" />}>
       <JobInfos />
     </Suspense>
   );

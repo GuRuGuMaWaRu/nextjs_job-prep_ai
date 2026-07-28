@@ -1,8 +1,8 @@
-jest.mock("@/core/features/auth/helpers", () => ({
+jest.mock("@/core/lib/getCurrentUser", () => ({
   getCurrentUser: jest.fn(),
 }));
 
-import { getCurrentUser } from "@/core/features/auth/helpers";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { UnauthorizedError } from "@/core/dal/errors";
 import { requireUser } from "@/core/dal/helpers";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
@@ -19,9 +19,7 @@ describe("DAL helpers", () => {
     it("returns the current user", async () => {
       const user = makeUser({ id: TEST_USER_ID });
 
-      mockGetCurrentUser.mockResolvedValue({
-        user,
-      });
+      mockGetCurrentUser.mockResolvedValue(user);
 
       await expect(requireUser()).resolves.toBe(user);
 
@@ -29,7 +27,7 @@ describe("DAL helpers", () => {
     });
 
     it("throws when no user is authenticated", async () => {
-      mockGetCurrentUser.mockResolvedValue({ user: null });
+      mockGetCurrentUser.mockResolvedValue(null);
 
       await expect(requireUser()).rejects.toThrow(UnauthorizedError);
     });

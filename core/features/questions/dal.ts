@@ -10,7 +10,7 @@ import {
   getQuestionIdTag,
   getQuestionJobInfoTag,
   revalidateQuestionCache,
-} from "@/core/features/questions/dbCache";
+} from "@/core/features/questions/cache";
 import { QuestionTable } from "@/core/drizzle/schema";
 
 /**
