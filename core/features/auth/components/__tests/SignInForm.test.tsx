@@ -39,7 +39,7 @@ import { signInAction } from "@/core/features/auth/actions";
 import { OAuthQueryErrorBanner } from "@/core/features/auth/components/OAuthQueryErrorBanner";
 import { OAuthSignInSection } from "@/core/features/auth/components/OAuthSignInSection";
 
-import { SignInForm } from "./SignInForm";
+import { SignInForm } from "../SignInForm";
 
 const mockUseActionState = jest.mocked(useActionState);
 const mockOAuthQueryErrorBanner = jest.mocked(OAuthQueryErrorBanner);

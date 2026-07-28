@@ -8,7 +8,7 @@ import userEvent from "@testing-library/user-event";
 import type { OAuthProvider } from "@/core/drizzle/schema/oauthProviderIds";
 import { signInWithOAuthAction } from "@/core/features/auth/actions";
 
-import { OAuthSignInSection } from "./OAuthSignInSection";
+import { OAuthSignInSection } from "../OAuthSignInSection";
 
 const mockSignInWithOAuthAction = jest.mocked(signInWithOAuthAction);
 

@@ -5,7 +5,7 @@ jest.mock("next/navigation", () => ({
 import { render, screen } from "@testing-library/react";
 import { useSearchParams } from "next/navigation";
 
-import { OAuthQueryErrorBanner } from "./OAuthQueryErrorBanner";
+import { OAuthQueryErrorBanner } from "../OAuthQueryErrorBanner";
 
 const mockUseSearchParams = jest.mocked(useSearchParams);
 

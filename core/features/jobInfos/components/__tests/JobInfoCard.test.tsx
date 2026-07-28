@@ -17,7 +17,7 @@ import { JobInfoTable } from "@/core/drizzle/schema";
 import { removeJobInfoAction } from "@/core/features/jobInfos/actions";
 import { render, screen, waitFor } from "@/core/test-utils/render";
 
-import { JobInfoCard } from "./JobInfoCard";
+import { JobInfoCard } from "../JobInfoCard";
 
 const mockRemoveJobInfoAction = jest.mocked(removeJobInfoAction);
 const mockToast = jest.mocked(toast);

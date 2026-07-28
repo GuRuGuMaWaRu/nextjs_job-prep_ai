@@ -25,7 +25,7 @@ import {
 } from "@/core/features/jobInfos/actions";
 import { render, screen, waitFor } from "@/core/test-utils/render";
 
-import { JobInfoForm } from "./JobInfoForm";
+import { JobInfoForm } from "../JobInfoForm";
 
 const mockCreateJobInfoAction = jest.mocked(createJobInfoAction);
 const mockUpdateJobInfoAction = jest.mocked(updateJobInfoAction);
