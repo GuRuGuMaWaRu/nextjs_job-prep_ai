@@ -3,7 +3,7 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
+import { reserveResumeAnalysisUsageService } from "@/core/features/resumeAnalysis/service";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import {
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!(await reserveResumeAnalysisUsage(user.id, user.plan, jobInfoId))) {
+    if (!(await reserveResumeAnalysisUsageService(jobInfoId))) {
       return new Response(PLAN_LIMIT_MESSAGE, {
         status: 403,
       });

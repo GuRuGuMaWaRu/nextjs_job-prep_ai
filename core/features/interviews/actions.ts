@@ -3,13 +3,13 @@
 import { z } from "zod";
 
 import { INTERVIEW_ERROR_MESSAGES } from "@/core/features/interviews/errorMessages";
-import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import {
   createInterviewService,
   updateInterviewService,
   getInterviewByIdService,
   getInterviewsService,
   generateInterviewFeedbackService,
+  checkInterviewPermissionService,
 } from "@/core/features/interviews/service";
 import { ActionResult } from "@/core/lib/types";
 import {
@@ -162,7 +162,7 @@ export async function getInterviewByIdAction(id: string, userId: string) {
  * Used for UI permission checks; errors bubble to callers/error boundaries
  */
 export async function canCreateInterviewAction(): Promise<boolean> {
-  return await checkInterviewPermission();
+  return await checkInterviewPermissionService();
 }
 
 /**

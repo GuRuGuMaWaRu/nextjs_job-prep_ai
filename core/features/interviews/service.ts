@@ -7,17 +7,21 @@ import {
   RateLimitError,
 } from "@/core/lib/errors";
 import { requireUser } from "@/core/lib/requireUser";
+import { hasPermission } from "@/core/features/auth/permissions";
 import {
   getInterviewByIdDal,
   getInterviewsDal,
   insertInterviewDal,
   updateInterviewDal,
 } from "@/core/features/interviews/dal";
-import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import { INTERVIEW_ERROR_MESSAGES } from "@/core/features/interviews/errorMessages";
 import { getJobInfoDal } from "@/core/features/jobInfos/dal";
 import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
+import {
+  PERMISSIONS,
+  PLAN_LIMIT_MESSAGE,
+  RATE_LIMIT_MESSAGE,
+} from "@/core/data/constants";
 import { env } from "@/core/data/env/server";
 
 /**
@@ -46,7 +50,7 @@ const aj = arcjet({
 export async function getInterviewByIdService(id: string, userId: string) {
   await requireUser();
 
-  const interview = await getInterviewByIdDal(id);
+  const interview = await getInterviewByIdDal(id, userId);
 
   if (!interview) {
     return null;
@@ -75,7 +79,7 @@ export async function getInterviewsService(jobInfoId: string) {
 export async function createInterviewService(jobInfoId: string) {
   const user = await requireUser();
 
-  const permitted = await checkInterviewPermission();
+  const permitted = await hasPermission(PERMISSIONS.INTERVIEWS, user);
   if (!permitted) {
     throw new PermissionError(PLAN_LIMIT_MESSAGE);
   }
@@ -109,7 +113,7 @@ export async function updateInterviewService(
 ) {
   const user = await requireUser();
 
-  const interview = await getInterviewByIdDal(id);
+  const interview = await getInterviewByIdDal(id, user.id);
 
   if (!interview) {
     throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess);
@@ -137,9 +141,13 @@ export async function generateInterviewFeedbackService(interviewId: string) {
     throw new RateLimitError(RATE_LIMIT_MESSAGE);
   }
 
-  const interview = await getInterviewByIdService(interviewId, user.id);
+  const interview = await getInterviewByIdDal(interviewId, user.id);
 
   if (!interview) {
+    throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess);
+  }
+
+  if (interview.jobInfo.userId !== user.id) {
     throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess);
   }
 
@@ -161,4 +169,9 @@ export async function generateInterviewFeedbackService(interviewId: string) {
   refresh();
 
   return feedback;
+}
+
+export async function checkInterviewPermissionService(): Promise<boolean> {
+  const user = await requireUser();
+  return await hasPermission(PERMISSIONS.INTERVIEWS, user);
 }

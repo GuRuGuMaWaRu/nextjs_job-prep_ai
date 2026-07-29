@@ -4,10 +4,7 @@ jest.mock("@/core/features/interviews/service", () => ({
   getInterviewByIdService: jest.fn(),
   getInterviewsService: jest.fn(),
   updateInterviewService: jest.fn(),
-}));
-
-jest.mock("@/core/features/interviews/permissions", () => ({
-  checkInterviewPermission: jest.fn(),
+  checkInterviewPermissionService: jest.fn(),
 }));
 
 import {
@@ -26,19 +23,21 @@ import {
   getInterviewsAction,
   updateInterviewAction,
 } from "@/core/features/interviews/actions";
-import { checkInterviewPermission } from "@/core/features/interviews/permissions";
 import {
   createInterviewService,
   generateInterviewFeedbackService,
   getInterviewByIdService,
   getInterviewsService,
   updateInterviewService,
+  checkInterviewPermissionService,
 } from "@/core/features/interviews/service";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeInterview } from "@/core/test-utils/factories";
 
-const mockCheckInterviewPermission = jest.mocked(checkInterviewPermission);
+const mockCheckInterviewPermissionService = jest.mocked(
+  checkInterviewPermissionService,
+);
 const mockCreateInterviewService = jest.mocked(createInterviewService);
 const mockUpdateInterviewService = jest.mocked(updateInterviewService);
 const mockGetInterviewByIdService = jest.mocked(getInterviewByIdService);
@@ -317,16 +316,16 @@ describe("interview actions", () => {
   });
 
   it("checks interview creation permission through the permission helper", async () => {
-    mockCheckInterviewPermission.mockResolvedValue(false);
+    mockCheckInterviewPermissionService.mockResolvedValue(false);
 
     await expect(canCreateInterviewAction()).resolves.toBe(false);
 
-    expect(mockCheckInterviewPermission).toHaveBeenCalledWith();
+    expect(mockCheckInterviewPermissionService).toHaveBeenCalledWith();
   });
 
   it("bubbles permission check failures", async () => {
     const error = new Error("permission");
-    mockCheckInterviewPermission.mockRejectedValue(error);
+    mockCheckInterviewPermissionService.mockRejectedValue(error);
 
     await expect(canCreateInterviewAction()).rejects.toBe(error);
   });

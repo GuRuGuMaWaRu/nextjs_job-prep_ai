@@ -26,12 +26,12 @@ import { InterviewTable } from "@/core/drizzle/schema";
  * Get interview by ID
  * Returns interview with jobInfo, or null if not found
  */
-export async function getInterviewByIdDal(id: string) {
+export async function getInterviewByIdDal(id: string, userId: string) {
   "use cache";
   cacheTag(getInterviewIdTag(id));
 
   try {
-    const interview = await getInterviewByIdDb(id);
+    const interview = await getInterviewByIdDb(id, userId);
 
     if (interview) {
       cacheTag(getJobInfoIdTag(interview.jobInfo.id));

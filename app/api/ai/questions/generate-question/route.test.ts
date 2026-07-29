@@ -55,8 +55,8 @@ jest.mock("@/core/features/questions/actions", () => ({
   insertQuestionAction: jest.fn(),
 }));
 
-jest.mock("@/core/features/questions/permissions", () => ({
-  checkQuestionsPermission: jest.fn(),
+jest.mock("@/core/features/questions/service", () => ({
+  checkQuestionsPermissionService: jest.fn(),
 }));
 
 jest.mock("@/core/services/ai/questions", () => ({
@@ -72,7 +72,7 @@ import {
   getQuestionsAction,
   insertQuestionAction,
 } from "@/core/features/questions/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
+import { checkQuestionsPermissionService } from "@/core/features/questions/service";
 import { generateAiQuestion } from "@/core/services/ai/questions";
 import {
   DatabaseError,
@@ -103,7 +103,9 @@ const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockGetQuestionsAction = jest.mocked(getQuestionsAction);
 const mockInsertQuestionAction = jest.mocked(insertQuestionAction);
-const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
+const mockCheckQuestionsPermissionService = jest.mocked(
+  checkQuestionsPermissionService,
+);
 const mockGenerateAiQuestion = jest.mocked(generateAiQuestion);
 
 const jobInfoId = "00000000-0000-4000-8000-000000000101";
@@ -147,7 +149,7 @@ describe("POST /api/ai/questions/generate-question", () => {
     jest.clearAllMocks();
 
     mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
-    mockCheckQuestionsPermission.mockResolvedValue(true);
+    mockCheckQuestionsPermissionService.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
     mockGetJobInfoAction.mockResolvedValue(
@@ -200,13 +202,13 @@ describe("POST /api/ai/questions/generate-question", () => {
     );
 
     await expectTextResponse(response, 401, "You are not logged in");
-    expect(mockCheckQuestionsPermission).not.toHaveBeenCalled();
+    expect(mockCheckQuestionsPermissionService).not.toHaveBeenCalled();
     expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGenerateAiQuestion).not.toHaveBeenCalled();
   });
 
   it("returns the plan limit response when question generation is not allowed", async () => {
-    mockCheckQuestionsPermission.mockResolvedValueOnce(false);
+    mockCheckQuestionsPermissionService.mockResolvedValueOnce(false);
 
     const response = await POST(
       buildJsonRequest({ prompt: "medium", jobInfoId }),

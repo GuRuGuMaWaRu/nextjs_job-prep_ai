@@ -6,12 +6,12 @@ import { questionDifficulties } from "@/core/drizzle/schema";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestion } from "@/core/services/ai/questions";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import {
   getQuestionsAction,
   insertQuestionAction,
 } from "@/core/features/questions/actions";
+import { checkQuestionsPermissionService } from "@/core/features/questions/service";
 import {
   DatabaseError,
   NotFoundError,
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       throw new UnauthorizedError("You are not logged in");
     }
 
-    if (!(await checkQuestionsPermission())) {
+    if (!(await checkQuestionsPermissionService())) {
       throw new PermissionError(PLAN_LIMIT_MESSAGE);
     }
 

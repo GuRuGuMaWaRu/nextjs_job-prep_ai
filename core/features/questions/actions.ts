@@ -1,8 +1,8 @@
 "use server";
 
 import { QuestionDifficulty } from "@/core/drizzle/schema";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import {
+  checkQuestionsPermissionService,
   getQuestionByIdService,
   getQuestionsService,
   insertQuestionService,
@@ -47,5 +47,5 @@ export async function getQuestionByIdAction(questionId: string) {
  * Used for UI permission checks; errors bubble to callers/error boundaries
  */
 export async function canGenerateQuestionsAction(): Promise<boolean> {
-  return await checkQuestionsPermission();
+  return await checkQuestionsPermissionService();
 }

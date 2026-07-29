@@ -1,5 +1,5 @@
-jest.mock("@/core/lib/getCurrentUser", () => ({
-  getCurrentUser: jest.fn(),
+jest.mock("@/core/lib/requireUser", () => ({
+  requireUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/questions/dal", () => ({
@@ -12,8 +12,12 @@ jest.mock("@/core/features/jobInfos/dal", () => ({
   getJobInfoDal: jest.fn(),
 }));
 
+jest.mock("@/core/features/auth/permissions", () => ({
+  hasPermission: jest.fn(),
+}));
+
 import { NotFoundError, UnauthorizedError } from "@/core/lib/errors";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
+import { requireUser } from "@/core/lib/requireUser";
 import {
   getQuestionByIdDal,
   getQuestionsDal,
@@ -24,21 +28,26 @@ import {
   getQuestionByIdService,
   getQuestionsService,
   insertQuestionService,
+  checkQuestionsPermissionService,
 } from "@/core/features/questions/service";
+import { hasPermission } from "@/core/features/auth/permissions";
+import { PERMISSIONS } from "@/core/data/constants";
+
 import { TEST_USER_ID } from "@/core/test-utils/constants";
 import { makeJobInfo, makeQuestion } from "@/core/test-utils/factories";
 import { makeUser } from "@/core/test-utils/factories/user";
 
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
+const mockRequireUser = jest.mocked(requireUser);
 const mockGetQuestionsDal = jest.mocked(getQuestionsDal);
 const mockGetQuestionByIdDal = jest.mocked(getQuestionByIdDal);
 const mockInsertQuestionDal = jest.mocked(insertQuestionDal);
 const mockGetJobInfoDal = jest.mocked(getJobInfoDal);
+const mockHasPermission = jest.mocked(hasPermission);
 
 describe("question services", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
+    mockRequireUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
   });
 
   describe("getQuestionsService", () => {
@@ -55,7 +64,7 @@ describe("question services", () => {
     });
 
     it("rejects when the user is not signed in", async () => {
-      mockGetCurrentUser.mockResolvedValue(null);
+      mockRequireUser.mockRejectedValue(new UnauthorizedError());
 
       await expect(getQuestionsService("job-info-1")).rejects.toBeInstanceOf(
         UnauthorizedError,
@@ -82,7 +91,7 @@ describe("question services", () => {
     });
 
     it("rejects when the user is not signed in", async () => {
-      mockGetCurrentUser.mockResolvedValue(null);
+      mockRequireUser.mockRejectedValue(new UnauthorizedError());
 
       await expect(getQuestionByIdService("question-1")).rejects.toBeInstanceOf(
         UnauthorizedError,
@@ -132,7 +141,7 @@ describe("question services", () => {
     });
 
     it("rejects when the user is not signed in", async () => {
-      mockGetCurrentUser.mockResolvedValue(null);
+      mockRequireUser.mockRejectedValue(new UnauthorizedError());
 
       await expect(
         insertQuestionService(
@@ -144,6 +153,61 @@ describe("question services", () => {
 
       expect(mockGetJobInfoDal).not.toHaveBeenCalled();
       expect(mockInsertQuestionDal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("checkQuestionsPermissionService", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("passes correct permission to hasPermission", async () => {
+      const user = makeUser({ id: TEST_USER_ID });
+      mockRequireUser.mockResolvedValue(user);
+      mockHasPermission.mockResolvedValueOnce(true);
+
+      await checkQuestionsPermissionService();
+
+      expect(mockHasPermission).toHaveBeenCalledWith(
+        PERMISSIONS.QUESTIONS,
+        user,
+      );
+    });
+
+    it("returns true when hasPermission resolves true", async () => {
+      const user = makeUser({ id: TEST_USER_ID });
+      mockRequireUser.mockResolvedValue(user);
+      mockHasPermission.mockResolvedValueOnce(true);
+
+      await expect(checkQuestionsPermissionService()).resolves.toBe(true);
+    });
+
+    it("returns false when hasPermission resolves false", async () => {
+      const user = makeUser({ id: TEST_USER_ID });
+      mockRequireUser.mockResolvedValue(user);
+      mockHasPermission.mockResolvedValueOnce(false);
+
+      await expect(checkQuestionsPermissionService()).resolves.toBe(false);
+    });
+
+    it("throws when hasPermission rejects", async () => {
+      const user = makeUser({ id: TEST_USER_ID });
+      mockRequireUser.mockResolvedValue(user);
+      mockHasPermission.mockRejectedValueOnce(new Error("permission failed"));
+
+      await expect(checkQuestionsPermissionService()).rejects.toThrow(
+        "permission failed",
+      );
+    });
+
+    it("rejects when the user is unauthenticated", async () => {
+      mockRequireUser.mockRejectedValue(new UnauthorizedError());
+
+      await expect(checkQuestionsPermissionService()).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+
+      expect(mockHasPermission).not.toHaveBeenCalled();
     });
   });
 });

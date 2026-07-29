@@ -22,6 +22,7 @@ import { PLAN_LIMITS, PERMISSIONS } from "@/core/data/constants";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 import { getResumeAnalysisCountDb } from "@/core/features/resumeAnalysis/db";
+import type { AuthUser } from "@/core/features/auth/types";
 
 import { makeProUser, makeUser } from "@/core/test-utils/factories/user";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
@@ -36,10 +37,12 @@ const SIGNED_IN_USER_ID = TEST_USER_ID;
 
 describe("auth permission helpers", () => {
   let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+  let user: AuthUser;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetCurrentUser.mockResolvedValue(makeUser({ id: SIGNED_IN_USER_ID }));
+    user = makeUser({ id: SIGNED_IN_USER_ID });
+    mockGetCurrentUser.mockResolvedValue(user);
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
   });
 
@@ -69,7 +72,9 @@ describe("auth permission helpers", () => {
     it("denies permissions when the signed-in user cannot be loaded", async () => {
       mockGetCurrentUser.mockResolvedValue(null);
 
-      await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(false);
+      await expect(hasPermission(PERMISSIONS.QUESTIONS, user)).resolves.toBe(
+        false,
+      );
     });
 
     it("grants free-plan permissions", async () => {
@@ -77,11 +82,15 @@ describe("auth permission helpers", () => {
       mockGetQuestionCountDb.mockResolvedValueOnce(0);
       mockGetResumeAnalysisCountDb.mockResolvedValueOnce(0);
 
-      await expect(hasPermission(PERMISSIONS.INTERVIEWS)).resolves.toBe(true);
-      await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(true);
-      await expect(hasPermission(PERMISSIONS.RESUME_ANALYSES)).resolves.toBe(
+      await expect(hasPermission(PERMISSIONS.INTERVIEWS, user)).resolves.toBe(
         true,
       );
+      await expect(hasPermission(PERMISSIONS.QUESTIONS, user)).resolves.toBe(
+        true,
+      );
+      await expect(
+        hasPermission(PERMISSIONS.RESUME_ANALYSES, user),
+      ).resolves.toBe(true);
     });
 
     it("denies free-plan permissions when plan limits are reached", async () => {
@@ -89,11 +98,15 @@ describe("auth permission helpers", () => {
       mockGetQuestionCountDb.mockResolvedValueOnce(10);
       mockGetResumeAnalysisCountDb.mockResolvedValueOnce(3);
 
-      await expect(hasPermission(PERMISSIONS.INTERVIEWS)).resolves.toBe(false);
-      await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(false);
-      await expect(hasPermission(PERMISSIONS.RESUME_ANALYSES)).resolves.toBe(
+      await expect(hasPermission(PERMISSIONS.INTERVIEWS, user)).resolves.toBe(
         false,
       );
+      await expect(hasPermission(PERMISSIONS.QUESTIONS, user)).resolves.toBe(
+        false,
+      );
+      await expect(
+        hasPermission(PERMISSIONS.RESUME_ANALYSES, user),
+      ).resolves.toBe(false);
     });
 
     it.each([
@@ -115,19 +128,24 @@ describe("auth permission helpers", () => {
     }) => {
       countLookup.mockResolvedValueOnce(0);
 
-      await hasPermission(permission);
+      await hasPermission(permission, user);
 
       expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
     });
 
     it("grants permissions for pro users", async () => {
-      mockGetCurrentUser.mockResolvedValue(makeProUser());
+      const proUser = makeProUser();
+      mockGetCurrentUser.mockResolvedValue(proUser);
 
-      await expect(hasPermission(PERMISSIONS.INTERVIEWS)).resolves.toBe(true);
-      await expect(hasPermission(PERMISSIONS.QUESTIONS)).resolves.toBe(true);
-      await expect(hasPermission(PERMISSIONS.RESUME_ANALYSES)).resolves.toBe(
+      await expect(
+        hasPermission(PERMISSIONS.INTERVIEWS, proUser),
+      ).resolves.toBe(true);
+      await expect(hasPermission(PERMISSIONS.QUESTIONS, proUser)).resolves.toBe(
         true,
       );
+      await expect(
+        hasPermission(PERMISSIONS.RESUME_ANALYSES, proUser),
+      ).resolves.toBe(true);
     });
 
     it("rejects when count lookup throws", async () => {
@@ -135,7 +153,7 @@ describe("auth permission helpers", () => {
 
       mockGetInterviewCountDb.mockRejectedValueOnce(randomError);
 
-      await expect(hasPermission(PERMISSIONS.INTERVIEWS)).rejects.toThrow(
+      await expect(hasPermission(PERMISSIONS.INTERVIEWS, user)).rejects.toThrow(
         DatabaseError,
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -145,12 +163,15 @@ describe("auth permission helpers", () => {
     });
 
     it("denies unsupported runtime permissions", async () => {
-      mockGetCurrentUser.mockResolvedValue(makeProUser());
+      const proUser = makeProUser();
+      mockGetCurrentUser.mockResolvedValue(proUser);
       // Simulates an untyped caller crossing the module boundary.
       const unsupportedPermission = "unsupported" as Parameters<
         typeof hasPermission
       >[0];
-      await expect(hasPermission(unsupportedPermission)).resolves.toBe(false);
+      await expect(hasPermission(unsupportedPermission, proUser)).resolves.toBe(
+        false,
+      );
     });
   });
 

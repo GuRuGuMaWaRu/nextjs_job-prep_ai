@@ -53,3 +53,13 @@ export class RateLimitError extends Error {
     this.name = "RateLimitError";
   }
 }
+
+export class UnexpectedError extends Error {
+  constructor(
+    message: string,
+    public readonly originalError?: unknown,
+  ) {
+    super(message, { cause: originalError });
+    this.name = "UnexpectedError";
+  }
+}

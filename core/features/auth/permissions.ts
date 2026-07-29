@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import type { UserPlan } from "@/core/drizzle/schema/user";
+import type { AuthUser } from "@/core/features/auth/types";
 import { getInterviewCountDb } from "@/core/features/interviews/db";
 import { getQuestionCountDb } from "@/core/features/questions/db";
 import { getResumeAnalysisCountDb } from "@/core/features/resumeAnalysis/db";
@@ -15,13 +16,10 @@ import { DatabaseError } from "@/core/lib/errors";
  * @param permission - The permission to check
  * @returns true if user has the permission, false otherwise
  */
-export async function hasPermission(permission: Permission): Promise<boolean> {
-  const user = await getCurrentUser();
-
-  if (user == null) {
-    return false;
-  }
-
+export async function hasPermission(
+  permission: Permission,
+  user: AuthUser,
+): Promise<boolean> {
   const userPlan = user.plan;
   const permissionLimit = PLAN_LIMITS[userPlan][permission];
 

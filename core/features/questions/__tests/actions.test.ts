@@ -2,10 +2,7 @@ jest.mock("@/core/features/questions/service", () => ({
   getQuestionByIdService: jest.fn(),
   getQuestionsService: jest.fn(),
   insertQuestionService: jest.fn(),
-}));
-
-jest.mock("@/core/features/questions/permissions", () => ({
-  checkQuestionsPermission: jest.fn(),
+  checkQuestionsPermissionService: jest.fn(),
 }));
 
 import {
@@ -14,8 +11,8 @@ import {
   getQuestionsAction,
   insertQuestionAction,
 } from "@/core/features/questions/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import {
+  checkQuestionsPermissionService,
   getQuestionByIdService,
   getQuestionsService,
   insertQuestionService,
@@ -26,7 +23,9 @@ import { makeQuestion } from "@/core/test-utils/factories";
 const mockGetQuestionsService = jest.mocked(getQuestionsService);
 const mockInsertQuestionService = jest.mocked(insertQuestionService);
 const mockGetQuestionByIdService = jest.mocked(getQuestionByIdService);
-const mockCheckQuestionsPermission = jest.mocked(checkQuestionsPermission);
+const mockCheckQuestionsPermissionService = jest.mocked(
+  checkQuestionsPermissionService,
+);
 
 describe("question actions", () => {
   beforeEach(() => {
@@ -97,20 +96,22 @@ describe("question actions", () => {
 
   describe("canGenerateQuestionsAction", () => {
     it("returns true when question generation is allowed", async () => {
-      mockCheckQuestionsPermission.mockResolvedValueOnce(true);
+      mockCheckQuestionsPermissionService.mockResolvedValueOnce(true);
 
       await expect(canGenerateQuestionsAction()).resolves.toBe(true);
+
+      expect(mockCheckQuestionsPermissionService).toHaveBeenCalledWith();
     });
 
     it("returns false when question generation is denied", async () => {
-      mockCheckQuestionsPermission.mockResolvedValueOnce(false);
+      mockCheckQuestionsPermissionService.mockResolvedValueOnce(false);
 
       await expect(canGenerateQuestionsAction()).resolves.toBe(false);
     });
 
     it("bubbles permission check failures", async () => {
       const error = new Error("db down");
-      mockCheckQuestionsPermission.mockRejectedValueOnce(error);
+      mockCheckQuestionsPermissionService.mockRejectedValueOnce(error);
 
       await expect(canGenerateQuestionsAction()).rejects.toBe(error);
     });

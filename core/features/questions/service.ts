@@ -8,6 +8,8 @@ import {
 import { getJobInfoDal } from "@/core/features/jobInfos/dal";
 import { QUESTION_SERVICE_ERRORS } from "@/core/features/questions/serviceErrors";
 import { QuestionDifficulty } from "@/core/drizzle/schema";
+import { hasPermission } from "@/core/features/auth/permissions";
+import { PERMISSIONS } from "@/core/data/constants";
 
 /**
  * Service Layer for Questions
@@ -54,4 +56,12 @@ export async function insertQuestionService(
     jobInfoId,
     difficulty,
   });
+}
+
+/**
+ * Check if user can generate questions as per his/her plan
+ */
+export async function checkQuestionsPermissionService(): Promise<boolean> {
+  const user = await requireUser();
+  return await hasPermission(PERMISSIONS.QUESTIONS, user);
 }
