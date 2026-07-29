@@ -115,7 +115,8 @@ function PricingSection() {
             key={plan.name}
             className={`relative transition-all ${
               plan.popular && "border-primary shadow-lg"
-            }`}>
+            }`}
+          >
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="px-2 py-0.5 text-xs font-semibold">
@@ -173,7 +174,8 @@ function Footer() {
         </Link>
         <Link
           href="mailto:contact@offerpilot.example.com"
-          className="hover:text-foreground transition-colors">
+          className="hover:text-foreground transition-colors"
+        >
           Contact us
         </Link>
       </div>

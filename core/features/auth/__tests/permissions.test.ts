@@ -109,16 +109,16 @@ describe("auth permission helpers", () => {
         permission: PERMISSIONS.RESUME_ANALYSES,
         countLookup: mockGetResumeAnalysisCountDb,
       },
-    ])(
-      "passes free-plan userId to count lookup for $permission permission",
-      async ({ permission, countLookup }) => {
-        countLookup.mockResolvedValueOnce(0);
+    ])("passes free-plan userId to count lookup for $permission permission", async ({
+      permission,
+      countLookup,
+    }) => {
+      countLookup.mockResolvedValueOnce(0);
 
-        await hasPermission(permission);
+      await hasPermission(permission);
 
-        expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
-      },
-    );
+      expect(countLookup).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
+    });
 
     it("grants permissions for pro users", async () => {
       mockGetCurrentUser.mockResolvedValue(makeProUser());

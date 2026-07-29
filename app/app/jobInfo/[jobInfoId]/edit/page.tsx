@@ -23,7 +23,8 @@ export default async function JobInfoEditPage({
       <Card>
         <CardContent>
           <Suspense
-            fallback={<Loader2 className="animate-spin size-24 mx-auto" />}>
+            fallback={<Loader2 className="animate-spin size-24 mx-auto" />}
+          >
             <SuspendedForm jobInfoId={jobInfoId} />
           </Suspense>
         </CardContent>

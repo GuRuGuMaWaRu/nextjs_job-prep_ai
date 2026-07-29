@@ -177,7 +177,10 @@ describe("interview service", () => {
 
   describe("createInterviewService", () => {
     it("creates interviews with the default zero duration", async () => {
-      const jobInfo = makeJobInfo({ id: "job-info-1", userId: SIGNED_IN_USER_ID });
+      const jobInfo = makeJobInfo({
+        id: "job-info-1",
+        userId: SIGNED_IN_USER_ID,
+      });
       const interview = makeInterview({ jobInfoId: jobInfo.id });
       mockGetJobInfoDal.mockResolvedValue(jobInfo);
       mockInsertInterviewDal.mockResolvedValue(interview);

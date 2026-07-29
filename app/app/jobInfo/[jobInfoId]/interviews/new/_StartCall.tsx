@@ -211,7 +211,8 @@ function Controls({
         size="icon"
         className="-mx-3"
         onClick={onStartInterview}
-        disabled={!beforeInterview}>
+        disabled={!beforeInterview}
+      >
         <PhoneCallIcon className="size-4 text-primary" />
         <span className="sr-only">Start Interview</span>
       </Button>
@@ -220,7 +221,8 @@ function Controls({
         size="icon"
         className="-mx-3"
         onClick={handleMuteUnmute}
-        disabled={!interviewIsActive}>
+        disabled={!interviewIsActive}
+      >
         {isMuted ? <MicOffIcon className="text-destructive" /> : <MicIcon />}
         <span className="sr-only">{isMuted ? "Unmute" : "Mute"}</span>
       </Button>
@@ -235,7 +237,8 @@ function Controls({
         size="icon"
         className="-mx-3"
         onClick={onEndInterview}
-        disabled={!interviewIsActive}>
+        disabled={!interviewIsActive}
+      >
         <PhoneOffIcon className="text-destructive" />
         <span className="sr-only">End Call</span>
       </Button>
