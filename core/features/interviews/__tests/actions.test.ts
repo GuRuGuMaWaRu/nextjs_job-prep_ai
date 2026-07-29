@@ -1,30 +1,3 @@
-jest.mock("@arcjet/next", () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    protect: jest.fn(),
-  })),
-  request: jest.fn(),
-  tokenBucket: jest.fn((config) => config),
-}));
-
-jest.mock("@/core/data/env/server", () => ({
-  env: {
-    ARCJET_KEY: "test-arcjet-key",
-  },
-}));
-
-jest.mock("@/core/lib/getCurrentUser", () => ({
-  getCurrentUser: jest.fn(),
-}));
-
-jest.mock("@/core/features/interviews/permissions", () => ({
-  checkInterviewPermission: jest.fn(),
-}));
-
-jest.mock("@/core/features/jobInfos/actions", () => ({
-  getJobInfoAction: jest.fn(),
-}));
-
 jest.mock("@/core/features/interviews/service", () => ({
   createInterviewService: jest.fn(),
   generateInterviewFeedbackService: jest.fn(),
@@ -33,14 +6,18 @@ jest.mock("@/core/features/interviews/service", () => ({
   updateInterviewService: jest.fn(),
 }));
 
+jest.mock("@/core/features/interviews/permissions", () => ({
+  checkInterviewPermission: jest.fn(),
+}));
+
 import {
   DatabaseError,
+  NotFoundError,
   PermissionError,
+  RateLimitError,
   UnauthorizedError,
 } from "@/core/lib/errors";
-import arcjet, { request } from "@arcjet/next";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
-import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
+import { INTERVIEW_ERROR_MESSAGES } from "@/core/features/interviews/errorMessages";
 import {
   canCreateInterviewAction,
   createInterviewAction,
@@ -57,23 +34,11 @@ import {
   getInterviewsService,
   updateInterviewService,
 } from "@/core/features/interviews/service";
-import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeUser } from "@/core/test-utils/factories/user";
-import { makeInterview, makeJobInfo } from "@/core/test-utils/factories";
+import { makeInterview } from "@/core/test-utils/factories";
 
-const mockArcjet = jest.mocked(arcjet);
-const mockProtect = jest.mocked(
-  mockArcjet.mock.results[0].value.protect as jest.Mock,
-);
-const mockFeedbackProtect = jest.mocked(
-  mockArcjet.mock.results[1].value.protect as jest.Mock,
-);
-const mockRequest = jest.mocked(request);
-const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockCheckInterviewPermission = jest.mocked(checkInterviewPermission);
-const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
 const mockCreateInterviewService = jest.mocked(createInterviewService);
 const mockUpdateInterviewService = jest.mocked(updateInterviewService);
 const mockGetInterviewByIdService = jest.mocked(getInterviewByIdService);
@@ -82,21 +47,12 @@ const mockGenerateInterviewFeedbackService = jest.mocked(
   generateInterviewFeedbackService,
 );
 
-const allowDecision = { isDenied: () => false };
-const denyDecision = { isDenied: () => true };
-const requestContext = { ip: "127.0.0.1" };
-
 describe("interview actions", () => {
   let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
-    mockCheckInterviewPermission.mockResolvedValue(true);
-    mockRequest.mockResolvedValue(requestContext);
-    mockProtect.mockResolvedValue(allowDecision);
-    mockFeedbackProtect.mockResolvedValue(allowDecision);
   });
 
   afterEach(() => {
@@ -104,22 +60,38 @@ describe("interview actions", () => {
   });
 
   describe("createInterviewAction", () => {
-    it("returns a login message when the user is unauthenticated", async () => {
-      mockGetCurrentUser.mockResolvedValue(null);
+    it("returns the created interview id when creation succeeds", async () => {
+      const interview = makeInterview({ jobInfoId: "job-info-1" });
+      mockCreateInterviewService.mockResolvedValue(interview);
+
+      await expect(
+        createInterviewAction({ jobInfoId: interview.jobInfoId }),
+      ).resolves.toEqual({
+        success: true,
+        data: { id: interview.id },
+      });
+
+      expect(mockCreateInterviewService).toHaveBeenCalledWith(
+        interview.jobInfoId,
+      );
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it("maps unauthorized errors to a login message", async () => {
+      mockCreateInterviewService.mockRejectedValue(new UnauthorizedError());
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.createUnauthorized,
       });
-
-      expect(mockCheckInterviewPermission).not.toHaveBeenCalled();
-      expect(mockProtect).not.toHaveBeenCalled();
     });
 
-    it("returns the plan limit message when permission is denied", async () => {
-      mockCheckInterviewPermission.mockResolvedValue(false);
+    it("returns permission error messages from the service", async () => {
+      mockCreateInterviewService.mockRejectedValue(
+        new PermissionError(PLAN_LIMIT_MESSAGE),
+      );
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
@@ -127,29 +99,12 @@ describe("interview actions", () => {
         success: false,
         message: PLAN_LIMIT_MESSAGE,
       });
-
-      expect(mockProtect).not.toHaveBeenCalled();
-      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-      expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
 
-    it("maps permission check failures to the generic retry message", async () => {
-      mockCheckInterviewPermission.mockRejectedValue(new Error("permission"));
-
-      await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
-      ).resolves.toEqual({
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
-      });
-
-      expect(mockProtect).not.toHaveBeenCalled();
-      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-      expect(mockCreateInterviewService).not.toHaveBeenCalled();
-    });
-
-    it("returns the rate limit message when Arcjet denies the request", async () => {
-      mockProtect.mockResolvedValue(denyDecision);
+    it("maps rate limit errors to the rate limit token", async () => {
+      mockCreateInterviewService.mockRejectedValue(
+        new RateLimitError(RATE_LIMIT_MESSAGE),
+      );
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
@@ -157,93 +112,22 @@ describe("interview actions", () => {
         success: false,
         message: RATE_LIMIT_MESSAGE,
       });
-
-      expect(mockRequest).toHaveBeenCalledWith();
-      expect(mockProtect).toHaveBeenCalledWith(requestContext, {
-        userId: TEST_USER_ID,
-        requested: 1,
-      });
-      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-      expect(mockCreateInterviewService).not.toHaveBeenCalled();
     });
 
-    it("maps request failures to the generic retry message", async () => {
-      mockRequest.mockRejectedValue(new Error("request failed"));
-
-      await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
-      ).resolves.toEqual({
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
-      });
-
-      expect(mockProtect).not.toHaveBeenCalled();
-      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-      expect(mockCreateInterviewService).not.toHaveBeenCalled();
-    });
-
-    it("maps Arcjet protection failures to the generic retry message", async () => {
-      mockProtect.mockRejectedValue(new Error("arcjet failed"));
-
-      await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
-      ).resolves.toEqual({
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
-      });
-
-      expect(mockRequest).toHaveBeenCalledWith();
-      expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-      expect(mockCreateInterviewService).not.toHaveBeenCalled();
-    });
-
-    it("returns an access message when the job info is inaccessible", async () => {
-      mockGetJobInfoAction.mockResolvedValue(
-        null as unknown as Awaited<ReturnType<typeof getJobInfoAction>>,
+    it("maps not found errors to an access message", async () => {
+      mockCreateInterviewService.mockRejectedValue(
+        new NotFoundError("missing job info"),
       );
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createJobInfoNotFound,
-      });
-
-      expect(mockGetJobInfoAction).toHaveBeenCalledWith("job-info-1");
-      expect(mockCreateInterviewService).not.toHaveBeenCalled();
-    });
-
-    it("returns the created interview id when creation succeeds", async () => {
-      const jobInfo = makeJobInfo({ id: "job-info-1" });
-      const interview = makeInterview({ jobInfo, jobInfoId: jobInfo.id });
-      mockGetJobInfoAction.mockResolvedValue(jobInfo);
-      mockCreateInterviewService.mockResolvedValue(interview);
-
-      await expect(
-        createInterviewAction({ jobInfoId: jobInfo.id }),
-      ).resolves.toEqual({
-        success: true,
-        data: { id: interview.id },
-      });
-
-      expect(mockCreateInterviewService).toHaveBeenCalledWith(jobInfo.id);
-      expect(consoleErrorSpy).not.toHaveBeenCalled();
-    });
-
-    it("maps unauthorized errors to a login message", async () => {
-      mockGetJobInfoAction.mockResolvedValue(makeJobInfo());
-      mockCreateInterviewService.mockRejectedValue(new UnauthorizedError());
-
-      await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
-      ).resolves.toEqual({
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.jobInfoNotFoundOrNoAccess,
       });
     });
 
     it("maps database errors to a retry message", async () => {
-      mockGetJobInfoAction.mockResolvedValue(makeJobInfo());
       mockCreateInterviewService.mockRejectedValue(
         new DatabaseError("insert failed"),
       );
@@ -252,19 +136,18 @@ describe("interview actions", () => {
         createInterviewAction({ jobInfoId: "job-info-1" }),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createDatabaseError,
+        message: INTERVIEW_ERROR_MESSAGES.createDatabaseError,
       });
     });
 
     it("maps unexpected errors to the generic retry message", async () => {
-      mockGetJobInfoAction.mockResolvedValue(makeJobInfo());
       mockCreateInterviewService.mockRejectedValue(new Error("boom"));
 
       await expect(
         createInterviewAction({ jobInfoId: "job-info-1" }),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+        message: INTERVIEW_ERROR_MESSAGES.unexpectedError,
       });
     });
   });
@@ -297,7 +180,7 @@ describe("interview actions", () => {
         }),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.updateInvalidInput,
+        message: INTERVIEW_ERROR_MESSAGES.updateInvalidInput,
       });
 
       expect(mockUpdateInterviewService).not.toHaveBeenCalled();
@@ -310,7 +193,7 @@ describe("interview actions", () => {
         updateInterviewAction("interview-1", update),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.updateUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.updateUnauthorized,
       });
     });
 
@@ -336,7 +219,7 @@ describe("interview actions", () => {
         updateInterviewAction("interview-1", update),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.updateDatabaseError,
+        message: INTERVIEW_ERROR_MESSAGES.updateDatabaseError,
       });
     });
 
@@ -347,7 +230,7 @@ describe("interview actions", () => {
         updateInterviewAction("interview-1", update),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+        message: INTERVIEW_ERROR_MESSAGES.unexpectedError,
       });
     });
   });
@@ -363,18 +246,16 @@ describe("interview actions", () => {
         data: undefined,
       });
 
-      expect(mockFeedbackProtect).toHaveBeenCalledWith(requestContext, {
-        userId: TEST_USER_ID,
-        requested: 1,
-      });
       expect(mockGenerateInterviewFeedbackService).toHaveBeenCalledWith(
         "interview-1",
       );
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
-    it("returns the rate limit message when Arcjet denies the request", async () => {
-      mockFeedbackProtect.mockResolvedValueOnce(denyDecision);
+    it("maps rate limit errors to the rate limit token", async () => {
+      mockGenerateInterviewFeedbackService.mockRejectedValue(
+        new RateLimitError(RATE_LIMIT_MESSAGE),
+      );
 
       await expect(
         generateInterviewFeedbackAction("interview-1"),
@@ -382,27 +263,6 @@ describe("interview actions", () => {
         success: false,
         message: RATE_LIMIT_MESSAGE,
       });
-
-      expect(mockRequest).toHaveBeenCalledWith();
-      expect(mockFeedbackProtect).toHaveBeenCalledWith(requestContext, {
-        userId: TEST_USER_ID,
-        requested: 1,
-      });
-      expect(mockGenerateInterviewFeedbackService).not.toHaveBeenCalled();
-    });
-
-    it("returns unauthorized when the user is not signed in", async () => {
-      mockGetCurrentUser.mockResolvedValue(null);
-
-      await expect(
-        generateInterviewFeedbackAction("interview-1"),
-      ).resolves.toEqual({
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
-      });
-
-      expect(mockFeedbackProtect).not.toHaveBeenCalled();
-      expect(mockGenerateInterviewFeedbackService).not.toHaveBeenCalled();
     });
 
     it("maps unauthorized errors to a login message", async () => {
@@ -414,7 +274,7 @@ describe("interview actions", () => {
         generateInterviewFeedbackAction("interview-1"),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.feedbackUnauthorized,
       });
     });
 
@@ -440,7 +300,7 @@ describe("interview actions", () => {
         generateInterviewFeedbackAction("interview-1"),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackDatabaseError,
+        message: INTERVIEW_ERROR_MESSAGES.feedbackDatabaseError,
       });
     });
 
@@ -451,7 +311,7 @@ describe("interview actions", () => {
         generateInterviewFeedbackAction("interview-1"),
       ).resolves.toEqual({
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackUnexpectedError,
+        message: INTERVIEW_ERROR_MESSAGES.feedbackUnexpectedError,
       });
     });
   });
@@ -489,13 +349,8 @@ describe("interview actions", () => {
     const interviews = [makeInterview()];
     mockGetInterviewsService.mockResolvedValue(interviews);
 
-    await expect(getInterviewsAction("job-info-1", TEST_USER_ID)).resolves.toBe(
-      interviews,
-    );
+    await expect(getInterviewsAction("job-info-1")).resolves.toBe(interviews);
 
-    expect(mockGetInterviewsService).toHaveBeenCalledWith(
-      "job-info-1",
-      TEST_USER_ID,
-    );
+    expect(mockGetInterviewsService).toHaveBeenCalledWith("job-info-1");
   });
 });

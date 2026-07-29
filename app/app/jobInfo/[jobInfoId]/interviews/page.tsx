@@ -49,7 +49,7 @@ async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
     return redirect(routes.signIn);
   }
 
-  const interviews = await getInterviewsAction(jobInfoId, user.id);
+  const interviews = await getInterviewsAction(jobInfoId);
   const hasPermissionForInterviews = await canCreateInterviewAction();
 
   return (

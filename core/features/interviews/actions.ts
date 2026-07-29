@@ -1,20 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import arcjet, { request, tokenBucket } from "@arcjet/next";
 
+import { INTERVIEW_ERROR_MESSAGES } from "@/core/features/interviews/errorMessages";
 import { checkInterviewPermission } from "@/core/features/interviews/permissions";
-import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
-import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
-import { env } from "@/core/data/env/server";
-import { INTERVIEW_ACTION_MESSAGES } from "@/core/features/interviews/actionMessages";
-import { ActionResult } from "@/core/lib/types";
-import {
-  DatabaseError,
-  PermissionError,
-  UnauthorizedError,
-} from "@/core/lib/errors";
 import {
   createInterviewService,
   updateInterviewService,
@@ -22,38 +11,21 @@ import {
   getInterviewsService,
   generateInterviewFeedbackService,
 } from "@/core/features/interviews/service";
+import { ActionResult } from "@/core/lib/types";
+import {
+  DatabaseError,
+  NotFoundError,
+  PermissionError,
+  RateLimitError,
+  UnauthorizedError,
+} from "@/core/lib/errors";
+import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 
 /**
  * Action Layer for Interviews
- * Handles: Rate limiting, permission checks, error conversion
- * Returns: ActionResult or throws for page-level actions
+ * Handles: Input validation, error conversion to user-friendly messages
+ * Returns: ActionResult for client mutations; throws for page-level reads
  */
-
-const aj = arcjet({
-  characteristics: ["userId"],
-  key: env.ARCJET_KEY,
-  rules: [
-    tokenBucket({
-      capacity: 12,
-      refillRate: 4,
-      interval: "1d",
-      mode: "LIVE",
-    }),
-  ],
-});
-
-const feedbackAj = arcjet({
-  characteristics: ["userId"],
-  key: env.ARCJET_KEY,
-  rules: [
-    tokenBucket({
-      capacity: 12,
-      refillRate: 4,
-      interval: "1d",
-      mode: "LIVE",
-    }),
-  ],
-});
 
 const updateInterviewSchema = z
   .object({
@@ -75,45 +47,6 @@ export async function createInterviewAction({
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    const user = await getCurrentUser();
-    if (user == null) {
-      return {
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
-      };
-    }
-
-    // Check permissions
-    const permitted = await checkInterviewPermission();
-    if (!permitted) {
-      return {
-        success: false,
-        message: PLAN_LIMIT_MESSAGE,
-      };
-    }
-
-    // Check rate limit
-    const decision = await aj.protect(await request(), {
-      userId: user.id,
-      requested: 1,
-    });
-    if (decision.isDenied()) {
-      return {
-        success: false,
-        message: RATE_LIMIT_MESSAGE,
-      };
-    }
-
-    // Verify job info exists and user has access
-    const jobInfo = await getJobInfoAction(jobInfoId);
-    if (jobInfo == null) {
-      return {
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createJobInfoNotFound,
-      };
-    }
-
-    // Create interview
     const interview = await createInterviewService(jobInfoId);
 
     return {
@@ -126,20 +59,41 @@ export async function createInterviewAction({
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.createUnauthorized,
+      };
+    }
+
+    if (error instanceof PermissionError) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    if (error instanceof RateLimitError) {
+      return {
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
+      };
+    }
+
+    if (error instanceof NotFoundError) {
+      return {
+        success: false,
+        message: INTERVIEW_ERROR_MESSAGES.jobInfoNotFoundOrNoAccess,
       };
     }
 
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.createDatabaseError,
+        message: INTERVIEW_ERROR_MESSAGES.createDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+      message: INTERVIEW_ERROR_MESSAGES.unexpectedError,
     };
   }
 }
@@ -156,7 +110,7 @@ export async function updateInterviewAction(
   if (!validation.success) {
     return {
       success: false,
-      message: INTERVIEW_ACTION_MESSAGES.updateInvalidInput,
+      message: INTERVIEW_ERROR_MESSAGES.updateInvalidInput,
     };
   }
 
@@ -170,7 +124,7 @@ export async function updateInterviewAction(
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.updateUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.updateUnauthorized,
       };
     }
 
@@ -184,13 +138,13 @@ export async function updateInterviewAction(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.updateDatabaseError,
+        message: INTERVIEW_ERROR_MESSAGES.updateDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: INTERVIEW_ACTION_MESSAGES.unexpectedError,
+      message: INTERVIEW_ERROR_MESSAGES.unexpectedError,
     };
   }
 }
@@ -215,8 +169,8 @@ export async function canCreateInterviewAction(): Promise<boolean> {
  * Get all interviews for a job info
  * Used in pages - errors bubble up to error boundary
  */
-export async function getInterviewsAction(jobInfoId: string, userId: string) {
-  return await getInterviewsService(jobInfoId, userId);
+export async function getInterviewsAction(jobInfoId: string) {
+  return await getInterviewsService(jobInfoId);
 }
 
 /**
@@ -227,25 +181,6 @@ export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
   try {
-    const user = await getCurrentUser();
-    if (user == null) {
-      return {
-        success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
-      };
-    }
-
-    const decision = await feedbackAj.protect(await request(), {
-      userId: user.id,
-      requested: 1,
-    });
-    if (decision.isDenied()) {
-      return {
-        success: false,
-        message: RATE_LIMIT_MESSAGE,
-      };
-    }
-
     await generateInterviewFeedbackService(interviewId);
 
     return { success: true, data: undefined };
@@ -255,7 +190,14 @@ export async function generateInterviewFeedbackAction(
     if (error instanceof UnauthorizedError) {
       return {
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackUnauthorized,
+        message: INTERVIEW_ERROR_MESSAGES.feedbackUnauthorized,
+      };
+    }
+
+    if (error instanceof RateLimitError) {
+      return {
+        success: false,
+        message: RATE_LIMIT_MESSAGE,
       };
     }
 
@@ -269,13 +211,13 @@ export async function generateInterviewFeedbackAction(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        message: INTERVIEW_ACTION_MESSAGES.feedbackDatabaseError,
+        message: INTERVIEW_ERROR_MESSAGES.feedbackDatabaseError,
       };
     }
 
     return {
       success: false,
-      message: INTERVIEW_ACTION_MESSAGES.feedbackUnexpectedError,
+      message: INTERVIEW_ERROR_MESSAGES.feedbackUnexpectedError,
     };
   }
 }
