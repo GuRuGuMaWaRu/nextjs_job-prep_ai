@@ -187,9 +187,7 @@ describe("interview actions", () => {
     });
 
     it("rejects non-UUID interview id before calling the service", async () => {
-      await expect(
-        updateInterviewAction(INVALID_ID, update),
-      ).resolves.toEqual({
+      await expect(updateInterviewAction(INVALID_ID, update)).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.updateInvalidInput,
       });
