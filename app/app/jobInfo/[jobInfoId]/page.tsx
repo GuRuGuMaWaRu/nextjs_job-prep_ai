@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 
 import { Badge } from "@/core/components/ui/badge";
@@ -15,7 +15,6 @@ import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { routes } from "@/core/data/routes";
 import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 
@@ -54,18 +53,14 @@ export default async function JobInfoPage({
 
   assertUUIDor404(jobInfoId);
 
-  const jobInfo = getCurrentUser().then(async (user) => {
-    if (user == null) {
-      return redirect(routes.signIn);
-    }
-
-    const jobInfo = await getJobInfoAction(jobInfoId); //** TODO: ot this could be getJobInfoAction that requires the user and redirects to Sign In internally, but then does this redirect to NotFound in the page body?*/
-    if (jobInfo == null) {
+  const jobInfo = (async () => {
+    const info = await getJobInfoAction(jobInfoId);
+    if (info == null) {
       return notFound();
     }
 
-    return jobInfo;
-  });
+    return info;
+  })();
 
   return (
     <div className="container max-w-5xl my-4 space-y-4">

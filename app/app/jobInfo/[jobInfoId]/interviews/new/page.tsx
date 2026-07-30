@@ -4,9 +4,9 @@ import { fetchAccessToken } from "hume";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { BackLink } from "@/core/components/BackLink";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { canCreateInterviewAction } from "@/core/features/interviews/actions";
+import { requireUser } from "@/core/lib/requireUser";
 import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 
@@ -34,11 +34,7 @@ export default async function NewInterviewPage({
 }
 
 async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
-  const user = await getCurrentUser();
-
-  if (user == null) {
-    return redirect(routes.signIn);
-  }
+  const user = await requireUser();
 
   const hasPermissionForInterviews = await canCreateInterviewAction();
 

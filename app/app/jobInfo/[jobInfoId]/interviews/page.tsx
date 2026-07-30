@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowRightIcon, PlusIcon } from "lucide-react";
 
@@ -17,7 +16,6 @@ import {
   getInterviewsAction,
 } from "@/core/features/interviews/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
 
@@ -43,12 +41,6 @@ export default async function InterviewsPage({
 }
 
 async function SuspendedPage({ jobInfoId }: { jobInfoId: string }) {
-  const user = await getCurrentUser();
-
-  if (user == null) {
-    return redirect(routes.signIn);
-  }
-
   const interviews = await getInterviewsAction(jobInfoId);
   const hasPermissionForInterviews = await canCreateInterviewAction();
 

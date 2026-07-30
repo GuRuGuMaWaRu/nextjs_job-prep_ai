@@ -1,12 +1,10 @@
 import { Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { canGenerateQuestionsAction } from "@/core/features/questions/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUser } from "@/core/lib/getCurrentUser";
-import { routes } from "@/core/data/routes";
 
 import { NewQuestionClientPage } from "./_NewQuestionClientPage";
 
@@ -28,12 +26,6 @@ export default async function QuestionsPage({
 }
 
 async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
-  const user = await getCurrentUser(); //** TODO: so we check user here and then do the same in canGenerateQuestionsAction and getJobInfoAction? Probably should be done in the actions themselves? Yet I like this approach better because it's explicit. */
-
-  if (user == null) {
-    return redirect(routes.signIn);
-  }
-
   const canGenerateQuestions = await canGenerateQuestionsAction();
 
   // getJobInfoAction handles auth internally and throws on error
