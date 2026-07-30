@@ -33,7 +33,7 @@ import {
 } from "@/core/features/interviews/service";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeInterview } from "@/core/test-utils/factories";
+import { makeInterview, makeJobInfo } from "@/core/test-utils/factories";
 
 const mockCheckInterviewPermissionService = jest.mocked(
   checkInterviewPermissionService,
@@ -45,6 +45,10 @@ const mockGetInterviewsService = jest.mocked(getInterviewsService);
 const mockGenerateInterviewFeedbackService = jest.mocked(
   generateInterviewFeedbackService,
 );
+
+const JOB_INFO_ID = "00000000-0000-4000-8000-000000000001";
+const INTERVIEW_ID = "00000000-0000-4001-8000-000000000001";
+const INVALID_ID = "not-a-uuid";
 
 describe("interview actions", () => {
   let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
@@ -60,7 +64,7 @@ describe("interview actions", () => {
 
   describe("createInterviewAction", () => {
     it("returns the created interview id when creation succeeds", async () => {
-      const interview = makeInterview({ jobInfoId: "job-info-1" });
+      const interview = makeInterview({ jobInfoId: JOB_INFO_ID });
       mockCreateInterviewService.mockResolvedValue(interview);
 
       await expect(
@@ -76,11 +80,22 @@ describe("interview actions", () => {
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
+    it("rejects non-UUID jobInfoId before calling the service", async () => {
+      await expect(
+        createInterviewAction({ jobInfoId: INVALID_ID }),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ERROR_MESSAGES.jobInfoNotFoundOrNoAccess,
+      });
+
+      expect(mockCreateInterviewService).not.toHaveBeenCalled();
+    });
+
     it("maps unauthorized errors to a login message", async () => {
       mockCreateInterviewService.mockRejectedValue(new UnauthorizedError());
 
       await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
+        createInterviewAction({ jobInfoId: JOB_INFO_ID }),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.createUnauthorized,
@@ -93,7 +108,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
+        createInterviewAction({ jobInfoId: JOB_INFO_ID }),
       ).resolves.toEqual({
         success: false,
         message: PLAN_LIMIT_MESSAGE,
@@ -106,7 +121,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
+        createInterviewAction({ jobInfoId: JOB_INFO_ID }),
       ).resolves.toEqual({
         success: false,
         message: RATE_LIMIT_MESSAGE,
@@ -119,7 +134,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
+        createInterviewAction({ jobInfoId: JOB_INFO_ID }),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.jobInfoNotFoundOrNoAccess,
@@ -132,7 +147,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
+        createInterviewAction({ jobInfoId: JOB_INFO_ID }),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.createDatabaseError,
@@ -143,7 +158,7 @@ describe("interview actions", () => {
       mockCreateInterviewService.mockRejectedValue(new Error("boom"));
 
       await expect(
-        createInterviewAction({ jobInfoId: "job-info-1" }),
+        createInterviewAction({ jobInfoId: JOB_INFO_ID }),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.unexpectedError,
@@ -158,22 +173,33 @@ describe("interview actions", () => {
       mockUpdateInterviewService.mockResolvedValue(makeInterview());
 
       await expect(
-        updateInterviewAction("interview-1", update),
+        updateInterviewAction(INTERVIEW_ID, update),
       ).resolves.toEqual({
         success: true,
         data: undefined,
       });
 
       expect(mockUpdateInterviewService).toHaveBeenCalledWith(
-        "interview-1",
+        INTERVIEW_ID,
         update,
       );
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
+    it("rejects non-UUID interview id before calling the service", async () => {
+      await expect(
+        updateInterviewAction(INVALID_ID, update),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ERROR_MESSAGES.updateInvalidInput,
+      });
+
+      expect(mockUpdateInterviewService).not.toHaveBeenCalled();
+    });
+
     it("rejects forged update fields before calling the service", async () => {
       await expect(
-        updateInterviewAction("interview-1", {
+        updateInterviewAction(INTERVIEW_ID, {
           duration: "00:12:34",
           jobInfoId: "other-user-job-info",
         }),
@@ -189,7 +215,7 @@ describe("interview actions", () => {
       mockUpdateInterviewService.mockRejectedValue(new UnauthorizedError());
 
       await expect(
-        updateInterviewAction("interview-1", update),
+        updateInterviewAction(INTERVIEW_ID, update),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.updateUnauthorized,
@@ -202,7 +228,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        updateInterviewAction("interview-1", update),
+        updateInterviewAction(INTERVIEW_ID, update),
       ).resolves.toEqual({
         success: false,
         message: "Custom permission message",
@@ -215,7 +241,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        updateInterviewAction("interview-1", update),
+        updateInterviewAction(INTERVIEW_ID, update),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.updateDatabaseError,
@@ -226,7 +252,7 @@ describe("interview actions", () => {
       mockUpdateInterviewService.mockRejectedValue(new Error("boom"));
 
       await expect(
-        updateInterviewAction("interview-1", update),
+        updateInterviewAction(INTERVIEW_ID, update),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.unexpectedError,
@@ -239,16 +265,27 @@ describe("interview actions", () => {
       mockGenerateInterviewFeedbackService.mockResolvedValue("Useful feedback");
 
       await expect(
-        generateInterviewFeedbackAction("interview-1"),
+        generateInterviewFeedbackAction(INTERVIEW_ID),
       ).resolves.toEqual({
         success: true,
         data: undefined,
       });
 
       expect(mockGenerateInterviewFeedbackService).toHaveBeenCalledWith(
-        "interview-1",
+        INTERVIEW_ID,
       );
       expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it("rejects non-UUID interview id before calling the service", async () => {
+      await expect(
+        generateInterviewFeedbackAction(INVALID_ID),
+      ).resolves.toEqual({
+        success: false,
+        message: INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess,
+      });
+
+      expect(mockGenerateInterviewFeedbackService).not.toHaveBeenCalled();
     });
 
     it("maps rate limit errors to the rate limit token", async () => {
@@ -257,7 +294,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        generateInterviewFeedbackAction("interview-1"),
+        generateInterviewFeedbackAction(INTERVIEW_ID),
       ).resolves.toEqual({
         success: false,
         message: RATE_LIMIT_MESSAGE,
@@ -270,7 +307,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        generateInterviewFeedbackAction("interview-1"),
+        generateInterviewFeedbackAction(INTERVIEW_ID),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.feedbackUnauthorized,
@@ -283,7 +320,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        generateInterviewFeedbackAction("interview-1"),
+        generateInterviewFeedbackAction(INTERVIEW_ID),
       ).resolves.toEqual({
         success: false,
         message: "Interview has not been completed yet",
@@ -296,7 +333,7 @@ describe("interview actions", () => {
       );
 
       await expect(
-        generateInterviewFeedbackAction("interview-1"),
+        generateInterviewFeedbackAction(INTERVIEW_ID),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.feedbackDatabaseError,
@@ -307,7 +344,7 @@ describe("interview actions", () => {
       mockGenerateInterviewFeedbackService.mockRejectedValue(new Error("boom"));
 
       await expect(
-        generateInterviewFeedbackAction("interview-1"),
+        generateInterviewFeedbackAction(INTERVIEW_ID),
       ).resolves.toEqual({
         success: false,
         message: INTERVIEW_ERROR_MESSAGES.feedbackUnexpectedError,
@@ -330,26 +367,45 @@ describe("interview actions", () => {
     await expect(canCreateInterviewAction()).rejects.toBe(error);
   });
 
-  it("gets one interview by id through the service", async () => {
-    const interview = makeInterview();
-    mockGetInterviewByIdService.mockResolvedValue(interview);
+  describe("getInterviewByIdAction", () => {
+    it("gets one interview by id through the service", async () => {
+      const interview = makeInterview();
+      mockGetInterviewByIdService.mockResolvedValue(interview);
 
-    await expect(
-      getInterviewByIdAction(interview.id, TEST_USER_ID),
-    ).resolves.toBe(interview);
+      await expect(
+        getInterviewByIdAction(interview.id, TEST_USER_ID),
+      ).resolves.toBe(interview);
 
-    expect(mockGetInterviewByIdService).toHaveBeenCalledWith(
-      interview.id,
-      TEST_USER_ID,
-    );
+      expect(mockGetInterviewByIdService).toHaveBeenCalledWith(
+        interview.id,
+        TEST_USER_ID,
+      );
+    });
+
+    it("returns null for a non-UUID id without calling the service", async () => {
+      await expect(
+        getInterviewByIdAction(INVALID_ID, TEST_USER_ID),
+      ).resolves.toBeNull();
+
+      expect(mockGetInterviewByIdService).not.toHaveBeenCalled();
+    });
   });
 
-  it("gets all interviews through the service", async () => {
-    const interviews = [makeInterview()];
-    mockGetInterviewsService.mockResolvedValue(interviews);
+  describe("getInterviewsAction", () => {
+    it("gets all interviews through the service", async () => {
+      const jobInfo = makeJobInfo();
+      const interviews = [makeInterview({ jobInfoId: jobInfo.id })];
+      mockGetInterviewsService.mockResolvedValue(interviews);
 
-    await expect(getInterviewsAction("job-info-1")).resolves.toBe(interviews);
+      await expect(getInterviewsAction(jobInfo.id)).resolves.toBe(interviews);
 
-    expect(mockGetInterviewsService).toHaveBeenCalledWith("job-info-1");
+      expect(mockGetInterviewsService).toHaveBeenCalledWith(jobInfo.id);
+    });
+
+    it("returns an empty list for a non-UUID jobInfoId without calling the service", async () => {
+      await expect(getInterviewsAction(INVALID_ID)).resolves.toEqual([]);
+
+      expect(mockGetInterviewsService).not.toHaveBeenCalled();
+    });
   });
 });

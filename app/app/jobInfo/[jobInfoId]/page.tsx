@@ -16,7 +16,6 @@ import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
 import { routes } from "@/core/data/routes";
-import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 
 const options = [
   {
@@ -50,8 +49,6 @@ export default async function JobInfoPage({
   params: Promise<{ jobInfoId: string }>;
 }) {
   const { jobInfoId } = await params;
-
-  assertUUIDor404(jobInfoId);
 
   const jobInfo = (async () => {
     const info = await getJobInfoAction(jobInfoId);
@@ -109,8 +106,7 @@ export default async function JobInfoPage({
             <Link
               className="hover:scale-[1.02] transition-[transform_opacity]"
               href={`${routes.jobInfo(jobInfoId)}/${option.href}`}
-              key={option.href}
-            >
+              key={option.href}>
               <Card className="h-full flex flex-row items-start justify-between">
                 <CardHeader className="grow">
                   <CardTitle>{option.label}</CardTitle>

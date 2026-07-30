@@ -24,10 +24,6 @@ import { CondensedMessages } from "@/core/services/hume/components/CondensedMess
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
-import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
-import { assertUUID } from "@/core/lib/assertUUID";
-
-import InterviewNotFound from "./_InterviewNotFound";
 
 export default async function InterviewPage({
   params,
@@ -35,12 +31,6 @@ export default async function InterviewPage({
   params: Promise<{ jobInfoId: string; interviewId: string }>;
 }) {
   const { jobInfoId, interviewId } = await params;
-
-  assertUUIDor404(jobInfoId);
-
-  if (!assertUUID(interviewId)) {
-    return <InterviewNotFound jobInfoId={jobInfoId} />;
-  }
 
   const interview = (async () => {
     const user = await requireUser();
@@ -81,8 +71,7 @@ export default async function InterviewPage({
             result={(i) =>
               i.feedback == null ? (
                 <ActionButton
-                  action={generateInterviewFeedbackAction.bind(null, i.id)}
-                >
+                  action={generateInterviewFeedbackAction.bind(null, i.id)}>
                   Generate Feedback
                 </ActionButton>
               ) : (
@@ -100,8 +89,7 @@ export default async function InterviewPage({
           />
         </div>
         <Suspense
-          fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}
-        >
+          fallback={<Loader2Icon className="animate-spin size-24 mx-auto" />}>
           <SuspendedMessages interview={interview} />
         </Suspense>
       </div>

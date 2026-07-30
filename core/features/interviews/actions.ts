@@ -11,6 +11,7 @@ import {
   generateInterviewFeedbackService,
   checkInterviewPermissionService,
 } from "@/core/features/interviews/service";
+import { assertUUID } from "@/core/lib/assertUUID";
 import { ActionResult } from "@/core/lib/types";
 import {
   DatabaseError,
@@ -46,6 +47,13 @@ export async function createInterviewAction({
 }: {
   jobInfoId: string;
 }): Promise<ActionResult<{ id: string }>> {
+  if (!assertUUID(jobInfoId)) {
+    return {
+      success: false,
+      message: INTERVIEW_ERROR_MESSAGES.jobInfoNotFoundOrNoAccess,
+    };
+  }
+
   try {
     const interview = await createInterviewService(jobInfoId);
 
@@ -106,6 +114,13 @@ export async function updateInterviewAction(
   id: string,
   unsafeData: unknown,
 ): Promise<ActionResult<void>> {
+  if (!assertUUID(id)) {
+    return {
+      success: false,
+      message: INTERVIEW_ERROR_MESSAGES.updateInvalidInput,
+    };
+  }
+
   const validation = updateInterviewSchema.safeParse(unsafeData);
   if (!validation.success) {
     return {
@@ -154,6 +169,10 @@ export async function updateInterviewAction(
  * Used in pages - errors bubble up to error boundary
  */
 export async function getInterviewByIdAction(id: string, userId: string) {
+  if (!assertUUID(id)) {
+    return null;
+  }
+
   return await getInterviewByIdService(id, userId);
 }
 
@@ -170,6 +189,10 @@ export async function canCreateInterviewAction(): Promise<boolean> {
  * Used in pages - errors bubble up to error boundary
  */
 export async function getInterviewsAction(jobInfoId: string) {
+  if (!assertUUID(jobInfoId)) {
+    return [];
+  }
+
   return await getInterviewsService(jobInfoId);
 }
 
@@ -180,6 +203,13 @@ export async function getInterviewsAction(jobInfoId: string) {
 export async function generateInterviewFeedbackAction(
   interviewId: string,
 ): Promise<ActionResult<void>> {
+  if (!assertUUID(interviewId)) {
+    return {
+      success: false,
+      message: INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess,
+    };
+  }
+
   try {
     await generateInterviewFeedbackService(interviewId);
 
