@@ -30,6 +30,14 @@ describe("getErrorMessage", () => {
         "You have an existing subscription. Use Manage subscription on this page to update payment or cancel.",
       ],
       ["checkout_failed", "Failed to start checkout. Please try again."],
+      [
+        "invalid_session",
+        "We couldn't confirm that checkout. Please try again or refresh after a moment.",
+      ],
+      [
+        "fulfillment_failed",
+        "Payment succeeded but we couldn't activate Pro yet. Refresh this page or contact support if it persists.",
+      ],
       ["no_customer", "No billing customer found. Upgrade to Pro first."],
       ["portal_failed", "Failed to open billing portal. Please try again."],
     ])("maps %s to the correct message", (code, errorMessage) => {

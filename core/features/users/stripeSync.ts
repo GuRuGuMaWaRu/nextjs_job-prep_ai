@@ -2,11 +2,8 @@ import Stripe from "stripe";
 
 import type { UserPlan } from "@/core/drizzle/schema/user";
 
-import {
-  getUserByIdDb,
-  getUserByStripeCustomerIdDb,
-  updateUserPlanAndStripeIdsIfSubscriptionMatchesDb,
-} from "./db";
+import { updateUserPlanAndStripeIdsIfSubscriptionMatchesDal } from "./dal";
+import { getUserByIdDb, getUserByStripeCustomerIdDb } from "./db";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 const CUSTOMER_SUBSCRIPTION_LIST_LIMIT = 100;
@@ -162,7 +159,7 @@ export async function syncSubscriptionFromStripe(
 
   const subscriptionState = getSubscriptionState(subscriptionForSync);
 
-  const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+  const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
     user.id,
     user.stripeSubscriptionId,
     subscriptionState,
@@ -248,7 +245,7 @@ export async function reconcileUserStripeSubscription(
       return { kind: "ok", updated: false };
     }
 
-    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
       user.id,
       user.stripeSubscriptionId,
       subscriptionState,
@@ -299,7 +296,7 @@ export async function reconcileUserStripeSubscription(
         if (activeSubscription) {
           const subscriptionState = getSubscriptionState(activeSubscription);
           const updated =
-            await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+            await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
               userId,
               user.stripeSubscriptionId,
               subscriptionState,
@@ -328,7 +325,7 @@ export async function reconcileUserStripeSubscription(
         },
       );
 
-      const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+      const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
         userId,
         user.stripeSubscriptionId,
         {

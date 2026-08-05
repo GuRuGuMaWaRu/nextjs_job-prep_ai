@@ -333,6 +333,7 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - `app/api/auth/validate-session/route.ts`
 - `app/api/oauth/[provider]/route.ts`
 - `app/api/stripe/create-checkout-session/route.ts`
+- `app/api/stripe/checkout-return/route.ts`
 - `app/api/stripe/create-portal-session/route.ts`
 - `app/api/stripe/cancel-subscription/route.ts`
 - `app/api/stripe/webhooks/route.ts`

@@ -43,6 +43,7 @@ describe("routes", () => {
       aiQuestionGeneration: "/api/ai/questions/generate-question",
       aiQuestionFeedback: "/api/ai/questions/generate-feedback",
       evictSession: "/api/auth/evict",
+      stripeCheckoutReturn: "/api/stripe/checkout-return",
     });
   });
 });

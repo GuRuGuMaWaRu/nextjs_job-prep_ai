@@ -27,6 +27,7 @@ export function getStripe(): Stripe | null {
  * returns null in non-dev environments so callers fail closed rather than
  * redirecting Stripe to a dead address.
  */
+//** TODO: should be simplified */
 export function getStripeBaseUrl(): string | null {
   if (env.APP_URL) return env.APP_URL;
 
@@ -46,9 +47,9 @@ export function isStripeConfigured(): boolean {
 
   return Boolean(
     env.STRIPE_SECRET_KEY &&
-      env.STRIPE_WEBHOOK_SECRET &&
-      hasPriceOrProduct &&
-      getStripeBaseUrl(),
+    env.STRIPE_WEBHOOK_SECRET &&
+    hasPriceOrProduct &&
+    getStripeBaseUrl(),
   );
 }
 

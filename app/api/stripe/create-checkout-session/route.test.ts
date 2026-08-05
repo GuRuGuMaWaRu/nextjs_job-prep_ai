@@ -286,7 +286,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
         mode: "subscription",
         line_items: [{ price: "price_test_pro", quantity: 1 }],
         success_url:
-          "https://app.test/app/upgrade?success=true&session_id={CHECKOUT_SESSION_ID}",
+          "https://app.test/api/stripe/checkout-return?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: "https://app.test/app/upgrade?canceled=true",
         metadata: { userId: TEST_USER_ID },
         customer: "cus_test_checkout",
@@ -311,7 +311,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
     expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         success_url:
-          "http://localhost:3000/app/upgrade?success=true&session_id={CHECKOUT_SESSION_ID}",
+          "http://localhost:3000/api/stripe/checkout-return?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: "http://localhost:3000/app/upgrade?canceled=true",
       }),
       undefined,

@@ -45,10 +45,6 @@ jest.mock("@/core/features/users/stripeSync", () => ({
   syncSubscriptionFromStripe: jest.fn(),
 }));
 
-jest.mock("@/core/features/users/cache", () => ({
-  revalidateUserCache: jest.fn(),
-}));
-
 import { getStripe } from "@/core/features/billing/stripe";
 import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import {
@@ -59,7 +55,6 @@ import {
   unclaimEvent,
 } from "@/core/features/billing/webhookHelpers";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/cache";
 
 import { POST } from "./route";
 
@@ -81,7 +76,6 @@ const mockMarkRemediation =
 const mockSyncSubscription = syncSubscriptionFromStripe as jest.MockedFunction<
   typeof syncSubscriptionFromStripe
 >;
-const mockRevalidateUserCache = jest.mocked(revalidateUserCache);
 
 const VALID_SIGNATURE_HEADER = "t=1,v1=test-signature";
 
@@ -276,7 +270,6 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     expect(response.status).toBe(200);
     expect(mockFulfill).toHaveBeenCalledTimes(1);
     expect(mockFulfill).toHaveBeenCalledWith(session);
-    expect(mockRevalidateUserCache).toHaveBeenCalledWith("user-42");
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
     expect(mockUnclaimEvent).not.toHaveBeenCalled();
   });

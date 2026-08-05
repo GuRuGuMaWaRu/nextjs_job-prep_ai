@@ -28,7 +28,6 @@ import {
 } from "@/core/features/billing/webhookHelpers";
 import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/cache";
 import { getStripe } from "@/core/features/billing/stripe";
 import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 
@@ -102,11 +101,7 @@ export async function POST(request: Request) {
       case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted:
       case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded: {
         const session = event.data.object as Stripe.Checkout.Session;
-        const fulfilled = await fulfillCheckoutSession(session);
-        const userId = session.metadata?.userId;
-        if (fulfilled && userId) {
-          revalidateUserCache(userId);
-        }
+        await fulfillCheckoutSession(session);
         break;
       }
 
@@ -128,14 +123,7 @@ export async function POST(request: Request) {
             : subscription.customer?.id;
         if (!customerId) break;
 
-        const updatedUserId = await syncSubscriptionFromStripe(
-          stripe,
-          subscription.id,
-          customerId,
-        );
-        if (updatedUserId) {
-          revalidateUserCache(updatedUserId);
-        }
+        await syncSubscriptionFromStripe(stripe, subscription.id, customerId);
         break;
       }
 
@@ -147,14 +135,7 @@ export async function POST(request: Request) {
             : subscription.customer?.id;
         if (!customerId) break;
 
-        const updatedUserId = await syncSubscriptionFromStripe(
-          stripe,
-          subscription.id,
-          customerId,
-        );
-        if (updatedUserId) {
-          revalidateUserCache(updatedUserId);
-        }
+        await syncSubscriptionFromStripe(stripe, subscription.id, customerId);
         break;
       }
 

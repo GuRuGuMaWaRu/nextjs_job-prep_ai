@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     return createRedirectResponse(getUpgradeErrorRedirect(errorCode, baseUrl));
   }
 
-  const successUrl = `${baseUrl}${routes.upgrade}?success=true&session_id={CHECKOUT_SESSION_ID}`;
+  const successUrl = `${baseUrl}${routes.api.stripeCheckoutReturn}?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${baseUrl}${routes.upgrade}?canceled=true`;
 
   const sessionParams: {
