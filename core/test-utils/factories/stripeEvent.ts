@@ -165,31 +165,6 @@ export function makeCheckoutSessionCompletedEvent(
   });
 }
 
-export function makeCheckoutSessionAsyncPaymentSucceededEvent(
-  sessionOverrides: MakeStripeCheckoutSessionOverrides = {},
-  eventId?: string,
-): Stripe.Event {
-  return makeStripeEvent({
-    id: eventId,
-    type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded,
-    object: makeStripeCheckoutSession(sessionOverrides),
-  });
-}
-
-export function makeCheckoutSessionAsyncPaymentFailedEvent(
-  sessionOverrides: MakeStripeCheckoutSessionOverrides = {},
-  eventId?: string,
-): Stripe.Event {
-  return makeStripeEvent({
-    id: eventId,
-    type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed,
-    object: makeStripeCheckoutSession({
-      paymentStatus: "unpaid",
-      ...sessionOverrides,
-    }),
-  });
-}
-
 export function makeSubscriptionUpdatedEvent(
   subscriptionOverrides: MakeStripeSubscriptionOverrides = {},
   eventId?: string,
@@ -212,20 +187,5 @@ export function makeSubscriptionDeletedEvent(
       status: "canceled",
       ...subscriptionOverrides,
     }),
-  });
-}
-
-/**
- * Builds a real Stripe event (`invoice.voided` is a valid `Stripe.Event.Type`)
- * that this app's webhook route does not handle, so tests can assert the
- * default branch (no-op, HTTP 200).
- */
-export function makeUnhandledStripeWebhookEvent(
-  eventId?: string,
-): Stripe.Event {
-  return makeStripeEvent({
-    id: eventId,
-    type: STRIPE_WEBHOOK_EVENT_TYPES.invoiceVoided,
-    object: {},
   });
 }

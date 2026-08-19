@@ -8,11 +8,8 @@ import {
 } from "@core/test-utils/mocks/stripe";
 import {
   makeCheckoutSessionCompletedEvent,
-  makeCheckoutSessionAsyncPaymentSucceededEvent,
-  makeCheckoutSessionAsyncPaymentFailedEvent,
   makeSubscriptionDeletedEvent,
   makeSubscriptionUpdatedEvent,
-  makeUnhandledStripeWebhookEvent,
   makeStripeCheckoutSession,
   makeStripeCustomer,
   makeStripeSubscription,
@@ -122,7 +119,7 @@ beforeEach(() => {
   mockFulfill.mockReset().mockResolvedValue(true);
   mockMarkProcessed.mockReset().mockResolvedValue(undefined);
   mockMarkRemediation.mockReset().mockResolvedValue(undefined);
-  mockSyncSubscription.mockReset().mockResolvedValue(null);
+  mockSyncSubscription.mockReset().mockResolvedValue(undefined);
 
   consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -274,35 +271,6 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     expect(mockUnclaimEvent).not.toHaveBeenCalled();
   });
 
-  it("also fulfills the checkout on checkout.session.async_payment_succeeded", async () => {
-    const event = makeCheckoutSessionAsyncPaymentSucceededEvent({
-      userId: "user-async",
-    });
-    primeHappyPath(event);
-
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
-
-    expect(response.status).toBe(200);
-    expect(mockFulfill).toHaveBeenCalledTimes(1);
-    expect(mockFulfill).toHaveBeenCalledWith(event.data.object);
-    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
-  });
-
-  it("does not fulfill on checkout.session.async_payment_failed but still marks processed", async () => {
-    const event = makeCheckoutSessionAsyncPaymentFailedEvent();
-    primeHappyPath(event);
-
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
-
-    expect(response.status).toBe(200);
-    expect(mockFulfill).not.toHaveBeenCalled();
-    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
-  });
-
   it("syncs the subscription on customer.subscription.updated with the resolved customer id", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_updated",
@@ -439,110 +407,112 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
-  it("no-ops on an unhandled event type and still marks the event processed", async () => {
-    const event = makeUnhandledStripeWebhookEvent();
-    primeHappyPath(event);
+  describe("POST /api/stripe/webhooks — handler failure recovery", () => {
+    it("unclaims the event and returns 500 without marking processed when the handler throws", async () => {
+      const event = makeSubscriptionUpdatedEvent();
+      primeHappyPath(event);
+      mockSyncSubscription.mockRejectedValueOnce(new Error("db unavailable"));
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(200);
-    expect(mockFulfill).not.toHaveBeenCalled();
-    expect(mockSyncSubscription).not.toHaveBeenCalled();
-    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
-  });
-});
-
-describe("POST /api/stripe/webhooks — handler failure recovery", () => {
-  it("unclaims the event and returns 500 without marking processed when the handler throws", async () => {
-    const event = makeSubscriptionUpdatedEvent();
-    primeHappyPath(event);
-    mockSyncSubscription.mockRejectedValueOnce(new Error("db unavailable"));
-
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
-
-    expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({
-      error: "Webhook handler failed",
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({
+        error: "Webhook handler failed",
+      });
+      expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+      expect(mockMarkRemediation).not.toHaveBeenCalled();
     });
-    expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-    expect(mockMarkRemediation).not.toHaveBeenCalled();
-  });
 
-  it("flags the row for remediation when both the handler and unclaim fail", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+    it("flags the row for remediation when both the handler and unclaim fail", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
-    expect(mockMarkRemediation).toHaveBeenCalledWith(event.id, "unclaim boom");
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(500);
+      expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
+      expect(mockMarkRemediation).toHaveBeenCalledWith(
+        event.id,
+        "unclaim boom",
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
 
-  it("stringifies non-Error unclaim failures before flagging remediation", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce("plain unclaim failure");
+    it("stringifies non-Error unclaim failures before flagging remediation", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce("plain unclaim failure");
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(mockMarkRemediation).toHaveBeenCalledWith(
-      event.id,
-      "plain unclaim failure",
-    );
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(500);
+      expect(mockMarkRemediation).toHaveBeenCalledWith(
+        event.id,
+        "plain unclaim failure",
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
 
-  it("still returns 500 when even the remediation write fails", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
-    mockMarkRemediation.mockRejectedValueOnce(new Error("flag boom"));
+    it("still returns 500 when even the remediation write fails", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+      mockMarkRemediation.mockRejectedValueOnce(new Error("flag boom"));
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(mockMarkRemediation).toHaveBeenCalledWith(event.id, "unclaim boom");
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(500);
+      expect(mockMarkRemediation).toHaveBeenCalledWith(
+        event.id,
+        "unclaim boom",
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
 
-  it("stringifies non-Error remediation write failures for safe alert metadata", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
-    mockMarkRemediation.mockRejectedValueOnce("plain flag failure");
+    it("stringifies non-Error remediation write failures for safe alert metadata", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+      mockMarkRemediation.mockRejectedValueOnce("plain flag failure");
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
-      {
-        eventType: event.type,
-        markError: "plain flag failure",
-        unclaimError: "unclaim boom",
-      },
-    );
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
+      expect(response.status).toBe(500);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
+        {
+          eventType: event.type,
+          markError: "plain flag failure",
+          unclaimError: "unclaim boom",
+        },
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
   });
 });

@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  //** TODO: this function may throw an error that we don't handle here */
   const userIds = await getUserIdsWithStripeSubscriptionDb(BATCH_LIMIT);
 
   console.info("[cron:stripe-subscriptions] run started", {
