@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 import type { UserPlan } from "@/core/drizzle/schema/user";
+import { getStripe } from "@/core/features/billing/stripe";
 
 import { updateUserPlanAndStripeIdsIfSubscriptionMatchesDal } from "./dal";
 import { getUserByIdDb, getUserByStripeCustomerIdDb } from "./db";
@@ -44,7 +45,7 @@ function getLatestActiveSubscription(
   return latest;
 }
 
-function getSubscriptionState(subscription: Stripe.Subscription): {
+function getSubscriptionUpdatePayload(subscription: Stripe.Subscription): {
   plan: UserPlan;
   stripeSubscriptionId: string | null;
 } {
@@ -81,18 +82,23 @@ async function findActiveCustomerSubscription(
 }
 
 async function getSubscriptionForSync(
-  stripe: Stripe,
   subscription: Stripe.Subscription,
-  customerId: string,
-  currentStripeSubscriptionId: string | null,
+  userStripeSubscriptionId: string | null,
 ): Promise<Stripe.Subscription | null> {
+  const stripe = getStripe();
+  if (!stripe) {
+    throw new Error("Stripe not configured");
+  }
+
+  //** a user has a subscriptionId, but it differs from the subscriptionId in the webhook event */
+  //** find the latest active subscription for the user in Stripe and return it if possible */
   if (
-    currentStripeSubscriptionId !== null &&
-    currentStripeSubscriptionId !== subscription.id
+    userStripeSubscriptionId !== null &&
+    userStripeSubscriptionId !== subscription.id
   ) {
     const activeSubscription = await findActiveCustomerSubscription(
       stripe,
-      customerId,
+      subscription.customer as string,
     );
 
     if (activeSubscription?.id === subscription.id) {
@@ -100,7 +106,7 @@ async function getSubscriptionForSync(
     }
 
     console.warn("[stripeSync] Skipped stale subscription webhook", {
-      currentStripeSubscriptionId,
+      userStripeSubscriptionId,
       eventStripeSubscriptionId: subscription.id,
       activeStripeSubscriptionId: activeSubscription?.id ?? null,
     });
@@ -108,15 +114,18 @@ async function getSubscriptionForSync(
     return null;
   }
 
+  //** check if subscription from webhook event is active (active or trialing)? if so, return it */
   if (isActiveSubscriptionStatus(subscription.status)) {
     return subscription;
   }
 
+  //** if subscription from webhook event is not active, find in Stripe the latest active subscription for the user */
   const activeSubscription = await findActiveCustomerSubscription(
     stripe,
-    customerId,
+    subscription.customer as string,
   );
 
+  //** if the latest active subscription for the user is different from the subscription from the webhook event, return the latest active subscription */
   return activeSubscription && activeSubscription.id !== subscription.id
     ? activeSubscription
     : subscription;
@@ -132,37 +141,39 @@ async function getSubscriptionForSync(
  * @returns User id when the database row was updated (for cache revalidation at the caller).
  */
 export async function syncSubscriptionFromStripe(
-  stripe: Stripe,
-  subscriptionId: string,
-  customerId: string,
-): Promise<string | null> {
-  const user = await getUserByStripeCustomerIdDb(customerId);
+  stripeSubscription: Stripe.Subscription,
+): Promise<void> {
+  const stripe = getStripe();
+  if (!stripe) {
+    throw new Error("Stripe not configured");
+  }
+
+  //** ensure the subscription belongs to a user in our database */
+  const user = await getUserByStripeCustomerIdDb(
+    stripeSubscription.customer as string,
+  );
 
   if (user === null) {
     throw new Error(
-      `syncSubscriptionFromStripe: no user for customer ${customerId} - will retry`,
+      `syncSubscriptionFromStripe: no user for customer ${stripeSubscription.customer} - will retry`,
     );
   }
 
-  const stripeSubscription =
-    await stripe.subscriptions.retrieve(subscriptionId);
   const subscriptionForSync = await getSubscriptionForSync(
-    stripe,
     stripeSubscription,
-    customerId,
     user.stripeSubscriptionId,
   );
 
   if (!subscriptionForSync) {
-    return null;
+    return;
   }
 
-  const subscriptionState = getSubscriptionState(subscriptionForSync);
+  const updatePayload = getSubscriptionUpdatePayload(subscriptionForSync);
 
   const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
     user.id,
     user.stripeSubscriptionId,
-    subscriptionState,
+    updatePayload,
   );
 
   if (!updated) {
@@ -174,17 +185,8 @@ export async function syncSubscriptionFromStripe(
         eventStripeSubscriptionId: subscriptionForSync.id,
       },
     );
-    return null;
+    return;
   }
-
-  return user.id;
-}
-
-function isStripeSubscriptionMissingError(err: unknown): boolean {
-  return (
-    err instanceof Stripe.errors.StripeInvalidRequestError &&
-    err.code === "resource_missing"
-  );
 }
 
 type ReconcileStripeSubscriptionResult =
@@ -206,6 +208,8 @@ export async function reconcileUserStripeSubscription(
 ): Promise<ReconcileStripeSubscriptionResult> {
   const user = await getUserByIdDb(userId);
 
+  //** TODO: in CRON job we got a list of user ids with a subscription id, so why do we need to check if there is a user and a subscription id? */
+  //** The only possible reason is we are afraid that between the moment when we got that list of user ids and now the user has no subscription id anymore */
   if (!user || !user.stripeSubscriptionId) {
     return { kind: "skipped", reason: "no_subscription" };
   }
@@ -214,14 +218,8 @@ export async function reconcileUserStripeSubscription(
     const stripeSubscription = await stripe.subscriptions.retrieve(
       user.stripeSubscriptionId,
     );
-    const stripeCustomerId =
-      typeof stripeSubscription.customer === "string"
-        ? stripeSubscription.customer
-        : stripeSubscription.customer?.id;
-
-    if (!stripeCustomerId) {
-      return { kind: "error", message: "subscription_missing_customer" };
-    }
+    //** TODO: apparently we can be certain that this will be a string */
+    const stripeCustomerId = stripeSubscription.customer as string;
 
     if (
       user.stripeCustomerId !== null &&
@@ -236,10 +234,10 @@ export async function reconcileUserStripeSubscription(
           stripeSubscription)
         : stripeSubscription;
 
-    const subscriptionState = getSubscriptionState(subscriptionForSync);
+    const updatePayload = getSubscriptionUpdatePayload(subscriptionForSync);
     const isUpdated =
-      user.plan !== subscriptionState.plan ||
-      user.stripeSubscriptionId !== subscriptionState.stripeSubscriptionId;
+      user.plan !== updatePayload.plan ||
+      user.stripeSubscriptionId !== updatePayload.stripeSubscriptionId;
 
     if (!isUpdated) {
       return { kind: "ok", updated: false };
@@ -248,7 +246,7 @@ export async function reconcileUserStripeSubscription(
     const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
       user.id,
       user.stripeSubscriptionId,
-      subscriptionState,
+      updatePayload,
     );
 
     if (!updated) {
@@ -264,7 +262,10 @@ export async function reconcileUserStripeSubscription(
 
     return { kind: "ok", updated };
   } catch (err) {
-    if (isStripeSubscriptionMissingError(err)) {
+    if (
+      err instanceof Stripe.errors.StripeInvalidRequestError &&
+      err.code === "resource_missing"
+    ) {
       console.error(
         "[stripeSync] Stripe subscription not found (resource_missing)",
         {
@@ -294,12 +295,13 @@ export async function reconcileUserStripeSubscription(
         );
 
         if (activeSubscription) {
-          const subscriptionState = getSubscriptionState(activeSubscription);
+          const updatePayload =
+            getSubscriptionUpdatePayload(activeSubscription);
           const updated =
             await updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
               userId,
               user.stripeSubscriptionId,
-              subscriptionState,
+              updatePayload,
             );
 
           if (!updated) {
