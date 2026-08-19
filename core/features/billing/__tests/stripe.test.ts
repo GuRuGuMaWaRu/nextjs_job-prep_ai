@@ -20,7 +20,6 @@ import {
   getIdempotencyKeyFromRequest,
   getStripe,
   getStripeBaseUrl,
-  getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/features/billing/stripe";
 import { createTestServerEnv } from "@core/test-utils/env";
@@ -184,19 +183,6 @@ describe("billing Stripe helpers", () => {
       const result = isStripeConfigured();
 
       expect(result).toBe(false);
-    });
-  });
-
-  describe("getUpgradeErrorRedirect", () => {
-    it("builds an absolute upgrade redirect with an encoded error code", () => {
-      const result = getUpgradeErrorRedirect(
-        "checkout failed & retry",
-        "https://app.test",
-      );
-
-      expect(result).toBe(
-        "https://app.test/app/upgrade?error=checkout%20failed%20%26%20retry",
-      );
     });
   });
 

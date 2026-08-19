@@ -62,22 +62,20 @@ export async function updateUserPlanAndStripeIdsIfSubscriptionMatchesDal(
   expectedStripeSubscriptionId: string | null,
   payload: UpdateUserPlanAndStripeIdsPayload,
 ) {
-  let updated: boolean;
-
   try {
-    updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
+    const updated = await updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
       userId,
       expectedStripeSubscriptionId,
       payload,
     );
+
+    if (updated) {
+      revalidateUserCache(userId);
+    }
+
+    return updated;
   } catch (error) {
     console.error("Database error updating user plan:", error);
     throw new DatabaseError("Failed to update user plan in database", error);
   }
-
-  if (updated) {
-    revalidateUserCache(userId);
-  }
-
-  return updated;
 }

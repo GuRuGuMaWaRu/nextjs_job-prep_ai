@@ -11,20 +11,6 @@ type UpdateUserPlanAndStripeIdsPayload = {
   stripeSubscriptionId?: string | null;
 };
 
-function toUserPlanAndStripeIdsUpdate(
-  payload: UpdateUserPlanAndStripeIdsPayload,
-) {
-  return {
-    plan: payload.plan,
-    ...(payload.stripeCustomerId !== undefined && {
-      stripeCustomerId: payload.stripeCustomerId,
-    }),
-    ...(payload.stripeSubscriptionId !== undefined && {
-      stripeSubscriptionId: payload.stripeSubscriptionId,
-    }),
-  };
-}
-
 export async function upsertUserDb(user: typeof UserTable.$inferInsert) {
   await db
     .insert(UserTable)
@@ -99,7 +85,15 @@ export async function updateUserPlanAndStripeIdsDb(
 ) {
   await db
     .update(UserTable)
-    .set(toUserPlanAndStripeIdsUpdate(payload))
+    .set({
+      plan: payload.plan,
+      ...(payload.stripeCustomerId !== undefined && {
+        stripeCustomerId: payload.stripeCustomerId,
+      }),
+      ...(payload.stripeSubscriptionId !== undefined && {
+        stripeSubscriptionId: payload.stripeSubscriptionId,
+      }),
+    })
     .where(eq(UserTable.id, userId));
 }
 
@@ -114,7 +108,15 @@ export async function updateUserPlanAndStripeIdsIfSubscriptionMatchesDb(
 ) {
   const rows = await db
     .update(UserTable)
-    .set(toUserPlanAndStripeIdsUpdate(payload))
+    .set({
+      plan: payload.plan,
+      ...(payload.stripeCustomerId !== undefined && {
+        stripeCustomerId: payload.stripeCustomerId,
+      }),
+      ...(payload.stripeSubscriptionId !== undefined && {
+        stripeSubscriptionId: payload.stripeSubscriptionId,
+      }),
+    })
     .where(
       and(
         eq(UserTable.id, userId),

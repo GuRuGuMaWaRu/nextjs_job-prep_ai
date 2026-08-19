@@ -4,7 +4,6 @@ import {
   getStripe,
   getStripeBaseUrl,
   getIdempotencyKeyFromRequest,
-  getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/features/billing/stripe";
 import { routes } from "@/core/data/routes";
@@ -16,8 +15,6 @@ import { getCurrentUser } from "@/core/lib/getCurrentUser";
  * subscription ends.
  */
 export async function POST(request: Request) {
-  const user = await getCurrentUser();
-  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers
       .get("content-type")
@@ -30,30 +27,33 @@ export async function POST(request: Request) {
       ? NextResponse.json({ redirectUrl })
       : NextResponse.redirect(redirectUrl, 302);
 
+  const user = await getCurrentUser();
   if (user == null) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("unauthorized", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=unauthorized`,
     );
   }
 
   if (!isStripeConfigured()) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=stripe_not_configured`,
     );
   }
 
   const stripe = getStripe();
   if (!stripe) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=stripe_not_configured`,
     );
   }
 
   if (user.stripeSubscriptionId == null) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("no_subscription", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=no_subscription`,
     );
   }
+
+  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
 
   try {
     await stripe.subscriptions.update(
@@ -63,14 +63,14 @@ export async function POST(request: Request) {
       },
       idempotencyKey ? { idempotencyKey } : undefined,
     );
+
+    return createRedirectResponse(
+      `${baseUrl}${routes.upgrade}?canceled_subscription=true`,
+    );
   } catch (err) {
     console.error("Stripe cancel subscription error:", err);
     return createRedirectResponse(
-      getUpgradeErrorRedirect("cancel_failed", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=cancel_failed`,
     );
   }
-
-  const redirectUrl = `${baseUrl}${routes.upgrade}?canceled_subscription=true`;
-
-  return createRedirectResponse(redirectUrl);
 }

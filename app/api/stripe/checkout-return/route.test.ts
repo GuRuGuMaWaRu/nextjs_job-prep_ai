@@ -5,10 +5,6 @@ jest.mock("@/core/lib/getCurrentUser", () => ({
 jest.mock("@/core/features/billing/stripe", () => ({
   getStripe: jest.fn(),
   getStripeBaseUrl: jest.fn(),
-  getUpgradeErrorRedirect: jest.fn(
-    (errorCode: string, baseUrl: string) =>
-      `${baseUrl}/app/upgrade?error=${errorCode}`,
-  ),
   isStripeConfigured: jest.fn(),
 }));
 
