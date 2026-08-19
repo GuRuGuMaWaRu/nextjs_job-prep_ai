@@ -8,7 +8,6 @@ export type PlanCardDefinition = {
   period: string;
   description: string;
   features: readonly string[];
-  popular: boolean;
 };
 
 export const FREE_PLAN_CARD = {
@@ -22,7 +21,6 @@ export const FREE_PLAN_CARD = {
     `${questions} practice questions`,
     "Job-specific prep from your own descriptions",
   ],
-  popular: false,
 } as const satisfies PlanCardDefinition;
 
 export const PRO_PLAN_CARD = {
@@ -37,7 +35,6 @@ export const PRO_PLAN_CARD = {
     "Structured AI feedback on interviews and answers",
     "Job-specific prep from your own descriptions",
   ],
-  popular: true,
 } as const satisfies PlanCardDefinition;
 
 export const PUBLIC_PLANS = [FREE_PLAN_CARD, PRO_PLAN_CARD] as const;
