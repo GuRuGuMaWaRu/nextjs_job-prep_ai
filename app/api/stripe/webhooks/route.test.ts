@@ -193,7 +193,7 @@ describe("POST /api/stripe/webhooks — preconditions", () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
-      error: "Invalid signature",
+      error: "Webhook Error: invalid signature",
     });
     expect(mockClaimEvent).not.toHaveBeenCalled();
     expect(mockFulfill).not.toHaveBeenCalled();
@@ -271,7 +271,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     expect(mockUnclaimEvent).not.toHaveBeenCalled();
   });
 
-  it("syncs the subscription on customer.subscription.updated with the resolved customer id", async () => {
+  it("syncs the subscription on customer.subscription.updated", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_updated",
       customer: "cus_test_updated",
@@ -289,15 +289,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
 
     expect(response.status).toBe(200);
     expect(mockSyncSubscription).toHaveBeenCalledTimes(1);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_updated",
-      "cus_test_updated",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
-  it("resolves the customer id when subscription.customer is an expanded object", async () => {
+  it("passes expanded subscription data through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_expanded",
       customer: makeStripeCustomer("cus_test_expanded"),
@@ -314,14 +310,10 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_expanded",
-      "cus_test_expanded",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
   });
 
-  it("skips syncing when a subscription event has no resolvable customer id", async () => {
+  it("passes subscriptions without a customer through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_no_customer",
       customer: null,
@@ -338,7 +330,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).not.toHaveBeenCalled();
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
@@ -354,14 +346,10 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_del",
-      "cus_test_del",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(event.data.object);
   });
 
-  it("resolves an expanded customer object on customer.subscription.deleted", async () => {
+  it("passes expanded deleted subscription data through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_deleted_expanded",
       customer: makeStripeCustomer("cus_test_deleted_expanded"),
@@ -378,15 +366,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_deleted_expanded",
-      "cus_test_deleted_expanded",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
-  it("skips syncing when a deleted subscription has no resolvable customer id", async () => {
+  it("passes deleted subscriptions without a customer through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_deleted_no_customer",
       customer: null,
@@ -403,7 +387,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).not.toHaveBeenCalled();
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 

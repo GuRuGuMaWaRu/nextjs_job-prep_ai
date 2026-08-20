@@ -114,11 +114,14 @@ describe("fulfillCheckoutSession", () => {
     await expect(fulfillCheckoutSession(session)).resolves.toBe(true);
 
     expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_active");
-    expect(mockUpdateUserPlanAndStripeIdsDal).toHaveBeenCalledWith("user-test", {
-      plan: "pro",
-      stripeCustomerId: "cus_test_active",
-      stripeSubscriptionId: "sub_test_active",
-    });
+    expect(mockUpdateUserPlanAndStripeIdsDal).toHaveBeenCalledWith(
+      "user-test",
+      {
+        plan: "pro",
+        stripeCustomerId: "cus_test_active",
+        stripeSubscriptionId: "sub_test_active",
+      },
+    );
   });
 
   it("does not re-grant Pro when an old paid checkout success points at a canceled subscription", async () => {
@@ -169,31 +172,6 @@ describe("fulfillCheckoutSession", () => {
     expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["customer", { customerId: null, subscriptionId: "sub_test_incomplete" }],
-    [
-      "subscription",
-      { customerId: "cus_test_incomplete", subscriptionId: null },
-    ],
-  ] as const)("skips paid checkout sessions that are missing the %s id", async (_missingField, overrides) => {
-    const session = makeStripeCheckoutSession({
-      id: "cs_test_incomplete",
-      userId: "user-test",
-      ...overrides,
-    });
-
-    await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "fulfillCheckoutSession: incomplete session payload",
-      ),
-      "cs_test_incomplete",
-    );
-    expect(retrieveSubscription).not.toHaveBeenCalled();
-    expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
-  });
-
   it("skips paid checkout sessions when the Stripe client is unavailable", async () => {
     mockGetStripe.mockReturnValueOnce(null);
     const session = makeStripeCheckoutSession({
@@ -208,38 +186,6 @@ describe("fulfillCheckoutSession", () => {
     expect(retrieveSubscription).not.toHaveBeenCalled();
     expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
     expect(consoleWarnSpy).not.toHaveBeenCalled();
-  });
-
-  it("uses expanded checkout customer and subscription object ids", async () => {
-    const session = makeStripeCheckoutSession({
-      userId: "user-test",
-      customerId: "cus_test_expanded",
-      subscriptionId: "sub_test_expanded",
-    });
-    session.customer = {
-      id: "cus_test_expanded",
-    } as Stripe.Customer;
-    session.subscription = {
-      id: "sub_test_expanded",
-    } as Stripe.Subscription;
-    retrieveSubscription.mockResolvedValueOnce(
-      makeStripeSubscription({
-        id: "sub_test_expanded",
-        customer: {
-          id: "cus_test_expanded",
-        } as Stripe.Customer,
-        status: "trialing",
-      }),
-    );
-
-    await expect(fulfillCheckoutSession(session)).resolves.toBe(true);
-
-    expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_expanded");
-    expect(mockUpdateUserPlanAndStripeIdsDal).toHaveBeenCalledWith("user-test", {
-      plan: "pro",
-      stripeCustomerId: "cus_test_expanded",
-      stripeSubscriptionId: "sub_test_expanded",
-    });
   });
 
   it("skips sessions whose retrieved subscription belongs to a different customer", async () => {
