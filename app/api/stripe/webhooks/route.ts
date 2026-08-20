@@ -28,11 +28,11 @@ import {
 } from "@/core/features/billing/webhookHelpers";
 import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
 import { getStripe } from "@/core/features/billing/stripe";
 import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
 
 export async function POST(request: Request) {
+  //** TODO: I think here as in other places with env variables we should rather rely on checking envs on load with Zod or similar */
   const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return NextResponse.json(
@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     );
   }
 
+  //** TODO: we will have an instance of Stripe created elsewhere and passed in here? */
   const stripe = getStripe();
   if (!stripe) {
     return NextResponse.json(
@@ -68,8 +69,11 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    console.error("Stripe webhook signature verification failed:", err);
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json(
+      { error: `Webhook Error: ${message}` },
+      { status: 400 },
+    );
   }
 
   // ── Idempotency: atomically claim the event ────────────────────────
@@ -99,66 +103,21 @@ export async function POST(request: Request) {
 
   try {
     switch (event.type) {
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted:
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded: {
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted: {
         const session = event.data.object as Stripe.Checkout.Session;
-        const fulfilled = await fulfillCheckoutSession(session);
-        const userId = session.metadata?.userId;
-        if (fulfilled && userId) {
-          revalidateUserCache(userId);
-        }
+        await fulfillCheckoutSession(session);
         break;
       }
 
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed: {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.warn(
-          `${STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed}: async payment failed for checkout session`,
-          "userId",
-          session.metadata?.userId,
-        );
-        break;
-      }
-
-      case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated: {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId =
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : subscription.customer?.id;
-        if (!customerId) break;
-
-        const updatedUserId = await syncSubscriptionFromStripe(
-          stripe,
-          subscription.id,
-          customerId,
-        );
-        if (updatedUserId) {
-          revalidateUserCache(updatedUserId);
-        }
-        break;
-      }
-
+      case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated:
       case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted: {
         const subscription = event.data.object as Stripe.Subscription;
-        const customerId =
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : subscription.customer?.id;
-        if (!customerId) break;
-
-        const updatedUserId = await syncSubscriptionFromStripe(
-          stripe,
-          subscription.id,
-          customerId,
-        );
-        if (updatedUserId) {
-          revalidateUserCache(updatedUserId);
-        }
+        await syncSubscriptionFromStripe(subscription);
         break;
       }
 
       default:
+        console.warn(`[stripe:webhook] unhandled event type: ${event.type}`);
         break;
     }
 
@@ -192,10 +151,12 @@ export async function POST(request: Request) {
         );
       }
     }
+
     console.error("[stripe:webhook] handler failed", {
       eventType: event.type,
       error: toSafeErrorMeta(error),
     });
+
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 },

@@ -15,9 +15,7 @@ import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { formatExperienceLevel } from "@/core/features/jobInfos/lib/formatters";
 import { SuspendedItem } from "@/core/components/SuspendedItem";
 import { Skeleton } from "@/core/components/Skeleton";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { routes } from "@/core/data/routes";
-import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
 
 const options = [
   {
@@ -52,18 +50,14 @@ export default async function JobInfoPage({
 }) {
   const { jobInfoId } = await params;
 
-  assertUUIDor404(jobInfoId);
+  const jobInfo = (async () => {
+    const info = await getJobInfoAction(jobInfoId);
+    if (info == null) {
+      return notFound();
+    }
 
-  const jobInfo = getCurrentUserAction().then(
-    async ({ userId, redirectToSignIn }) => {
-      if (userId == null) return redirectToSignIn();
-
-      const jobInfo = await getJobInfoAction(jobInfoId);
-      if (jobInfo == null) return notFound();
-
-      return jobInfo;
-    },
-  );
+    return info;
+  })();
 
   return (
     <div className="container max-w-5xl my-4 space-y-4">

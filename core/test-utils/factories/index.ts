@@ -1,4 +1,4 @@
-export { makeUser, makeProUser, makeCurrentUser } from "./user";
+export { makeUser, makeProUser } from "./user";
 export { makeSession, makeExpiredSession } from "./session";
 export { makeJobInfo } from "./jobInfo";
 export { makeInterview, type InterviewWithJobInfo } from "./interview";
@@ -9,9 +9,6 @@ export {
   makeStripeCheckoutSession,
   makeStripeEvent,
   makeCheckoutSessionCompletedEvent,
-  makeCheckoutSessionAsyncPaymentSucceededEvent,
-  makeCheckoutSessionAsyncPaymentFailedEvent,
   makeSubscriptionUpdatedEvent,
   makeSubscriptionDeletedEvent,
-  makeUnhandledStripeWebhookEvent,
 } from "./stripeEvent";

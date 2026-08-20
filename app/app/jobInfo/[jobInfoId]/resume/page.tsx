@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { checkResumeAnalysisPermission } from "@/core/features/resumeAnalysis/permissions";
+import { canAnalyzeResumeAction } from "@/core/features/resumeAnalysis/actions";
 import { routes } from "@/core/data/routes";
 
 import { ResumeAnalysisClientPage } from "./_ResumeAnalysisClientPage";
@@ -26,7 +26,7 @@ export default async function ResumePage({
 }
 
 async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
-  if (!(await checkResumeAnalysisPermission())) redirect(routes.upgrade);
+  if (!(await canAnalyzeResumeAction())) redirect(routes.upgrade);
 
   return <ResumeAnalysisClientPage jobInfoId={jobInfoId} />;
 }

@@ -1,6 +1,6 @@
 import { cacheTag } from "next/cache";
 
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 import {
   getInterviewByIdDb,
   getInterviewsDb,
@@ -11,8 +11,8 @@ import {
   getInterviewIdTag,
   getInterviewJobInfoTag,
   revalidateInterviewCache,
-} from "@/core/features/interviews/dbCache";
-import { getJobInfoIdTag } from "@/core/features/jobInfos/dbCache";
+} from "@/core/features/interviews/cache";
+import { getJobInfoIdTag } from "@/core/features/jobInfos/cache";
 import { InterviewTable } from "@/core/drizzle/schema";
 
 /**
@@ -26,12 +26,12 @@ import { InterviewTable } from "@/core/drizzle/schema";
  * Get interview by ID
  * Returns interview with jobInfo, or null if not found
  */
-export async function getInterviewByIdDal(id: string) {
+export async function getInterviewByIdDal(id: string, userId: string) {
   "use cache";
   cacheTag(getInterviewIdTag(id));
 
   try {
-    const interview = await getInterviewByIdDb(id);
+    const interview = await getInterviewByIdDb(id, userId);
 
     if (interview) {
       cacheTag(getJobInfoIdTag(interview.jobInfo.id));

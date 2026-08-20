@@ -18,16 +18,12 @@ import {
   generateInterviewFeedbackAction,
   getInterviewByIdAction,
 } from "@/core/features/interviews/actions";
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { requireUser } from "@/core/lib/requireUser";
 import { condenseChatMessages } from "@/core/services/hume/lib/condenseChatMessages";
 import { CondensedMessages } from "@/core/services/hume/components/CondensedMessages";
 import { fetchChatMessages } from "@/core/services/hume/lib/api";
 import { formatDateTime } from "@/core/lib/formatters";
 import { routes } from "@/core/data/routes";
-import { assertUUIDor404 } from "@/core/lib/assertUUIDor404";
-import { assertUUID } from "@/core/lib/assertUUID";
-
-import InterviewNotFound from "./_InterviewNotFound";
 
 export default async function InterviewPage({
   params,
@@ -36,22 +32,13 @@ export default async function InterviewPage({
 }) {
   const { jobInfoId, interviewId } = await params;
 
-  assertUUIDor404(jobInfoId);
+  const interview = (async () => {
+    const user = await requireUser();
+    const result = await getInterviewByIdAction(interviewId, user.id);
+    if (result == null) return notFound();
 
-  if (!assertUUID(interviewId)) {
-    return <InterviewNotFound jobInfoId={jobInfoId} />;
-  }
-
-  const interview = getCurrentUserWithProfileAction().then(
-    async ({ userId, redirectToSignIn }) => {
-      if (userId == null) return redirectToSignIn();
-
-      const interview = await getInterviewByIdAction(interviewId, userId);
-      if (interview == null) return notFound();
-
-      return interview;
-    },
-  );
+    return result;
+  })();
 
   return (
     <div className="container my-4 space-y-4">
@@ -117,10 +104,12 @@ async function SuspendedMessages({
 }: {
   interview: Promise<{ humeChatId: string | null }>;
 }) {
-  const { user, redirectToSignIn } = await getCurrentUserWithProfileAction();
-  if (user == null) return redirectToSignIn();
+  const user = await requireUser();
   const { humeChatId } = await interview;
-  if (humeChatId == null) return notFound();
+
+  if (humeChatId == null) {
+    return notFound();
+  }
 
   const condensedMessages = condenseChatMessages(
     await fetchChatMessages(humeChatId),

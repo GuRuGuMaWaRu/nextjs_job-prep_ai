@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/core/components/ui/card";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
 import { JobInfoForm } from "@/core/features/jobInfos/components/JobInfoForm";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
 
 export default async function JobInfoEditPage({
   params,
@@ -33,16 +32,10 @@ export default async function JobInfoEditPage({
 }
 
 async function SuspendedForm({ jobInfoId }: { jobInfoId: string }) {
-  const jobInfo = await getCurrentUserAction().then(
-    async ({ userId, redirectToSignIn }) => {
-      if (userId == null) return redirectToSignIn();
-
-      const jobInfo = await getJobInfoAction(jobInfoId);
-      if (jobInfo == null) return notFound();
-
-      return jobInfo;
-    },
-  );
+  const jobInfo = await getJobInfoAction(jobInfoId);
+  if (jobInfo == null) {
+    return notFound();
+  }
 
   return <JobInfoForm jobInfo={jobInfo} />;
 }

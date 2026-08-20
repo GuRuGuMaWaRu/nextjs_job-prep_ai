@@ -1,8 +1,4 @@
-import {
-  TEST_FIXTURE_NOW_ISO,
-  TEST_USER_ID,
-} from "@/core/test-utils/constants";
-import { makeCurrentUser, makeProUser, makeUser } from "./user";
+import { makeProUser, makeUser } from "./user";
 
 describe("makeUser", () => {
   it("returns a user with default free-plan shape and unverified oauth-free defaults", () => {
@@ -14,7 +10,6 @@ describe("makeUser", () => {
         name: expect.stringContaining("Test User"),
         email: expect.stringMatching(/@test\.local$/),
         plan: "free",
-        passwordHash: null,
         stripeCustomerId: null,
         stripeSubscriptionId: null,
         image: null,
@@ -36,14 +31,6 @@ describe("makeUser", () => {
     expect(user.plan).toBe("pro");
     expect(user.email).toBe("override@test.local");
     expect(user.name).toEqual(expect.any(String));
-  });
-
-  it("uses deterministic createdAt/updatedAt timestamps", () => {
-    const user = makeUser();
-
-    expect(user.createdAt).toBeInstanceOf(Date);
-    expect(user.createdAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
-    expect(user.updatedAt.toISOString()).toBe(TEST_FIXTURE_NOW_ISO);
   });
 });
 
@@ -78,26 +65,5 @@ describe("makeProUser", () => {
 
     expect(user.plan).toBe("free");
     expect(user.stripeCustomerId).toBeNull();
-  });
-});
-
-describe("makeCurrentUser", () => {
-  it("returns an authenticated current-user fixture by default", () => {
-    const currentUser = makeCurrentUser();
-
-    expect(currentUser.userId).toBe(TEST_USER_ID);
-    expect(currentUser.redirectToSignIn).toEqual(expect.any(Function));
-  });
-
-  it("throws a redirect sentinel from the default sign-in redirect", () => {
-    const currentUser = makeCurrentUser();
-
-    expect(() => currentUser.redirectToSignIn()).toThrow("redirect");
-  });
-
-  it("accepts overrides for anonymous-user scenarios", () => {
-    const currentUser = makeCurrentUser({ userId: null });
-
-    expect(currentUser.userId).toBeNull();
   });
 });

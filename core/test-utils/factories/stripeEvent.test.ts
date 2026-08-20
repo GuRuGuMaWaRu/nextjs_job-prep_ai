@@ -3,8 +3,6 @@ import type Stripe from "stripe";
 import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 
 import {
-  makeCheckoutSessionAsyncPaymentFailedEvent,
-  makeCheckoutSessionAsyncPaymentSucceededEvent,
   makeCheckoutSessionCompletedEvent,
   makeStripeCheckoutSession,
   makeStripeCustomer,
@@ -12,7 +10,6 @@ import {
   makeStripeSubscription,
   makeSubscriptionDeletedEvent,
   makeSubscriptionUpdatedEvent,
-  makeUnhandledStripeWebhookEvent,
 } from "./stripeEvent";
 
 describe("makeStripeSubscription", () => {
@@ -145,26 +142,6 @@ describe("named Stripe event builders", () => {
     expect(session.payment_status).toBe("paid");
   });
 
-  it("makeCheckoutSessionAsyncPaymentSucceededEvent builds the success variant", () => {
-    const event = makeCheckoutSessionAsyncPaymentSucceededEvent();
-
-    expect(event.type).toBe(
-      STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentSucceeded,
-    );
-    const session = event.data.object as Stripe.Checkout.Session;
-    expect(session.payment_status).toBe("paid");
-  });
-
-  it("makeCheckoutSessionAsyncPaymentFailedEvent defaults paymentStatus to unpaid", () => {
-    const event = makeCheckoutSessionAsyncPaymentFailedEvent();
-
-    expect(event.type).toBe(
-      STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionAsyncPaymentFailed,
-    );
-    const session = event.data.object as Stripe.Checkout.Session;
-    expect(session.payment_status).toBe("unpaid");
-  });
-
   it("makeSubscriptionUpdatedEvent wraps an active subscription", () => {
     const event = makeSubscriptionUpdatedEvent();
 
@@ -179,11 +156,5 @@ describe("named Stripe event builders", () => {
     expect(event.type).toBe(STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted);
     const subscription = event.data.object as Stripe.Subscription;
     expect(subscription.status).toBe("canceled");
-  });
-
-  it("makeUnhandledStripeWebhookEvent uses a real type the webhook route does not handle", () => {
-    const event = makeUnhandledStripeWebhookEvent();
-
-    expect(event.type).toBe(STRIPE_WEBHOOK_EVENT_TYPES.invoiceVoided);
   });
 });

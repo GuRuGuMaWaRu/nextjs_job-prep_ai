@@ -1,6 +1,6 @@
 import { cacheTag } from "next/cache";
 
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 import {
   getQuestionByIdDb,
   getQuestionsDb,
@@ -10,7 +10,7 @@ import {
   getQuestionIdTag,
   getQuestionJobInfoTag,
   revalidateQuestionCache,
-} from "@/core/features/questions/dbCache";
+} from "@/core/features/questions/cache";
 import { QuestionTable } from "@/core/drizzle/schema";
 
 /**
@@ -22,12 +22,12 @@ import { QuestionTable } from "@/core/drizzle/schema";
 /**
  * Get all questions for a job info
  */
-export async function getQuestionsDal(jobInfoId: string) {
+export async function getQuestionsDal(jobInfoId: string, userId: string) {
   "use cache";
   cacheTag(getQuestionJobInfoTag(jobInfoId));
 
   try {
-    return await getQuestionsDb(jobInfoId);
+    return await getQuestionsDb(jobInfoId, userId);
   } catch (error) {
     console.error("Database error getting questions:", error);
     throw new DatabaseError("Failed to fetch questions from database", error);

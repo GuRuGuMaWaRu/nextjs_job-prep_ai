@@ -7,7 +7,7 @@ import type Stripe from "stripe";
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
 import { getStripe } from "@/core/features/billing/stripe";
-import { updateUserPlanAndStripeIdsDb } from "@/core/features/users/db";
+import { updateUserPlanAndStripeIdsDal } from "@/core/features/users/dal";
 
 const REMEDIATION_DETAIL_MAX_LEN = 512;
 const POSTGRES_UNDEFINED_COLUMN = "42703";
@@ -16,6 +16,7 @@ const FULFILLABLE_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const;
 /** After `onConflictDoNothing`, a row might disappear before SELECT (e.g. concurrent `unclaimEvent`). */
 const CLAIM_EVENT_MISSING_ROW_MAX_ATTEMPTS = 5;
 
+//** TODO: what the hell :) */
 function isMissingStripeEventSchemaError(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -25,6 +26,7 @@ function isMissingStripeEventSchemaError(error: unknown): boolean {
   return withCode.code === POSTGRES_UNDEFINED_COLUMN;
 }
 
+//** TODO: do I need this? */
 function isFulfillableSubscriptionStatus(status: string): boolean {
   return FULFILLABLE_SUBSCRIPTION_STATUSES.includes(
     status as (typeof FULFILLABLE_SUBSCRIPTION_STATUSES)[number],
@@ -53,6 +55,7 @@ export async function markStripeEventRemediationRequired(
       })
       .where(eq(StripeEventTable.id, eventId));
   } catch (error) {
+    //** TODO: what is this? Really hate this workaround. */
     // During deploy rollouts the app code can be newer than the DB schema.
     // Falling back preserves the previous webhook behavior until migrations land.
     if (isMissingStripeEventSchemaError(error)) {
@@ -146,7 +149,7 @@ export async function unclaimEvent(eventId: string): Promise<void> {
  *
  * @param session — Stripe Checkout session (must include `metadata.userId` and resolved customer/subscription).
  * @returns True when the user row was updated, or false if the session is unpaid or missing required data.
- * @sideEffects Writes to the application database via `updateUserPlanAndStripeIdsDb`; may log non-sensitive warnings.
+ * @sideEffects Writes via `updateUserPlanAndStripeIdsDal` (DB + scheduled user cache revalidation); may log non-sensitive warnings.
  */
 export async function fulfillCheckoutSession(
   session: Stripe.Checkout.Session,
@@ -155,42 +158,32 @@ export async function fulfillCheckoutSession(
     return false;
   }
 
-  const userId = session.metadata?.userId as string | undefined;
+  //** TODO: again, why are we sure it is missing? */
+  const userId: string | undefined = session.metadata?.userId;
+
   if (!userId) {
     console.warn("fulfillCheckoutSession: missing metadata.userId", session.id);
     return false;
   }
 
-  const subscriptionId =
-    typeof session.subscription === "string"
-      ? session.subscription
-      : (session.subscription?.id ?? null);
-
-  const customerId =
-    typeof session.customer === "string"
-      ? session.customer
-      : (session.customer?.id ?? null);
-
-  if (!customerId || !subscriptionId) {
-    console.warn(
-      "fulfillCheckoutSession: incomplete session payload — " +
-        `customerId=${customerId}, subscriptionId=${subscriptionId}`,
-      session.id,
-    );
-    return false;
-  }
+  const subscriptionId = session.subscription as string;
+  const customerId = session.customer as string;
 
   const stripe = getStripe();
+
   if (!stripe) {
     return false;
   }
 
+  //** TODO: we do have "session", which is "event" from calling "stripe.webhooks.constructEvent" in one case and "session" from calling "stripe.checkout.sessions.retrieve" in another */
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  //** TODO: apparently we can be certain that this will be a string */
   const subscriptionCustomerId =
     typeof subscription.customer === "string"
       ? subscription.customer
       : (subscription.customer?.id ?? null);
 
+  //** TODO: do I need this check? E.g. "subscriptionCustomerId" comes from "subscription.customer", which we get by using "subscriptionId" from "session", which also gets us "customerId". So you see? Both are closely related.   */
   if (
     subscriptionCustomerId !== customerId ||
     !isFulfillableSubscriptionStatus(subscription.status)
@@ -204,7 +197,7 @@ export async function fulfillCheckoutSession(
     return false;
   }
 
-  await updateUserPlanAndStripeIdsDb(userId, {
+  await updateUserPlanAndStripeIdsDal(userId, {
     plan: "pro",
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscriptionId,

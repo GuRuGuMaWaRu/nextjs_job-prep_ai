@@ -5,7 +5,6 @@ import { FullScreenLoader } from "@/core/components/FullScreenLoader";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import { canGenerateQuestionsAction } from "@/core/features/questions/actions";
 import { JobInfoBackLink } from "@/core/features/jobInfos/components/JobInfoBackLink";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
 
 import { NewQuestionClientPage } from "./_NewQuestionClientPage";
 
@@ -27,9 +26,6 @@ export default async function QuestionsPage({
 }
 
 async function SuspendedComponent({ jobInfoId }: { jobInfoId: string }) {
-  const { userId, redirectToSignIn } = await getCurrentUserAction();
-  if (userId == null) return redirectToSignIn();
-
   const canGenerateQuestions = await canGenerateQuestionsAction();
 
   // getJobInfoAction handles auth internally and throws on error

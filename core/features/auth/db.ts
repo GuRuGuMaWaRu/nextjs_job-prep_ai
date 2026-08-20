@@ -6,6 +6,17 @@ import { SessionTable, UserTable } from "@/core/drizzle/schema";
 export async function findUserByEmailDb(email: string) {
   return await db.query.UserTable.findFirst({
     where: eq(UserTable.email, email.toLowerCase()),
+    columns: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      plan: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+      passwordHash: true,
+      emailVerified: true,
+    },
   });
 }
 
@@ -27,18 +38,26 @@ export async function createSessionDb(sessionData: {
   token: string;
   expiresAt: Date;
 }) {
-  return await db.insert(SessionTable).values(sessionData).returning();
+  return await db
+    .insert(SessionTable)
+    .values(sessionData)
+    .returning({ expiresAt: SessionTable.expiresAt });
 }
 
-export async function validateSessionDb(token: string) {
-  return (
-    (await db.query.SessionTable.findFirst({
-      where: and(
-        eq(SessionTable.token, token),
-        gt(SessionTable.expiresAt, new Date()),
-      ),
-    })) ?? null
-  );
+export async function getActiveSessionDb(token: string) {
+  const session = await db.query.SessionTable.findFirst({
+    where: and(
+      eq(SessionTable.token, token),
+      gt(SessionTable.expiresAt, new Date()),
+    ),
+    columns: {
+      id: true,
+      userId: true,
+      expiresAt: true,
+    },
+  });
+
+  return session ?? null;
 }
 
 export async function extendSessionDb(sessionId: string, expiresAt: Date) {
@@ -46,7 +65,11 @@ export async function extendSessionDb(sessionId: string, expiresAt: Date) {
     .update(SessionTable)
     .set({ expiresAt })
     .where(eq(SessionTable.id, sessionId))
-    .returning();
+    .returning({
+      id: SessionTable.id,
+      userId: SessionTable.userId,
+      expiresAt: SessionTable.expiresAt,
+    });
 }
 
 export async function deleteSessionDb(token: string) {
@@ -61,16 +84,4 @@ export async function deleteExpiredSessionsDb() {
   return await db
     .delete(SessionTable)
     .where(lt(SessionTable.expiresAt, new Date()));
-}
-
-export async function getUserSessionsDb(userId: string) {
-  return await db
-    .select()
-    .from(SessionTable)
-    .where(
-      and(
-        eq(SessionTable.userId, userId),
-        gt(SessionTable.expiresAt, new Date()),
-      ),
-    );
 }

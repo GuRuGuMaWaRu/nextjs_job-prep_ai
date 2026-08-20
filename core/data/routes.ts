@@ -17,6 +17,7 @@ export const routes = {
     aiResumeAnalysis: "/api/ai/resumes/analyze",
     aiQuestionGeneration: "/api/ai/questions/generate-question",
     aiQuestionFeedback: "/api/ai/questions/generate-feedback",
-    validateSession: "/api/auth/validate-session",
+    evictSession: "/api/auth/evict",
+    stripeCheckoutReturn: "/api/stripe/checkout-return",
   },
 };

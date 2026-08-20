@@ -3,7 +3,7 @@ import { and, count, desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "@/core/drizzle/db";
 import { InterviewTable, JobInfoTable } from "@/core/drizzle/schema";
 
-export async function getInterviewByIdDb(id: string) {
+export async function getInterviewByIdDb(id: string, userId: string) {
   const interview = await db.query.InterviewTable.findFirst({
     where: eq(InterviewTable.id, id),
     with: {
@@ -18,6 +18,10 @@ export async function getInterviewByIdDb(id: string) {
       },
     },
   });
+
+  if (interview == null) return null;
+
+  if (interview.jobInfo.userId !== userId) return null;
 
   return interview;
 }

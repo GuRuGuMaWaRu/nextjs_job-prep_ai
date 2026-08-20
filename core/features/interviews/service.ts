@@ -1,34 +1,61 @@
 import { refresh } from "next/cache";
+import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import { PermissionError } from "@/core/dal/errors";
-import { requireUser, requireUserWithData } from "@/core/dal/helpers";
+import {
+  NotFoundError,
+  PermissionError,
+  RateLimitError,
+} from "@/core/lib/errors";
+import { requireUser } from "@/core/lib/requireUser";
+import { hasPermission } from "@/core/features/auth/permissions";
 import {
   getInterviewByIdDal,
   getInterviewsDal,
   insertInterviewDal,
   updateInterviewDal,
 } from "@/core/features/interviews/dal";
-import { INTERVIEW_SERVICE_ERRORS } from "@/core/features/interviews/serviceErrors";
+import { INTERVIEW_ERROR_MESSAGES } from "@/core/features/interviews/errorMessages";
+import { getJobInfoDal } from "@/core/features/jobInfos/dal";
 import { generateAiInterviewFeedback } from "@/core/services/ai/interviews";
+import {
+  PERMISSIONS,
+  PLAN_LIMIT_MESSAGE,
+  RATE_LIMIT_MESSAGE,
+} from "@/core/data/constants";
+import { env } from "@/core/data/env/server";
 
 /**
  * Service Layer for Interviews
- * Handles: Business logic, permissions, ownership verification
- * Throws: UnauthorizedError, PermissionError, DatabaseError
+ * Handles: Business logic, auth, permissions, ownership, rate limiting
+ * Throws: UnauthorizedError, PermissionError, RateLimitError, NotFoundError, DatabaseError
  */
+
+const aj = arcjet({
+  characteristics: ["userId"],
+  key: env.ARCJET_KEY,
+  rules: [
+    tokenBucket({
+      capacity: 12,
+      refillRate: 4,
+      interval: "1d",
+      mode: "LIVE",
+    }),
+  ],
+});
 
 /**
  * Get interview by ID with ownership verification
  * Returns null if interview doesn't exist or user doesn't own it
  */
 export async function getInterviewByIdService(id: string, userId: string) {
-  const interview = await getInterviewByIdDal(id);
+  await requireUser();
+
+  const interview = await getInterviewByIdDal(id, userId);
 
   if (!interview) {
     return null;
   }
 
-  // Check ownership
   if (interview.jobInfo.userId !== userId) {
     return null;
   }
@@ -40,15 +67,36 @@ export async function getInterviewByIdService(id: string, userId: string) {
  * Get all interviews for a job info
  * Requires authentication
  */
-export async function getInterviewsService(jobInfoId: string, userId: string) {
-  return await getInterviewsDal(jobInfoId, userId);
+export async function getInterviewsService(jobInfoId: string) {
+  const user = await requireUser();
+  return await getInterviewsDal(jobInfoId, user.id);
 }
 
 /**
  * Create a new interview
- * Note: Auth and ownership checks handled by action layer
+ * Requires authentication, plan permission, rate limit allowance, and job info ownership
  */
 export async function createInterviewService(jobInfoId: string) {
+  const user = await requireUser();
+
+  const permitted = await hasPermission(PERMISSIONS.INTERVIEWS, user);
+  if (!permitted) {
+    throw new PermissionError(PLAN_LIMIT_MESSAGE);
+  }
+
+  const decision = await aj.protect(await request(), {
+    userId: user.id,
+    requested: 1,
+  });
+  if (decision.isDenied()) {
+    throw new RateLimitError(RATE_LIMIT_MESSAGE);
+  }
+
+  const jobInfo = await getJobInfoDal(jobInfoId, user.id);
+  if (!jobInfo) {
+    throw new NotFoundError(INTERVIEW_ERROR_MESSAGES.jobInfoNotFoundOrNoAccess);
+  }
+
   return await insertInterviewDal({
     jobInfoId,
     duration: "00:00:00",
@@ -63,17 +111,16 @@ export async function updateInterviewService(
   id: string,
   data: { humeChatId?: string; duration?: string },
 ) {
-  const userId = await requireUser();
+  const user = await requireUser();
 
-  // Verify ownership
-  const interview = await getInterviewByIdDal(id);
+  const interview = await getInterviewByIdDal(id, user.id);
 
   if (!interview) {
-    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notFoundOrNoAccess);
+    throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess);
   }
 
-  if (interview.jobInfo.userId !== userId) {
-    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.updateForbidden);
+  if (interview.jobInfo.userId !== user.id) {
+    throw new PermissionError(INTERVIEW_ERROR_MESSAGES.updateForbidden);
   }
 
   return await updateInterviewDal(id, data);
@@ -81,23 +128,33 @@ export async function updateInterviewService(
 
 /**
  * Generate AI feedback for an interview
- * Requires authentication and ownership
+ * Requires authentication, ownership, and rate limit allowance
  */
 export async function generateInterviewFeedbackService(interviewId: string) {
-  const { userId, user } = await requireUserWithData();
+  const user = await requireUser();
 
-  // Get interview with ownership check
-  const interview = await getInterviewByIdService(interviewId, userId);
+  const decision = await aj.protect(await request(), {
+    userId: user.id,
+    requested: 1,
+  });
+  if (decision.isDenied()) {
+    throw new RateLimitError(RATE_LIMIT_MESSAGE);
+  }
+
+  const interview = await getInterviewByIdDal(interviewId, user.id);
 
   if (!interview) {
-    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notFoundOrNoAccess);
+    throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess);
+  }
+
+  if (interview.jobInfo.userId !== user.id) {
+    throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notFoundOrNoAccess);
   }
 
   if (!interview.humeChatId) {
-    throw new PermissionError(INTERVIEW_SERVICE_ERRORS.notCompleted);
+    throw new PermissionError(INTERVIEW_ERROR_MESSAGES.notCompleted);
   }
 
-  // Generate feedback
   const feedback = await generateAiInterviewFeedback({
     humeChatId: interview.humeChatId,
     jobInfo: interview.jobInfo,
@@ -105,12 +162,16 @@ export async function generateInterviewFeedbackService(interviewId: string) {
   });
 
   if (!feedback) {
-    throw new Error(INTERVIEW_SERVICE_ERRORS.feedbackGenerationFailed);
+    throw new Error(INTERVIEW_ERROR_MESSAGES.feedbackGenerationFailed);
   }
 
-  // Update interview with feedback
   await updateInterviewDal(interviewId, { feedback });
   refresh();
 
   return feedback;
+}
+
+export async function checkInterviewPermissionService(): Promise<boolean> {
+  const user = await requireUser();
+  return await hasPermission(PERMISSIONS.INTERVIEWS, user);
 }

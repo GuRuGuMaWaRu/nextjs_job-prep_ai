@@ -13,9 +13,9 @@ import {
   getJobInfoGlobalTag,
   revalidateJobInfoAndRelatedItemsCache,
   revalidateJobInfoCache,
-} from "@/core/features/jobInfos/dbCache";
-import { DatabaseError } from "@/core/dal/errors";
-import { ActionResult } from "@/core/dal/helpers";
+} from "@/core/features/jobInfos/cache";
+import { DatabaseError } from "@/core/lib/errors";
+import { ActionResult } from "@/core/lib/types";
 import { JobInfoTable } from "@/core/drizzle/schema";
 
 /**

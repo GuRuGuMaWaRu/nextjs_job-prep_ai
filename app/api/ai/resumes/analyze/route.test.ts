@@ -13,16 +13,16 @@ jest.mock("@/core/data/env/server", () => ({
   },
 }));
 
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserAction: jest.fn(),
+jest.mock("@/core/lib/getCurrentUser", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/jobInfos/actions", () => ({
   getJobInfoAction: jest.fn(),
 }));
 
-jest.mock("@/core/features/resumeAnalysis/permissions", () => ({
-  reserveResumeAnalysisUsage: jest.fn(),
+jest.mock("@/core/features/resumeAnalysis/service", () => ({
+  reserveResumeAnalysisUsageService: jest.fn(),
 }));
 
 jest.mock("@/core/features/resumeAnalysis/schemas", () => {
@@ -48,19 +48,19 @@ jest.mock("@/core/services/ai/resumes/ai", () => ({
 import arcjet, { request } from "@arcjet/next";
 import { z } from "zod";
 
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
+import { reserveResumeAnalysisUsageService } from "@/core/features/resumeAnalysis/service";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import {
   DatabaseError,
   NotFoundError,
   PermissionError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { TEST_USER_ID } from "@/core/test-utils/constants";
-import { makeCurrentUser, makeJobInfo } from "@/core/test-utils/factories";
+import { makeJobInfo, makeUser } from "@/core/test-utils/factories";
 
 import { POST } from "./route";
 
@@ -69,9 +69,11 @@ const mockProtect = jest.mocked(
   mockArcjet.mock.results[0].value.protect as jest.Mock,
 );
 const mockRequest = jest.mocked(request);
-const mockGetCurrentUserAction = jest.mocked(getCurrentUserAction);
+const mockGetCurrentUser = jest.mocked(getCurrentUser);
 const mockGetJobInfoAction = jest.mocked(getJobInfoAction);
-const mockReserveResumeAnalysisUsage = jest.mocked(reserveResumeAnalysisUsage);
+const mockReserveResumeAnalysisUsageService = jest.mocked(
+  reserveResumeAnalysisUsageService,
+);
 const mockAnalyzeResumeForJob = jest.mocked(analyzeResumeForJob);
 const mockResumeAnalysisSafeParse = jest.mocked(
   resumeAnalysisInputSchema.safeParse,
@@ -146,13 +148,11 @@ describe("POST /api/ai/resumes/analyze", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockGetCurrentUserAction.mockResolvedValue(
-      makeCurrentUser({ userId: TEST_USER_ID }),
-    );
+    mockGetCurrentUser.mockResolvedValue(makeUser({ id: TEST_USER_ID }));
     mockGetJobInfoAction.mockResolvedValue(
       makeJobInfo({ id: jobInfoId, userId: TEST_USER_ID }),
     );
-    mockReserveResumeAnalysisUsage.mockResolvedValue(true);
+    mockReserveResumeAnalysisUsageService.mockResolvedValue(true);
     mockRequest.mockResolvedValue(requestContext);
     mockProtect.mockResolvedValue(allowDecision);
     mockResumeAnalysisSafeParse.mockImplementation((input) =>
@@ -173,7 +173,7 @@ describe("POST /api/ai/resumes/analyze", () => {
     await expectTextResponse(response, 400, "Missing resume or job info id");
     expect(mockProtect).not.toHaveBeenCalled();
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-    expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
+    expect(mockReserveResumeAnalysisUsageService).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
@@ -191,9 +191,7 @@ describe("POST /api/ai/resumes/analyze", () => {
   });
 
   it("returns 401 when the current user is unauthenticated", async () => {
-    mockGetCurrentUserAction.mockResolvedValueOnce(
-      makeCurrentUser({ userId: null }),
-    );
+    mockGetCurrentUser.mockResolvedValue(null);
 
     const response = await POST(buildFormRequest());
 
@@ -215,7 +213,7 @@ describe("POST /api/ai/resumes/analyze", () => {
       requested: 1,
     });
     expect(mockGetJobInfoAction).not.toHaveBeenCalled();
-    expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
+    expect(mockReserveResumeAnalysisUsageService).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
@@ -232,12 +230,12 @@ describe("POST /api/ai/resumes/analyze", () => {
       403,
       "You do not have permission to do this",
     );
-    expect(mockReserveResumeAnalysisUsage).not.toHaveBeenCalled();
+    expect(mockReserveResumeAnalysisUsageService).not.toHaveBeenCalled();
     expect(mockAnalyzeResumeForJob).not.toHaveBeenCalled();
   });
 
   it("returns the plan limit response when resume analysis is not allowed", async () => {
-    mockReserveResumeAnalysisUsage.mockResolvedValueOnce(false);
+    mockReserveResumeAnalysisUsageService.mockResolvedValueOnce(false);
 
     const response = await POST(buildFormRequest());
 
@@ -246,7 +244,7 @@ describe("POST /api/ai/resumes/analyze", () => {
   });
 
   it("maps reservation failures to a 500 response", async () => {
-    mockReserveResumeAnalysisUsage.mockRejectedValueOnce(
+    mockReserveResumeAnalysisUsageService.mockRejectedValueOnce(
       new DatabaseError("Reservation insert failed"),
     );
 
@@ -281,8 +279,7 @@ describe("POST /api/ai/resumes/analyze", () => {
       requested: 1,
     });
     expect(mockGetJobInfoAction).toHaveBeenCalledWith(jobInfoId);
-    expect(mockReserveResumeAnalysisUsage).toHaveBeenCalledWith(
-      TEST_USER_ID,
+    expect(mockReserveResumeAnalysisUsageService).toHaveBeenCalledWith(
       jobInfoId,
     );
     expect(mockAnalyzeResumeForJob).toHaveBeenCalledWith({

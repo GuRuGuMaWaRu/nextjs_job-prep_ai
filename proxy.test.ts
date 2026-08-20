@@ -94,7 +94,7 @@ describe("proxy middleware", () => {
       const response = await middleware(request);
 
       expect(mockProtect).toHaveBeenCalledWith(request);
-      expectRedirect(response, `${requestOrigin}${routes.signIn}`);
+      expectRedirect(response, `${requestOrigin}${routes.landing}`);
     });
 
     it("returns forbidden when Arcjet denies an API request", async () => {
@@ -140,14 +140,14 @@ describe("proxy middleware", () => {
       expectNext(response);
     });
 
-    it("redirects the landing route with a session cookie to session validation", async () => {
+    it("redirects the landing route with a session cookie to the main app", async () => {
       const request = buildRequest(routes.landing, {
         sessionToken: "test-session-token",
       });
 
       const response = await middleware(request);
 
-      expectRedirect(response, `${requestOrigin}${routes.api.validateSession}`);
+      expectRedirect(response, `${requestOrigin}${routes.app}`);
     });
 
     it("continues sign-in without a session cookie", async () => {
@@ -189,7 +189,7 @@ describe("proxy middleware", () => {
 
       const response = await middleware(request);
 
-      expectRedirect(response, `${requestOrigin}${routes.signIn}`);
+      expectRedirect(response, `${requestOrigin}${routes.landing}`);
     });
 
     it("continues app job info routes with a session cookie", async () => {
@@ -200,15 +200,6 @@ describe("proxy middleware", () => {
       const response = await middleware(request);
 
       expectNext(response);
-    });
-
-    it("redirects validate-session API requests without a session cookie to sign-in", async () => {
-      const request = buildRequest(routes.api.validateSession);
-
-      const response = await middleware(request);
-
-      expect(mockProtect).toHaveBeenCalledWith(request);
-      expectRedirect(response, `${requestOrigin}${routes.signIn}`);
     });
   });
 

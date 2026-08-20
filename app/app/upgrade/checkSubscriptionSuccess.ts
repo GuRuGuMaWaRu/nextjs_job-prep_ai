@@ -1,13 +1,14 @@
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getStripe } from "@/core/features/billing/stripe";
-import { fulfillCheckoutSession } from "@/core/features/billing/webhookHelpers";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 /**
- * Prevents spoofed upgrade success states by confirming Checkout payment and ownership server-side.
+ * Read-only anti-spoof check for the upgrade success banner.
+ * Confirms Checkout payment and ownership via Stripe retrieve — does not write.
+ *
  * @param searchParams - The search parameters from the URL.
- * @returns True if the subscription is successful, false otherwise.
+ * @returns True when success params refer to a paid session owned by the current user.
  */
 export async function checkSubscriptionSuccess(searchParams: SearchParams) {
   if (searchParams.success !== "true") return false;
@@ -18,24 +19,23 @@ export async function checkSubscriptionSuccess(searchParams: SearchParams) {
       : null;
   const stripe = getStripe();
 
-  if (sessionId && stripe) {
-    try {
-      const { userId } = await getCurrentUserAction();
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-      const isPaidCheckoutForCurrentUser =
-        session.payment_status === "paid" &&
-        !!userId &&
-        session.metadata?.userId === userId;
-
-      if (!isPaidCheckoutForCurrentUser) {
-        return false;
-      }
-
-      return await fulfillCheckoutSession(session);
-    } catch {
-      return false;
-    }
+  if (!sessionId || !stripe) {
+    return false;
   }
 
-  return false;
+  try {
+    const user = await getCurrentUser();
+
+    if (user == null) {
+      return false;
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    return (
+      session.payment_status === "paid" && session.metadata?.userId === user.id
+    );
+  } catch {
+    return false;
+  }
 }

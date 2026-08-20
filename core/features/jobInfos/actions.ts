@@ -13,14 +13,15 @@ import {
   removeJobInfoService,
 } from "@/core/features/jobInfos/service";
 import { JOB_INFO_ACTION_MESSAGES } from "@/core/features/jobInfos/actionMessages";
-import { ActionResult } from "@/core/dal/helpers";
+import { assertUUID } from "@/core/lib/assertUUID";
+import { ActionResult } from "@/core/lib/types";
 import { JobInfoTable } from "@/core/drizzle/schema";
 import {
   DatabaseError,
   NotFoundError,
   PermissionError,
   UnauthorizedError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 
 /**
  * Action Layer for JobInfo
@@ -88,6 +89,13 @@ export async function updateJobInfoAction(
   id: string,
   unsafeData: unknown,
 ): Promise<ActionResult<{ id: string }>> {
+  if (!assertUUID(id)) {
+    return {
+      success: false,
+      message: JOB_INFO_ACTION_MESSAGES.updateNotFound,
+    };
+  }
+
   const validation = jobInfoSchema.safeParse(unsafeData);
   if (!validation.success) {
     return {
@@ -146,6 +154,10 @@ export async function updateJobInfoAction(
  * Used in pages to fetch data - throws on error for error boundary to catch
  */
 export async function getJobInfoAction(id: string) {
+  if (!assertUUID(id)) {
+    return null;
+  }
+
   return await getJobInfoService(id);
 }
 
@@ -154,6 +166,10 @@ export async function getJobInfoAction(id: string) {
  * Used when ownership verification happens elsewhere
  */
 export async function getJobInfoByIdAction(id: string) {
+  if (!assertUUID(id)) {
+    return null;
+  }
+
   return await getJobInfoByIdService(id);
 }
 
@@ -172,6 +188,13 @@ export async function getJobInfosAction() {
 export async function removeJobInfoAction(
   id: string,
 ): Promise<ActionResult<typeof JobInfoTable.$inferSelect>> {
+  if (!assertUUID(id)) {
+    return {
+      success: false,
+      message: JOB_INFO_ACTION_MESSAGES.removeNotFound,
+    };
+  }
+
   try {
     const result = await removeJobInfoService(id);
 

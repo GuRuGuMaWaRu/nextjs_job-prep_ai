@@ -8,11 +8,8 @@ import {
 } from "@core/test-utils/mocks/stripe";
 import {
   makeCheckoutSessionCompletedEvent,
-  makeCheckoutSessionAsyncPaymentSucceededEvent,
-  makeCheckoutSessionAsyncPaymentFailedEvent,
   makeSubscriptionDeletedEvent,
   makeSubscriptionUpdatedEvent,
-  makeUnhandledStripeWebhookEvent,
   makeStripeCheckoutSession,
   makeStripeCustomer,
   makeStripeSubscription,
@@ -45,10 +42,6 @@ jest.mock("@/core/features/users/stripeSync", () => ({
   syncSubscriptionFromStripe: jest.fn(),
 }));
 
-jest.mock("@/core/features/users/dbCache", () => ({
-  revalidateUserCache: jest.fn(),
-}));
-
 import { getStripe } from "@/core/features/billing/stripe";
 import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
 import {
@@ -59,7 +52,6 @@ import {
   unclaimEvent,
 } from "@/core/features/billing/webhookHelpers";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
-import { revalidateUserCache } from "@/core/features/users/dbCache";
 
 import { POST } from "./route";
 
@@ -81,7 +73,6 @@ const mockMarkRemediation =
 const mockSyncSubscription = syncSubscriptionFromStripe as jest.MockedFunction<
   typeof syncSubscriptionFromStripe
 >;
-const mockRevalidateUserCache = jest.mocked(revalidateUserCache);
 
 const VALID_SIGNATURE_HEADER = "t=1,v1=test-signature";
 
@@ -128,7 +119,7 @@ beforeEach(() => {
   mockFulfill.mockReset().mockResolvedValue(true);
   mockMarkProcessed.mockReset().mockResolvedValue(undefined);
   mockMarkRemediation.mockReset().mockResolvedValue(undefined);
-  mockSyncSubscription.mockReset().mockResolvedValue(null);
+  mockSyncSubscription.mockReset().mockResolvedValue(undefined);
 
   consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -202,7 +193,7 @@ describe("POST /api/stripe/webhooks — preconditions", () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
-      error: "Invalid signature",
+      error: "Webhook Error: invalid signature",
     });
     expect(mockClaimEvent).not.toHaveBeenCalled();
     expect(mockFulfill).not.toHaveBeenCalled();
@@ -276,41 +267,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     expect(response.status).toBe(200);
     expect(mockFulfill).toHaveBeenCalledTimes(1);
     expect(mockFulfill).toHaveBeenCalledWith(session);
-    expect(mockRevalidateUserCache).toHaveBeenCalledWith("user-42");
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
     expect(mockUnclaimEvent).not.toHaveBeenCalled();
   });
 
-  it("also fulfills the checkout on checkout.session.async_payment_succeeded", async () => {
-    const event = makeCheckoutSessionAsyncPaymentSucceededEvent({
-      userId: "user-async",
-    });
-    primeHappyPath(event);
-
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
-
-    expect(response.status).toBe(200);
-    expect(mockFulfill).toHaveBeenCalledTimes(1);
-    expect(mockFulfill).toHaveBeenCalledWith(event.data.object);
-    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
-  });
-
-  it("does not fulfill on checkout.session.async_payment_failed but still marks processed", async () => {
-    const event = makeCheckoutSessionAsyncPaymentFailedEvent();
-    primeHappyPath(event);
-
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
-
-    expect(response.status).toBe(200);
-    expect(mockFulfill).not.toHaveBeenCalled();
-    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
-  });
-
-  it("syncs the subscription on customer.subscription.updated with the resolved customer id", async () => {
+  it("syncs the subscription on customer.subscription.updated", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_updated",
       customer: "cus_test_updated",
@@ -328,15 +289,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
 
     expect(response.status).toBe(200);
     expect(mockSyncSubscription).toHaveBeenCalledTimes(1);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_updated",
-      "cus_test_updated",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
-  it("resolves the customer id when subscription.customer is an expanded object", async () => {
+  it("passes expanded subscription data through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_expanded",
       customer: makeStripeCustomer("cus_test_expanded"),
@@ -353,14 +310,10 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_expanded",
-      "cus_test_expanded",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
   });
 
-  it("skips syncing when a subscription event has no resolvable customer id", async () => {
+  it("passes subscriptions without a customer through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_no_customer",
       customer: null,
@@ -377,7 +330,7 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).not.toHaveBeenCalled();
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
@@ -393,14 +346,10 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_del",
-      "cus_test_del",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(event.data.object);
   });
 
-  it("resolves an expanded customer object on customer.subscription.deleted", async () => {
+  it("passes expanded deleted subscription data through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_deleted_expanded",
       customer: makeStripeCustomer("cus_test_deleted_expanded"),
@@ -417,15 +366,11 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).toHaveBeenCalledWith(
-      mockStripe,
-      "sub_test_deleted_expanded",
-      "cus_test_deleted_expanded",
-    );
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
-  it("skips syncing when a deleted subscription has no resolvable customer id", async () => {
+  it("passes deleted subscriptions without a customer through to the sync service", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_deleted_no_customer",
       customer: null,
@@ -442,114 +387,116 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockSyncSubscription).not.toHaveBeenCalled();
+    expect(mockSyncSubscription).toHaveBeenCalledWith(subscription);
     expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
   });
 
-  it("no-ops on an unhandled event type and still marks the event processed", async () => {
-    const event = makeUnhandledStripeWebhookEvent();
-    primeHappyPath(event);
+  describe("POST /api/stripe/webhooks — handler failure recovery", () => {
+    it("unclaims the event and returns 500 without marking processed when the handler throws", async () => {
+      const event = makeSubscriptionUpdatedEvent();
+      primeHappyPath(event);
+      mockSyncSubscription.mockRejectedValueOnce(new Error("db unavailable"));
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(200);
-    expect(mockFulfill).not.toHaveBeenCalled();
-    expect(mockSyncSubscription).not.toHaveBeenCalled();
-    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
-  });
-});
-
-describe("POST /api/stripe/webhooks — handler failure recovery", () => {
-  it("unclaims the event and returns 500 without marking processed when the handler throws", async () => {
-    const event = makeSubscriptionUpdatedEvent();
-    primeHappyPath(event);
-    mockSyncSubscription.mockRejectedValueOnce(new Error("db unavailable"));
-
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
-
-    expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({
-      error: "Webhook handler failed",
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({
+        error: "Webhook handler failed",
+      });
+      expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+      expect(mockMarkRemediation).not.toHaveBeenCalled();
     });
-    expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-    expect(mockMarkRemediation).not.toHaveBeenCalled();
-  });
 
-  it("flags the row for remediation when both the handler and unclaim fail", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+    it("flags the row for remediation when both the handler and unclaim fail", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
-    expect(mockMarkRemediation).toHaveBeenCalledWith(event.id, "unclaim boom");
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(500);
+      expect(mockUnclaimEvent).toHaveBeenCalledWith(event.id);
+      expect(mockMarkRemediation).toHaveBeenCalledWith(
+        event.id,
+        "unclaim boom",
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
 
-  it("stringifies non-Error unclaim failures before flagging remediation", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce("plain unclaim failure");
+    it("stringifies non-Error unclaim failures before flagging remediation", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce("plain unclaim failure");
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(mockMarkRemediation).toHaveBeenCalledWith(
-      event.id,
-      "plain unclaim failure",
-    );
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(500);
+      expect(mockMarkRemediation).toHaveBeenCalledWith(
+        event.id,
+        "plain unclaim failure",
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
 
-  it("still returns 500 when even the remediation write fails", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
-    mockMarkRemediation.mockRejectedValueOnce(new Error("flag boom"));
+    it("still returns 500 when even the remediation write fails", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+      mockMarkRemediation.mockRejectedValueOnce(new Error("flag boom"));
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(mockMarkRemediation).toHaveBeenCalledWith(event.id, "unclaim boom");
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(500);
+      expect(mockMarkRemediation).toHaveBeenCalledWith(
+        event.id,
+        "unclaim boom",
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
 
-  it("stringifies non-Error remediation write failures for safe alert metadata", async () => {
-    const event = makeCheckoutSessionCompletedEvent();
-    primeHappyPath(event);
-    mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
-    mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
-    mockMarkRemediation.mockRejectedValueOnce("plain flag failure");
+    it("stringifies non-Error remediation write failures for safe alert metadata", async () => {
+      const event = makeCheckoutSessionCompletedEvent();
+      primeHappyPath(event);
+      mockFulfill.mockRejectedValueOnce(new Error("handler boom"));
+      mockUnclaimEvent.mockRejectedValueOnce(new Error("unclaim boom"));
+      mockMarkRemediation.mockRejectedValueOnce("plain flag failure");
 
-    const response = await POST(
-      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
-    );
+      const response = await POST(
+        buildWebhookRequest("{}", {
+          "stripe-signature": VALID_SIGNATURE_HEADER,
+        }),
+      );
 
-    expect(response.status).toBe(500);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
-      {
-        eventType: event.type,
-        markError: "plain flag failure",
-        unclaimError: "unclaim boom",
-      },
-    );
-    expect(mockMarkProcessed).not.toHaveBeenCalled();
+      expect(response.status).toBe(500);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[ALERT][stripe:webhook] failed to persist remediation flag for stuck event",
+        {
+          eventType: event.type,
+          markError: "plain flag failure",
+          unclaimError: "unclaim boom",
+        },
+      );
+      expect(mockMarkProcessed).not.toHaveBeenCalled();
+    });
   });
 });

@@ -5,13 +5,13 @@ import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { questionDifficulties } from "@/core/drizzle/schema";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestion } from "@/core/services/ai/questions";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
 import {
   getQuestionsAction,
   insertQuestionAction,
 } from "@/core/features/questions/actions";
+import { checkQuestionsPermissionService } from "@/core/features/questions/service";
 import {
   DatabaseError,
   NotFoundError,
@@ -19,7 +19,7 @@ import {
   UnauthorizedError,
   BadRequestError,
   RateLimitError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { env } from "@/core/data/env/server";
 
 /**
@@ -47,13 +47,13 @@ const JOB_ACCESS_DENIED_MESSAGE = "You do not have permission to do this";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await getCurrentUserAction();
+    const user = await getCurrentUser();
 
-    if (userId == null) {
+    if (user == null) {
       throw new UnauthorizedError("You are not logged in");
     }
 
-    if (!(await checkQuestionsPermission())) {
+    if (!(await checkQuestionsPermissionService())) {
       throw new PermissionError(PLAN_LIMIT_MESSAGE);
     }
 
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     const { prompt: difficulty, jobInfoId } = parseResult.data;
 
     const decision = await aj.protect(await request(), {
-      userId,
+      userId: user.id,
       requested: 1,
     });
     if (decision.isDenied()) {

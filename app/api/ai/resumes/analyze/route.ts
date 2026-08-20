@@ -1,9 +1,9 @@
 import arcjet, { request, tokenBucket } from "@arcjet/next";
 
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { analyzeResumeForJob } from "@/core/services/ai/resumes/ai";
 import { getJobInfoAction } from "@/core/features/jobInfos/actions";
-import { reserveResumeAnalysisUsage } from "@/core/features/resumeAnalysis/permissions";
+import { reserveResumeAnalysisUsageService } from "@/core/features/resumeAnalysis/service";
 import { resumeAnalysisInputSchema } from "@/core/features/resumeAnalysis/schemas";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import {
@@ -12,7 +12,7 @@ import {
   PermissionError,
   RateLimitError,
   UnauthorizedError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { env } from "@/core/data/env/server";
 
 /**
@@ -33,9 +33,9 @@ const aj = arcjet({
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await getCurrentUserAction();
+    const user = await getCurrentUser();
 
-    if (userId == null) {
+    if (user == null) {
       throw new UnauthorizedError("You are not logged in");
     }
 
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     }
 
     const decision = await aj.protect(await request(), {
-      userId,
+      userId: user.id,
       requested: 1,
     });
     if (decision.isDenied()) {
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!(await reserveResumeAnalysisUsage(userId, jobInfoId))) {
+    if (!(await reserveResumeAnalysisUsageService(jobInfoId))) {
       return new Response(PLAN_LIMIT_MESSAGE, {
         status: 403,
       });

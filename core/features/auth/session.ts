@@ -1,17 +1,16 @@
-import { generateSecureToken } from "@/core/features/auth/tokens";
+import { generateSecureToken, hashToken } from "@/core/features/auth/tokens";
 import {
   SESSION_DURATION_MS,
   SESSION_REFRESH_THRESHOLD_MS,
 } from "@/core/features/auth/constants";
-import { DatabaseError } from "@/core/dal/errors";
+import { DatabaseError } from "@/core/lib/errors";
 import {
   createSessionDb,
   deleteAllUserSessionsDb,
   deleteExpiredSessionsDb,
   deleteSessionDb,
   extendSessionDb,
-  getUserSessionsDb,
-  validateSessionDb,
+  getActiveSessionDb,
 } from "@/core/features/auth/db";
 
 export type Session = {
@@ -22,18 +21,27 @@ export type Session = {
   createdAt: Date;
 };
 
+export type NewSession = Pick<Session, "token" | "expiresAt">;
+
+export type ActiveSession = Pick<Session, "id" | "userId" | "expiresAt">;
+
 /**
  * Create a new session for a user
  * @param userId - User ID to create session for
- * @returns Session object with token
+ * @returns Session object with token (unhashed for use in cookies)
  */
-export async function createSession(userId: string): Promise<Session> {
+export async function createSession(userId: string): Promise<NewSession> {
   const token = generateSecureToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+  const hashedToken = hashToken(token);
 
   try {
-    const [session] = await createSessionDb({ userId, token, expiresAt });
-    return session;
+    const [session] = await createSessionDb({
+      userId,
+      token: hashedToken,
+      expiresAt,
+    });
+    return { ...session, token };
   } catch (error) {
     console.error("Database error creating session:", error);
     throw new DatabaseError("Failed to create session", error);
@@ -41,13 +49,16 @@ export async function createSession(userId: string): Promise<Session> {
 }
 
 /**
- * Validate a session token and return session data
+ * Get a session by token and return session data
  * @param token - Session token from cookie
- * @returns Session object if valid, null otherwise
+ * @returns Session object if found, null otherwise
  */
-export async function validateSession(token: string): Promise<Session | null> {
+export async function getActiveSession(
+  token: string,
+): Promise<ActiveSession | null> {
   try {
-    const session = await validateSessionDb(token);
+    const hashedToken = hashToken(token);
+    const session = await getActiveSessionDb(hashedToken);
 
     if (!session) {
       return null;
@@ -55,8 +66,8 @@ export async function validateSession(token: string): Promise<Session | null> {
 
     return session;
   } catch (error) {
-    console.error("Database error validating session:", error);
-    throw new DatabaseError("Failed to validate session", error);
+    console.error("Database error getting active session:", error);
+    throw new DatabaseError("Failed to get active session", error);
   }
 }
 
@@ -67,8 +78,8 @@ export async function validateSession(token: string): Promise<Session | null> {
  */
 export async function extendSessionIfNeeded(
   token: string,
-): Promise<Session | null> {
-  const session = await validateSession(token);
+): Promise<ActiveSession | null> {
+  const session = await getActiveSession(token);
 
   if (!session) {
     return null;
@@ -97,7 +108,8 @@ export async function extendSessionIfNeeded(
  */
 export async function deleteSession(token: string): Promise<void> {
   try {
-    await deleteSessionDb(token);
+    const hashedToken = hashToken(token);
+    await deleteSessionDb(hashedToken);
   } catch (error) {
     console.error("Database error deleting session:", error);
     throw new DatabaseError("Failed to delete session", error);
@@ -108,6 +120,7 @@ export async function deleteSession(token: string): Promise<void> {
  * Delete all sessions for a user (logout from all devices)
  * @param userId - User ID to delete sessions for
  */
+//** TODO: currently not used anywhere */
 export async function deleteAllUserSessions(userId: string): Promise<void> {
   try {
     await deleteAllUserSessionsDb(userId);
@@ -121,25 +134,12 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
  * Delete expired sessions (cleanup job)
  * Should be run periodically
  */
+//** TODO: currently not used anywhere */
 export async function deleteExpiredSessions(): Promise<void> {
   try {
     await deleteExpiredSessionsDb();
   } catch (error) {
     console.error("Database error deleting expired sessions:", error);
     throw new DatabaseError("Failed to delete expired sessions", error);
-  }
-}
-
-/**
- * Get all active sessions for a user
- * @param userId - User ID
- * @returns Array of active sessions
- */
-export async function getUserSessions(userId: string): Promise<Session[]> {
-  try {
-    return await getUserSessionsDb(userId);
-  } catch (error) {
-    console.error("Database error getting user sessions:", error);
-    throw new DatabaseError("Failed to get user sessions", error);
   }
 }

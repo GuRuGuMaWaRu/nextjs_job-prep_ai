@@ -1,6 +1,4 @@
-import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Mic, FileText, Brain, Check } from "lucide-react";
 
@@ -13,7 +11,6 @@ import {
 } from "@/core/components/ui/card";
 import { Badge } from "@/core/components/ui/badge";
 import { ThemeToggle } from "@/core/components/ThemeToggle";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
 import { PRODUCT_FEATURES, PUBLIC_PLANS } from "@/core/features/billing/plans";
 import { routes } from "@/core/data/routes";
 
@@ -44,31 +41,12 @@ function Navbar() {
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <Suspense
-            fallback={
-              <Button variant="outline" asChild>
-                <Link href={routes.signIn}>Sign In</Link>
-              </Button>
-            }
-          >
-            <SignInButton />
-          </Suspense>
+          <Button variant="outline" asChild>
+            <Link href={routes.signIn}>Sign In</Link>
+          </Button>
         </div>
       </div>
     </nav>
-  );
-}
-
-async function SignInButton() {
-  const { userId } = await getCurrentUserAction();
-  const isUserLoggedIn = userId != null;
-
-  if (isUserLoggedIn) return redirect(routes.app);
-
-  return (
-    <Button variant="outline" asChild>
-      <Link href={routes.signIn}>Sign In</Link>
-    </Button>
   );
 }
 
@@ -133,19 +111,7 @@ function PricingSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
         {PUBLIC_PLANS.map((plan) => (
-          <Card
-            key={plan.name}
-            className={`relative transition-all ${
-              plan.popular && "border-primary shadow-lg"
-            }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="px-2 py-0.5 text-xs font-semibold">
-                  Most Popular
-                </Badge>
-              </div>
-            )}
+          <Card key={plan.name} className="relative transition-all">
             <CardHeader className="space-y-4 p-5">
               <div className="space-y-1">
                 <CardTitle className="text-xl">{plan.name}</CardTitle>

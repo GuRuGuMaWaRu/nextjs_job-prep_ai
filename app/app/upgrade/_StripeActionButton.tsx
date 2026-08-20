@@ -24,12 +24,6 @@ type StripeActionButtonProps = {
   pendingLabel?: string;
 };
 
-const STORAGE_KEY_PREFIX = "stripe_idempotency_";
-
-function getStorageKey(action: StripeAction): string {
-  return `${STORAGE_KEY_PREFIX}${action}`;
-}
-
 function getOrCreateIdempotencyKey(storageKey: string): string {
   const existing = sessionStorage.getItem(storageKey);
   if (existing) return existing;
@@ -79,8 +73,10 @@ export function StripeActionButton({
 }: StripeActionButtonProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const storageKey = getStorageKey(action);
 
+  const storageKey = `stripe_idempotency_${action}`;
+
+  //** TODO: how about useTransition? */
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isSubmitting || disabled) return;
@@ -105,6 +101,7 @@ export function StripeActionButton({
         sessionStorage.removeItem(storageKey);
       }
 
+      //** TODO: use router.push instead? */
       window.location.assign(redirectTarget);
       return;
     } catch {

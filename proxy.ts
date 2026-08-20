@@ -5,11 +5,9 @@ import { env } from "@/core/data/env/server";
 import { SESSION_COOKIE_NAME } from "@/core/features/auth/constants";
 import { routes } from "@/core/data/routes";
 
-//** Public routes that don't require authentication
 const EXACT_PUBLIC_ROUTES = ["/"];
 const PREFIX_PUBLIC_ROUTES = ["/sign-in", "/sign-up", "/api/oauth"];
 
-//** Check if route is public
 function isPublicRoute(pathname: string): boolean {
   if (EXACT_PUBLIC_ROUTES.includes(pathname)) {
     return true;
@@ -86,21 +84,17 @@ export default async function middleware(req: NextRequest) {
   }
 
   const isPublic = isPublicRoute(pathname);
-  const hasSessionToken = !!req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const hasSessionCookie = req.cookies.has(SESSION_COOKIE_NAME);
 
-  if (isPublic && !hasSessionToken) {
-    return NextResponse.next();
+  if (isPublic && hasSessionCookie) {
+    return NextResponse.redirect(new URL(routes.app, req.url));
   }
 
-  if (isPublic && hasSessionToken) {
-    return NextResponse.redirect(new URL(routes.api.validateSession, req.url));
+  if (!isPublic && !hasSessionCookie) {
+    return NextResponse.redirect(new URL(routes.landing, req.url));
   }
 
-  if (!isPublic && !hasSessionToken) {
-    return NextResponse.redirect(new URL(routes.signIn, req.url));
-  }
-
-  //** Session validation happens in server components via getCurrentUser / getCurrentUserWithProfile
+  //** Session validation happens in server components via getCurrentUser
   return NextResponse.next();
 }
 

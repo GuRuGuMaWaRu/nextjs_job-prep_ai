@@ -1,19 +1,15 @@
-jest.mock("@/core/features/auth/actions", () => ({
-  getCurrentUserWithProfileAction: jest.fn(),
+jest.mock("@/core/lib/getCurrentUser", () => ({
+  getCurrentUser: jest.fn(),
 }));
 
 jest.mock("@/core/features/billing/stripe", () => ({
   getStripe: jest.fn(),
   getStripeBaseUrl: jest.fn(),
   getIdempotencyKeyFromRequest: jest.fn(),
-  getUpgradeErrorRedirect: jest.fn(
-    (errorCode: string, baseUrl: string) =>
-      `${baseUrl}/app/upgrade?error=${errorCode}`,
-  ),
   isStripeConfigured: jest.fn(),
 }));
 
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getStripe,
   getStripeBaseUrl,
@@ -26,10 +22,9 @@ import { asStripeClient } from "@core/test-utils/mocks/stripe";
 
 import { POST } from "./route";
 
-const mockGetCurrentUserWithProfile =
-  getCurrentUserWithProfileAction as jest.MockedFunction<
-    typeof getCurrentUserWithProfileAction
-  >;
+const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<
+  typeof getCurrentUser
+>;
 const mockGetStripe = getStripe as jest.MockedFunction<typeof getStripe>;
 const mockGetStripeBaseUrl = getStripeBaseUrl as jest.MockedFunction<
   typeof getStripeBaseUrl
@@ -78,18 +73,14 @@ describe("POST /api/stripe/create-portal-session", () => {
   beforeEach(() => {
     mockStripe.billingPortal.sessions.create.mockReset();
 
-    mockGetCurrentUserWithProfile.mockReset();
-    mockGetCurrentUserWithProfile.mockResolvedValue({
-      userId: TEST_USER_ID,
-      user: makeUser({
+    mockGetCurrentUser.mockReset();
+    mockGetCurrentUser.mockResolvedValue(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-portal@test.local",
         stripeCustomerId: "cus_test_portal",
       }),
-      redirectToSignIn: jest.fn(() => {
-        throw new Error("redirect");
-      }),
-    });
+    );
 
     mockGetStripe.mockReset();
     mockGetStripe.mockReturnValue(asStripeClient(mockStripe));
@@ -111,12 +102,7 @@ describe("POST /api/stripe/create-portal-session", () => {
   });
 
   it("redirects unauthenticated users to the upgrade unauthorized error", async () => {
-    mockGetCurrentUserWithProfile.mockResolvedValueOnce({
-      userId: null,
-      redirectToSignIn: jest.fn(() => {
-        throw new Error("redirect");
-      }),
-    });
+    mockGetCurrentUser.mockResolvedValueOnce(null);
 
     const response = await POST(buildJsonRequest());
 
@@ -129,17 +115,13 @@ describe("POST /api/stripe/create-portal-session", () => {
   });
 
   it("redirects when the current user has no Stripe customer id", async () => {
-    mockGetCurrentUserWithProfile.mockResolvedValueOnce({
-      userId: TEST_USER_ID,
-      user: makeUser({
+    mockGetCurrentUser.mockResolvedValueOnce(
+      makeUser({
         id: TEST_USER_ID,
         email: "billing-portal-missing@test.local",
         stripeCustomerId: null,
       }),
-      redirectToSignIn: jest.fn(() => {
-        throw new Error("redirect");
-      }),
-    });
+    );
 
     const response = await POST(buildJsonRequest());
 

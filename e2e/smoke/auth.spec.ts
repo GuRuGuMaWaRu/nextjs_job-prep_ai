@@ -66,15 +66,15 @@ test.describe("Auth", () => {
     await expectAppHome(page);
   });
 
-  test("when trying to access App page a signed out user is redirected to Sign In page ", async ({
+  test("when trying to access App page a signed out user is redirected to Landing page ", async ({
     page,
   }) => {
     await page.goto("/app");
 
-    await expect(page).toHaveURL("/sign-in");
+    await expect(page).toHaveURL("/");
   });
 
-  test("when a signed in user logs out and tries to access App pages he is redirected to Sgn In page", async ({
+  test("when a signed in user logs out and tries to access App pages he is redirected to Landing page", async ({
     page,
   }) => {
     // Log in
@@ -93,7 +93,7 @@ test.describe("Auth", () => {
     // Try visiting app again
     await page.goto("/app");
 
-    await expect(page).toHaveURL("/sign-in");
+    await expect(page).toHaveURL("/");
   });
 });
 

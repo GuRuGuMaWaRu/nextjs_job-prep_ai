@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, varchar, timestamp, pgEnum } from "drizzle-orm/pg-core";
 
 import { JobInfoTable } from "./jobInfo";
 import { createdAt, updatedAt } from "../schemaHelpers";
@@ -7,9 +7,9 @@ import { PasswordResetTokenTable, VerificationTokenTable } from "./token";
 import { SessionTable } from "./session";
 import { UserOAuthAccountTable } from "./userOAuthAccount";
 
-// User plan types
 export const userPlans = ["free", "pro"] as const;
 export type UserPlan = (typeof userPlans)[number];
+export const userPlansEnum = pgEnum("user_plans", userPlans);
 
 export const UserTable = pgTable("users", {
   id: varchar().primaryKey(),
@@ -18,7 +18,7 @@ export const UserTable = pgTable("users", {
   image: varchar(),
   passwordHash: varchar("password_hash"),
   emailVerified: timestamp("email_verified", { withTimezone: true }),
-  plan: varchar({ length: 50 }).notNull().default("free"),
+  plan: userPlansEnum().notNull().default("free"),
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).unique(),
   stripeSubscriptionId: varchar("stripe_subscription_id", {
     length: 255,

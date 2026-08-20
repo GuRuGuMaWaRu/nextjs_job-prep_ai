@@ -12,8 +12,8 @@ function nextSessionIndex(): number {
 }
 
 /**
- * Builds a `Session` fixture with defaults that pass `validateSession` /
- * `validateSessionDb` semantics (not expired vs real time) out of the box.
+ * Builds a `Session` fixture with defaults that pass `getSession` /
+ * `getSessionDb` semantics (not expired vs real time) out of the box.
  *
  * `createdAt` is fixed for deterministic snapshots; `expiresAt` is anchored to
  * `Date.now()` so it stays in the future as wall-clock time advances.

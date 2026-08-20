@@ -1,6 +1,5 @@
 import Stripe from "stripe";
 
-import { routes } from "@/core/data/routes";
 import { env } from "@/core/data/env/server";
 
 let stripeInstance: Stripe | null = null;
@@ -27,6 +26,8 @@ export function getStripe(): Stripe | null {
  * returns null in non-dev environments so callers fail closed rather than
  * redirecting Stripe to a dead address.
  */
+//** TODO: should be simplified */
+//** TODO: I may be wrong, but why does it have 'Stripe' in the name if it returns a base URL for the app? */
 export function getStripeBaseUrl(): string | null {
   if (env.APP_URL) return env.APP_URL;
 
@@ -40,6 +41,7 @@ export function getStripeBaseUrl(): string | null {
   return null;
 }
 
+//** TODO: I don't like this function and want it gone; we should be checking env variables on app load */
 export function isStripeConfigured(): boolean {
   const hasPriceOrProduct =
     env.STRIPE_PRO_PRICE_ID || env.STRIPE_PRO_PRODUCT_ID;
@@ -50,21 +52,6 @@ export function isStripeConfigured(): boolean {
       hasPriceOrProduct &&
       getStripeBaseUrl(),
   );
-}
-
-/**
- * Builds the absolute upgrade page URL with an error code for redirect-on-error.
- * Use when form POST handlers (checkout, portal, cancel) fail so the user is
- * sent back to the upgrade page with a message instead of a raw text response.
- * Callers must pass an absolute origin (e.g. from getStripeBaseUrl() or
- * request.url) — NextResponse.redirect() in Route Handlers requires absolute URLs.
- */
-export function getUpgradeErrorRedirect(
-  errorCode: string,
-  baseUrl: string,
-): string {
-  const query = `?error=${encodeURIComponent(errorCode)}`;
-  return `${baseUrl}${routes.upgrade}${query}`;
 }
 
 function getNormalizedIdempotencyKey(value: unknown): string | undefined {

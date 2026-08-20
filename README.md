@@ -69,7 +69,7 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
 4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
 5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
-6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUserAction()` / `getCurrentUserWithProfileAction()`.
+6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
 7. Features execute service/DAL/database logic and return data or stream AI output.
 
 ### Data model (high level)
@@ -338,6 +338,7 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - `app/api/auth/validate-session/route.ts`
 - `app/api/oauth/[provider]/route.ts`
 - `app/api/stripe/create-checkout-session/route.ts`
+- `app/api/stripe/checkout-return/route.ts`
 - `app/api/stripe/create-portal-session/route.ts`
 - `app/api/stripe/cancel-subscription/route.ts`
 - `app/api/stripe/webhooks/route.ts`

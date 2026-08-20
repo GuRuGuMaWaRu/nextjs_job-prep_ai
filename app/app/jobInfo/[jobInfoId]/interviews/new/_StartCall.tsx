@@ -50,23 +50,40 @@ export function StartCall({
 
   //** Sync chat id */
   useEffect(() => {
-    if (chatMetadata?.chatId == null || interviewId == null) {
-      return;
+    async function updateInterview() {
+      if (chatMetadata?.chatId == null || interviewId == null) {
+        return;
+      }
+
+      const res = await updateInterviewAction(interviewId, {
+        humeChatId: chatMetadata.chatId,
+      });
+
+      if (!res.success) {
+        errorToast(res.message);
+      }
     }
-    updateInterviewAction(interviewId, { humeChatId: chatMetadata.chatId });
+
+    updateInterview();
   }, [chatMetadata, interviewId]);
 
   //** Sync chat duration */
   useEffect(() => {
-    if (interviewId == null) return;
+    async function updateInterviewDuration() {
+      if (durationRef.current == null || interviewId == null) {
+        return;
+      }
 
-    const intervalId = setInterval(() => {
-      if (durationRef.current == null) return;
-
-      updateInterviewAction(interviewId, {
+      const res = await updateInterviewAction(interviewId, {
         duration: durationRef.current,
       });
-    }, 10000);
+
+      if (!res.success) {
+        errorToast(res.message);
+      }
+    }
+
+    const intervalId = setInterval(updateInterviewDuration, 10000);
 
     return () => clearInterval(intervalId);
   }, [interviewId]);
@@ -110,7 +127,7 @@ export function StartCall({
     });
   };
 
-  const handleEndInterview = () => {
+  const handleEndInterview = async () => {
     disconnect();
 
     if (interviewId == null) {
@@ -118,7 +135,14 @@ export function StartCall({
     }
 
     if (durationRef.current != null) {
-      updateInterviewAction(interviewId, { duration: durationRef.current });
+      const res = await updateInterviewAction(interviewId, {
+        duration: durationRef.current,
+      });
+
+      if (!res.success) {
+        errorToast(res.message);
+        return;
+      }
     }
     router.push(routes.interview(jobInfo.id, interviewId));
   };

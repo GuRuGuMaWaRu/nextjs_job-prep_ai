@@ -1,16 +1,19 @@
 "use server";
 
 import { QuestionDifficulty } from "@/core/drizzle/schema";
-import { checkQuestionsPermission } from "@/core/features/questions/permissions";
 import {
+  checkQuestionsPermissionService,
   getQuestionByIdService,
   getQuestionsService,
   insertQuestionService,
 } from "@/core/features/questions/service";
+import { QUESTION_SERVICE_ERRORS } from "@/core/features/questions/serviceErrors";
+import { assertUUID } from "@/core/lib/assertUUID";
+import { NotFoundError } from "@/core/lib/errors";
 
 /**
  * Action Layer for Questions
- * Handles: Delegates to service layer, lets errors bubble to error boundaries
+ * Handles: Input validation, delegates to service layer
  * These actions are called from pages/components that have error boundaries
  */
 
@@ -19,6 +22,10 @@ import {
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionsAction(jobInfoId: string) {
+  if (!assertUUID(jobInfoId)) {
+    return [];
+  }
+
   return await getQuestionsService(jobInfoId);
 }
 
@@ -31,6 +38,10 @@ export async function insertQuestionAction(
   jobInfoId: string,
   difficulty: QuestionDifficulty,
 ) {
+  if (!assertUUID(jobInfoId)) {
+    throw new NotFoundError(QUESTION_SERVICE_ERRORS.jobInfoNotFoundOrNoAccess);
+  }
+
   return await insertQuestionService(question, jobInfoId, difficulty);
 }
 
@@ -39,6 +50,10 @@ export async function insertQuestionAction(
  * Used in pages - errors bubble up to error boundary
  */
 export async function getQuestionByIdAction(questionId: string) {
+  if (!assertUUID(questionId)) {
+    return null;
+  }
+
   return await getQuestionByIdService(questionId);
 }
 
@@ -47,5 +62,5 @@ export async function getQuestionByIdAction(questionId: string) {
  * Used for UI permission checks; errors bubble to callers/error boundaries
  */
 export async function canGenerateQuestionsAction(): Promise<boolean> {
-  return await checkQuestionsPermission();
+  return await checkQuestionsPermissionService();
 }

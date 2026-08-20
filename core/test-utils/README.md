@@ -14,10 +14,7 @@ This folder grows incrementally — add a helper only when a real test needs it.
   - `makeUser`, `makeProUser`, `makeSession`, `makeExpiredSession`.
   - `makeStripeSubscription`, `makeStripeCheckoutSession`,
     `makeStripeEvent`, plus `makeCheckoutSessionCompletedEvent`,
-    `makeCheckoutSessionAsyncPaymentSucceededEvent`,
-    `makeCheckoutSessionAsyncPaymentFailedEvent`,
     `makeSubscriptionUpdatedEvent`, `makeSubscriptionDeletedEvent`,
-    `makeUnhandledStripeWebhookEvent`.
 - `render.tsx` — `renderWithProviders` that wraps children in
   `ThemeProvider` + `Toaster`, plus a re-export of every RTL export.
 - `mocks/next.ts` — factories for stubbing `next/cache`, `next/headers`,

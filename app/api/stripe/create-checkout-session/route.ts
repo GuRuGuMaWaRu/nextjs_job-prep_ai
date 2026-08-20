@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
-import type Stripe from "stripe";
 
-import { getCurrentUserWithProfileAction } from "@/core/features/auth/actions";
 import {
   getStripe,
   getStripeBaseUrl,
   getIdempotencyKeyFromRequest,
-  getUpgradeErrorRedirect,
   isStripeConfigured,
 } from "@/core/features/billing/stripe";
 import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 
 export async function POST(request: Request) {
-  const { userId, user } = await getCurrentUserWithProfileAction();
-  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
   const wantsJson =
     request.headers
       .get("content-type")
@@ -22,30 +18,35 @@ export async function POST(request: Request) {
       .includes("application/json") ?? false;
 
   const baseUrl = getStripeBaseUrl() ?? new URL(request.url).origin;
+  //** TODO: I wonder if I need all this wantsJson stuff? */
   const createRedirectResponse = (redirectUrl: string) =>
     wantsJson
       ? NextResponse.json({ redirectUrl })
       : NextResponse.redirect(redirectUrl, 302);
 
-  if (!userId) {
+  const user = await getCurrentUser();
+  if (user == null) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("unauthorized", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=unauthorized`,
     );
   }
 
+  //** TODO: I wonder if I need to check this? Maybe getStripe() already does this?  */
   if (!isStripeConfigured()) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=stripe_not_configured`,
     );
   }
 
   const stripe = getStripe();
   if (!stripe) {
     return createRedirectResponse(
-      getUpgradeErrorRedirect("stripe_not_configured", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=stripe_not_configured`,
     );
   }
 
+  //** TODO: should I store priceId and productId like this or in a database? */
+  //** TODO: all these checks? Looks like I am not sure that I will have env variables, that defaultPrice is a string? */
   let priceId = env.STRIPE_PRO_PRICE_ID;
 
   if (!priceId && env.STRIPE_PRO_PRODUCT_ID) {
@@ -58,31 +59,23 @@ export async function POST(request: Request) {
       typeof defaultPrice === "string"
         ? defaultPrice
         : (defaultPrice?.id ?? undefined);
-
-    if (!priceId) {
-      return createRedirectResponse(getUpgradeErrorRedirect("config", baseUrl));
-    }
   }
 
+  //** TODO: again, can't I be sure there is priceId? */
   if (!priceId) {
-    return createRedirectResponse(getUpgradeErrorRedirect("config", baseUrl));
+    return createRedirectResponse(`${baseUrl}${routes.upgrade}?error=config`);
   }
 
-  if (!user) {
+  //** TODO: I suppose this check makes sense, yet I see no reason to combine them both into one - better write one and then another one */
+  if (user.plan === "pro" || user.stripeSubscriptionId != null) {
+    const errorCode =
+      user.plan === "pro" ? "already_pro" : "existing_subscription";
     return createRedirectResponse(
-      getUpgradeErrorRedirect("user_not_found", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=${errorCode}`,
     );
   }
 
-  if (user.plan === "pro" || user.stripeSubscriptionId) {
-    const errorCode =
-      user.plan === "pro" ? "already_pro" : "existing_subscription";
-    return createRedirectResponse(getUpgradeErrorRedirect(errorCode, baseUrl));
-  }
-
-  const successUrl = `${baseUrl}${routes.upgrade}?success=true&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${baseUrl}${routes.upgrade}?canceled=true`;
-
+  //** TODO: do I need this explicit typing? */
   const sessionParams: {
     mode: "subscription";
     line_items: [{ price: string; quantity: number }];
@@ -94,35 +87,38 @@ export async function POST(request: Request) {
   } = {
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    metadata: { userId },
+    success_url: `${baseUrl}${routes.api.stripeCheckoutReturn}?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}${routes.upgrade}?canceled=true`,
+    metadata: { userId: user.id },
   };
 
-  if (user.stripeCustomerId) {
+  if (user.stripeCustomerId != null) {
     sessionParams.customer = user.stripeCustomerId;
   } else {
     sessionParams.customer_email = user.email;
   }
 
-  let session: Stripe.Checkout.Session;
+  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
+
   try {
-    session = await stripe.checkout.sessions.create(
+    //** TODO: why make idempotencyKey optional? */
+    const session = await stripe.checkout.sessions.create(
       sessionParams,
       idempotencyKey ? { idempotencyKey } : undefined,
     );
+
+    //** TODO: should I even check for a possibility where session.url is null? */
+    if (!session.url) {
+      return createRedirectResponse(
+        `${baseUrl}${routes.upgrade}?error=checkout_failed`,
+      );
+    }
+
+    return createRedirectResponse(session.url);
   } catch (err) {
     console.error("Stripe checkout session creation failed:", err);
     return createRedirectResponse(
-      getUpgradeErrorRedirect("checkout_failed", baseUrl),
+      `${baseUrl}${routes.upgrade}?error=checkout_failed`,
     );
   }
-
-  if (!session.url) {
-    return createRedirectResponse(
-      getUpgradeErrorRedirect("checkout_failed", baseUrl),
-    );
-  }
-
-  return createRedirectResponse(session.url);
 }

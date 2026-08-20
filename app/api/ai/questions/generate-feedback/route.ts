@@ -3,14 +3,14 @@ import arcjet, { request, tokenBucket } from "@arcjet/next";
 
 import { RATE_LIMIT_MESSAGE } from "@/core/data/constants";
 import { generateAiQuestionFeedback } from "@/core/services/ai/questions";
-import { getCurrentUserAction } from "@/core/features/auth/actions";
+import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import { getQuestionByIdAction } from "@/core/features/questions/actions";
 import {
   BadRequestError,
   DatabaseError,
   RateLimitError,
   UnauthorizedError,
-} from "@/core/dal/errors";
+} from "@/core/lib/errors";
 import { env } from "@/core/data/env/server";
 
 /**
@@ -36,9 +36,9 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await getCurrentUserAction();
+    const user = await getCurrentUser();
 
-    if (userId == null) {
+    if (user == null) {
       throw new UnauthorizedError("You are not logged in");
     }
 
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const { questionId, prompt: answer } = parseResult.data;
 
     const decision = await aj.protect(await request(), {
-      userId,
+      userId: user.id,
       requested: 1,
     });
     if (decision.isDenied()) {

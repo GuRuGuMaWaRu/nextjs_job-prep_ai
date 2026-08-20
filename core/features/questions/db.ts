@@ -13,11 +13,27 @@ export async function getQuestionCountDb(userId: string) {
   return questionCount;
 }
 
-export async function getQuestionsDb(jobInfoId: string) {
-  return db.query.QuestionTable.findMany({
-    where: eq(QuestionTable.jobInfoId, jobInfoId),
-    orderBy: asc(QuestionTable.createdAt),
-  });
+export async function getQuestionsDb(jobInfoId: string, userId: string) {
+  const questions = await db
+    .select({
+      id: QuestionTable.id,
+      jobInfoId: QuestionTable.jobInfoId,
+      text: QuestionTable.text,
+      difficulty: QuestionTable.difficulty,
+      createdAt: QuestionTable.createdAt,
+      updatedAt: QuestionTable.updatedAt,
+    })
+    .from(QuestionTable)
+    .innerJoin(JobInfoTable, eq(QuestionTable.jobInfoId, JobInfoTable.id))
+    .where(
+      and(
+        eq(QuestionTable.jobInfoId, jobInfoId),
+        eq(JobInfoTable.userId, userId),
+      ),
+    )
+    .orderBy(asc(QuestionTable.createdAt));
+
+  return questions;
 }
 
 export async function insertQuestionDb(
