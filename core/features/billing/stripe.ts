@@ -48,9 +48,9 @@ export function isStripeConfigured(): boolean {
 
   return Boolean(
     env.STRIPE_SECRET_KEY &&
-    env.STRIPE_WEBHOOK_SECRET &&
-    hasPriceOrProduct &&
-    getStripeBaseUrl(),
+      env.STRIPE_WEBHOOK_SECRET &&
+      hasPriceOrProduct &&
+      getStripeBaseUrl(),
   );
 }
 
