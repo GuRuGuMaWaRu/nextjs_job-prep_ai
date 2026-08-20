@@ -162,7 +162,8 @@ function Footer() {
         </Link>
         <Link
           href="mailto:contact@offerpilot.example.com"
-          className="hover:text-foreground transition-colors">
+          className="hover:text-foreground transition-colors"
+        >
           Contact us
         </Link>
       </div>
