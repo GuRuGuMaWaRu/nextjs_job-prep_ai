@@ -111,19 +111,7 @@ function PricingSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
         {PUBLIC_PLANS.map((plan) => (
-          <Card
-            key={plan.name}
-            className={`relative transition-all ${
-              plan.popular && "border-primary shadow-lg"
-            }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="px-2 py-0.5 text-xs font-semibold">
-                  Most Popular
-                </Badge>
-              </div>
-            )}
+          <Card key={plan.name} className="relative transition-all">
             <CardHeader className="space-y-4 p-5">
               <div className="space-y-1">
                 <CardTitle className="text-xl">{plan.name}</CardTitle>
@@ -174,8 +162,7 @@ function Footer() {
         </Link>
         <Link
           href="mailto:contact@offerpilot.example.com"
-          className="hover:text-foreground transition-colors"
-        >
+          className="hover:text-foreground transition-colors">
           Contact us
         </Link>
       </div>
