@@ -35,4 +35,3 @@ Change a status only when the evidence link supports it. Assistance is diagnosti
 - `failure drills passed`: link the failure matrix and persistent-state evidence.
 - `teach-back passed`: link the explanation and AI transfer questions.
 - `mastered`: record why the evidence reaches `transferable` on the mastery rubric.
-

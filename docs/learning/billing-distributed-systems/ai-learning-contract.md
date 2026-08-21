@@ -116,4 +116,3 @@ After reading the reference, the learner writes a comparison. The learner keeps 
 ## Working-by-accident rule
 
 Passing tests do not establish mastery when the learner cannot explain why the behavior holds. The guarantee must be visible in a constraint, transaction, compare-and-set condition, state transition, idempotency identity, fencing check, or equivalent enforceable mechanism.
-

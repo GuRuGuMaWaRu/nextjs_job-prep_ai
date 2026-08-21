@@ -41,4 +41,3 @@ Record questions you still cannot answer confidently and the smallest next retri
 ## Mastery evidence
 
 Link the mental model, prediction, experiment, design, first failing test, failure matrix, PR, and incident evidence used for the rubric decision.
-

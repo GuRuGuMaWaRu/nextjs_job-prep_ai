@@ -52,4 +52,3 @@ Record the cleanup command or action and evidence that disposable state was remo
 ## Next experiment
 
 Choose the smallest experiment that addresses the most important remaining uncertainty.
-

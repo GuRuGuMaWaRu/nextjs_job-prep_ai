@@ -47,4 +47,3 @@ Record uncertainty without resolving it from memory. Turn the highest-impact unc
 ## Revision history
 
 After experiments, append what changed in the model and which evidence caused the change. Do not erase the original model.
-

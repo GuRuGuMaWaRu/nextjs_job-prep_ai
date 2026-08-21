@@ -20,4 +20,3 @@ Enumerate failures before implementation and update observations during drills.
 ## Gaps and uncertainty
 
 List failure points that cannot yet be injected and the evidence or tooling needed to test them later.
-

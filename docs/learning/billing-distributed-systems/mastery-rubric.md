@@ -54,4 +54,3 @@ Do not repeat the same explanation immediately. Choose one smaller response:
 - rerun a previously mastered experiment from memory.
 
 The course advances after new evidence, not after rereading.
-

@@ -28,4 +28,3 @@ result and revised mental model
 ```
 
 Executable TypeScript is covered by the repository typecheck. JavaScript or TypeScript changes require `npm test`; TypeScript changes also require `npm run typecheck`.
-

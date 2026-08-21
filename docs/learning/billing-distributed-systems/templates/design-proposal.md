@@ -67,4 +67,3 @@ List questions requiring an experiment, primary source, or production observatio
 ## Architecture comparison
 
 After the gate opens, append differences from the frozen reference and justify every adopted or rejected change.
-

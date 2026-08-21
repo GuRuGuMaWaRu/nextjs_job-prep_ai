@@ -60,4 +60,3 @@ Level 4 permission expires when that obstacle is resolved. Your next activity re
 - Never copy real customer data, emails, provider payloads, secrets, or tokens into learning notes.
 - A successful experiment is not production-ready until the module's production and failure gates pass.
 - No module may weaken the repository's normal migration, testing, or deployment requirements.
-

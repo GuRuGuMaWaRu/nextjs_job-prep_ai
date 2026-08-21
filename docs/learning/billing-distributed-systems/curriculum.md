@@ -38,4 +38,3 @@ This is a diagnostic balance, not a schedule:
 ```
 
 If nearly all effort goes into reading, run a smaller experiment. If nearly all effort goes into coding, pause and reconstruct the model and guarantees.
-

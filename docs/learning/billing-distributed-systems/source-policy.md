@@ -34,52 +34,51 @@ For each concept:
 
 ### Backend foundations
 
-- `required` — [MDN: Overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)  
-  Question: What does an HTTP response communicate, and what does it not prove about later business processing?
-- `required` — [Node.js: Don't block the event loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)  
-  Question: How can one Node.js process interleave work for many requests even though JavaScript callbacks execute on an event loop?
-- `required` — [PostgreSQL tutorial](https://www.postgresql.org/docs/current/tutorial.html)  
-  Question: What are the database, table, row, query, and relation concepts used in the laboratories?
-- `required` — [PostgreSQL: Transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)  
-  Question: Which local database changes become all-or-nothing, and where does that guarantee stop?
+- `required` — [MDN: Overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)
+  - Question: What does an HTTP response communicate, and what does it not prove about later business processing?
+- `required` — [Node.js: Don't block the event loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
+  - Question: How can one Node.js process interleave work for many requests even though JavaScript callbacks execute on an event loop?
+- `required` — [PostgreSQL tutorial](https://www.postgresql.org/docs/current/tutorial.html)
+  - Question: What are the database, table, row, query, and relation concepts used in the laboratories?
+- `required` — [PostgreSQL: Transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)
+  - Question: Which local database changes become all-or-nothing, and where does that guarantee stop?
 
 ### Concurrency and database enforcement
 
-- `required` — [PostgreSQL: Constraints](https://www.postgresql.org/docs/current/ddl-constraints.html)  
-  Question: How can the database reject an invalid state when concurrent callers both believe it is available?
-- `reference` — [PostgreSQL: Transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html)  
-  Question: Which observations can change between statements and which anomalies require retry?
-- `required` — [PostgreSQL: Explicit locking](https://www.postgresql.org/docs/current/explicit-locking.html)  
-  Question: What does a row lock block, when is it released, and how can deadlock occur?
-- `reference` — [PostgreSQL: SELECT locking clauses](https://www.postgresql.org/docs/current/sql-select.html)  
-  Question: How do `FOR UPDATE` and `SKIP LOCKED` change competing workers' observations?
+- `required` — [PostgreSQL: Constraints](https://www.postgresql.org/docs/current/ddl-constraints.html)
+  - Question: How can the database reject an invalid state when concurrent callers both believe it is available?
+- `reference` — [PostgreSQL: Transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
+  - Question: Which observations can change between statements and which anomalies require retry?
+- `required` — [PostgreSQL: Explicit locking](https://www.postgresql.org/docs/current/explicit-locking.html)
+  - Question: What does a row lock block, when is it released, and how can deadlock occur?
+- `reference` — [PostgreSQL: SELECT locking clauses](https://www.postgresql.org/docs/current/sql-select.html)
+  - Question: How do `FOR UPDATE` and `SKIP LOCKED` change competing workers' observations?
 
 ### Stripe boundaries
 
-- `required` — [Stripe: Receive webhook events](https://docs.stripe.com/webhooks)  
-  Question: What duplicate, ordering, acknowledgement, and asynchronous-processing behavior must an endpoint expect?
-- `required` — [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)  
-  Question: Which logical identity lets a retry retrieve the result of an earlier provider operation?
+- `required` — [Stripe: Receive webhook events](https://docs.stripe.com/webhooks)
+  - Question: What duplicate, ordering, acknowledgement, and asynchronous-processing behavior must an endpoint expect?
+- `required` — [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)
+  - Question: Which logical identity lets a retry retrieve the result of an earlier provider operation?
 
 ### Operations
 
-- `required` — [OpenTelemetry: Signals](https://opentelemetry.io/docs/concepts/signals/)  
-  Question: Which operational questions are best answered by traces, metrics, or logs?
-- `reference` — [Vercel: Function limits](https://vercel.com/docs/functions/limitations)  
-  Question: Which execution limits constrain a serverless worker design?
-- `reference` — [Vercel: Managing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs)  
-  Question: What happens under overlapping, duplicated, or failed scheduled invocation?
-- `required` — [QStash: Schedules](https://upstash.com/docs/qstash/features/schedules)  
-  Question: What does QStash schedule and retry, and what state does it not own in this architecture?
+- `required` — [OpenTelemetry: Signals](https://opentelemetry.io/docs/concepts/signals/)
+  - Question: Which operational questions are best answered by traces, metrics, or logs?
+- `reference` — [Vercel: Function limits](https://vercel.com/docs/functions/limitations)
+  - Question: Which execution limits constrain a serverless worker design?
+- `reference` — [Vercel: Managing cron jobs](https://vercel.com/docs/cron-jobs/manage-cron-jobs)
+  - Question: What happens under overlapping, duplicated, or failed scheduled invocation?
+- `required` — [QStash: Schedules](https://upstash.com/docs/qstash/features/schedules)
+  - Question: What does QStash schedule and retry, and what state does it not own in this architecture?
 
 ### External effects
 
-- `required` — [Resend: Idempotency keys](https://resend.com/docs/dashboard/emails/idempotency-keys)  
-  Question: How long can one provider identity suppress duplicate sends, and what ambiguity remains after that window?
-- `required` — [Resend: Webhook guarantees](https://resend.com/docs/webhooks/introduction)  
-  Question: What duplication and ordering must delivery-outcome processing handle?
+- `required` — [Resend: Idempotency keys](https://resend.com/docs/dashboard/emails/idempotency-keys)
+  - Question: How long can one provider identity suppress duplicate sends, and what ambiguity remains after that window?
+- `required` — [Resend: Webhook guarantees](https://resend.com/docs/webhooks/introduction)
+  - Question: What duplication and ordering must delivery-outcome processing handle?
 
 ## Notes policy
 
 Record concepts in your own language. Short quotations are used only when exact provider wording is necessary, and the source is linked directly. Never copy secrets, customer examples, or real payloads into notes.
-

@@ -166,14 +166,14 @@ For every scenario, name evidence that could prove your prediction wrong.
 
 Read only after saving the predictions.
 
-1. `required` — [MDN: Overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)  
-   Question: What is contained in a request and response, and which business guarantees are outside HTTP itself?
-2. `required` — [Node.js: Don't block the event loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)  
-   Question: How does one Node.js process coordinate work for multiple clients?
-3. `required` — [PostgreSQL tutorial](https://www.postgresql.org/docs/current/tutorial.html)  
-   Question: Which database concepts and SQL operations will the laboratories use?
-4. `required` — [PostgreSQL: Transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)  
-   Question: Which intermediate states are hidden, which changes roll back, and where does the transaction boundary end?
+1. `required` — [MDN: Overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)
+   - Question: What is contained in a request and response, and which business guarantees are outside HTTP itself?
+2. `required` — [Node.js: Don't block the event loop](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
+   - Question: How does one Node.js process coordinate work for multiple clients?
+3. `required` — [PostgreSQL tutorial](https://www.postgresql.org/docs/current/tutorial.html)
+   - Question: Which database concepts and SQL operations will the laboratories use?
+4. `required` — [PostgreSQL: Transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)
+   - Question: Which intermediate states are hidden, which changes roll back, and where does the transaction boundary end?
 
 Append an “after reading” section to the prerequisite check and prediction log. Do not replace the original answers.
 
@@ -385,4 +385,3 @@ Module 3 will later retrieve:
 - the difference between a client's intent and one network request.
 
 Do not begin Module 1 until Module 0 is explicitly recorded as mastered.
-

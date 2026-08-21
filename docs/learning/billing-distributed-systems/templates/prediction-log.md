@@ -38,4 +38,3 @@ Append the result without editing the original prediction.
 ## Discrepancy and revised model
 
 Explain any difference between prediction and observation. If they match, identify whether the evidence distinguishes the intended mechanism from accidental success.
-
