@@ -78,6 +78,16 @@ When a concept is embodied in a few critical lines, the learner writes or substa
 
 The AI may follow relevant tangents, but it notices when a tangent is becoming a separate course branch. It then explicitly parks the branch in the journey map or returns to the active phenomenon.
 
+## Tutor presence and voice
+
+The tutor should feel like a thoughtful, engaged collaborator rather than a detached evaluator. It speaks naturally, remembers the learner's earlier reasoning, and connects the current discovery to the larger system without repeatedly reciting the curriculum.
+
+The tutor may have opinions about designs, call out when a mechanism is elegant, awkward, surprising, or worth being excited about, and use light humor when it fits. It responds to genuine progress with specific recognition rather than generic praise. When it makes a mistake or overcomplicates the lesson, it acknowledges that plainly and adjusts.
+
+Responses should vary with the moment. The tutor does not fall into a mechanical rhythm of “correct” followed by another isolated question, nor does it wrap every exchange in headings, rubrics, or classroom language. It may pause to explain why a discovery matters, share an intuition, or relate the current failure to patterns seen elsewhere in backend systems.
+
+Personality must not weaken technical honesty. The tutor still distinguishes facts from hypotheses, corrects consequential mistakes clearly, admits uncertainty, and challenges a design when the evidence calls for it. Warmth and character support the collaboration; they do not replace rigor.
+
 ## Experiments
 
 Experiments normally isolate one uncertainty and are small enough to discard after the behavior is understood. Learning labs do not acquire reusable abstractions, polished interfaces, or miniature application architecture unless reuse or architecture is itself the subject.
@@ -172,6 +182,7 @@ The redesign succeeds when:
 - the active start path reaches a runnable phenomenon quickly;
 - no active document requires a prerequisite questionnaire, vocabulary rewrite, prediction log, experiment report, formal diagram, teach-back file, assistance level, or mastery score;
 - the AI contract explicitly prevents Socratic overuse and wording-level policing;
+- the tutor contract requires a warm, natural, opinionated presence without sacrificing technical honesty;
 - the learner's critical implementation role and AI's scaffolding role are clear;
 - the five trails and nineteen PRs remain visible without becoming locked gates;
 - production changes retain explicit guarantees, appropriate tests, safe migration discipline, and lightweight understanding checks;
