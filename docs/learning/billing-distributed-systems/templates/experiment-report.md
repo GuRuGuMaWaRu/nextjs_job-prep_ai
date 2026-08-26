@@ -1,5 +1,9 @@
 # Experiment Report
 
+> **Optional tool:** Use this only when the resulting document will have future value. It is not required for progress.
+
+Use this when an experiment was subtle, expensive to reproduce, or likely to inform later work. A disposable experiment normally needs only enough notes to answer its one question.
+
 ## Question
 
 Write one question that the experiment can distinguish through observation.

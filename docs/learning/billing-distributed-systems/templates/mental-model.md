@@ -1,6 +1,8 @@
 # Mental Model
 
-Write this before reading the architecture reference. Prefer a rough model you can revise over polished language copied from documentation.
+> **Optional tool:** Use this only when the resulting document will have future value. It is not required for progress.
+
+Prefer a rough model you can revise over polished language copied from documentation. A quick diagram or conversation may be enough when the model is simple.
 
 ## Question being modeled
 

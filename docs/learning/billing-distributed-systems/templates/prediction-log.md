@@ -1,6 +1,8 @@
 # Prediction Log
 
-Record predictions before reading the assigned explanation or running the scenario.
+> **Optional tool:** Use this only when the resulting document will have future value. It is not required for progress.
+
+Use this when a prediction can distinguish competing explanations or make an experiment more informative. Skip it when prerequisite knowledge calls for a direct explanation first.
 
 ## Scenario
 

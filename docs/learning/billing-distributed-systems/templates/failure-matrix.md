@@ -1,6 +1,8 @@
 # Failure Matrix
 
-Enumerate failures before implementation and update observations during drills.
+> **Optional tool:** Use this only when the resulting document will have future value. It is not required for progress.
+
+Use a matrix when several failure points or recovery paths are difficult to compare in prose. Include only failures proportional to the guarantee being changed.
 
 | Failure point | Persisted state before failure | Uncertain external state | User-visible result | Next trigger | Retry decision | Recovery owner | Expected final state | Evidence | Invariant preserved or violated | Remediation |
 |---|---|---|---|---|---|---|---|---|---|---|

@@ -1,37 +1,40 @@
-# Mastery Progress
+# Learning Journey Map
 
-Allowed progression:
+This page preserves continuity between sessions. Update only what helps resume the work; it is not a status report or evidence ledger.
 
-```text
-not started → exploring → model formed → experiment passed
-→ production slice built → failure drills passed
-→ teach-back passed → mastered
-```
+## Current phenomenon
 
-Change a status only when the evidence link supports it. Assistance is diagnostic information, not a penalty.
+Can two requests representing one subscribe intent create multiple Stripe Checkout Sessions, especially when the first response is lost?
 
-| Module | Status | Highest assistance | Evidence | Unresolved questions | Last retrieval |
-|---|---|---:|---|---|---|
-| 0 — Backend foundations | not started | 0 | — | — | — |
-| 1 — Invariants | not started | 0 | — | — | — |
-| 2 — External boundaries | not started | 0 | — | — | — |
-| 3 — Idempotency | not started | 0 | — | — | — |
-| 4 — State machines and ownership | not started | 0 | — | — | — |
-| 5 — Domain modeling | not started | 0 | — | — | — |
-| 6 — Live data migrations | not started | 0 | — | — | — |
-| 7 — Reconciliation | not started | 0 | — | — | — |
-| 8 — Durable inbox | not started | 0 | — | — | — |
-| 9 — PostgreSQL workers | not started | 0 | — | — | — |
-| 10 — Operations | not started | 0 | — | — | — |
-| 11 — Auditability | not started | 0 | — | — | — |
-| 12 — Transactional outbox | not started | 0 | — | — | — |
-| 13 — Chaos capstone | not started | 0 | — | — | — |
+Active trail: [Recoverable checkout](curriculum.md#trail-2--recoverable-checkout)
 
-## Evidence rules
+Starting point: [Session 1 — Recoverable checkout intent](sessions/01-recoverable-checkout-intent/README.md)
 
-- `model formed`: link the learner-authored diagram or timeline and unresolved assumptions.
-- `experiment passed`: link predictions, observed results, and the revised model.
-- `production slice built`: link the PR and the first failing test.
-- `failure drills passed`: link the failure matrix and persistent-state evidence.
-- `teach-back passed`: link the explanation and AI transfer questions.
-- `mastered`: record why the evidence reaches `transferable` on the mastery rubric.
+## Last useful discovery
+
+The current route can finish the provider call without giving the browser a response. In that window, the browser knows only that it did not receive the outcome; Stripe may still hold a created Checkout Session.
+
+## Next concrete question
+
+What identity would let the server recognize two requests as retries of the same human subscribe intent rather than two separate intentions?
+
+## Unresolved uncertainty
+
+We have not yet observed the present route under two overlapping requests or a deliberately lost provider response. Its actual duplicate-creation behavior remains to be demonstrated.
+
+## Parked tangents
+
+- How Vercel may run the same route across multiple processes or instances.
+- How long Stripe retains an idempotency result.
+- Whether a dedicated queue will eventually be justified.
+
+These are worth returning to when they affect the current guarantee. They do not need answers before the first experiment.
+
+## Durable references
+
+- [AI teaching contract](ai-learning-contract.md)
+- [Learning checks](learning-checks.md)
+- [Just-in-time sources](source-policy.md)
+- [Historical foundations work](history/)
+
+Add links here when an experiment, production decision, test, or incident will be useful in a later session. Ordinary conversational progress does not need an artifact.

@@ -1,6 +1,8 @@
 # Design Proposal
 
-Complete this before opening the frozen architecture reference.
+> **Optional tool:** Use this only when the resulting document will have future value. It is not required for progress.
+
+Use the sections that clarify a production change with meaningful correctness, persistence, or operational consequences.
 
 ## Problem
 
@@ -54,7 +56,7 @@ State the operator question each proposed log, metric, trace, status query, or a
 
 ## Rollout and rollback
 
-Describe additive deployment, comparison evidence, authority switch, cleanup, and the point after which rollback requires data restoration.
+When deployed versions or persistent data could become incompatible, describe additive deployment, comparison evidence, authority switch, cleanup, and the point after which rollback requires data restoration.
 
 ## Rejected alternative
 
@@ -64,6 +66,6 @@ Describe one credible alternative, its benefit, and why its failure or complexit
 
 List questions requiring an experiment, primary source, or production observation before implementation.
 
-## Architecture comparison
+## Relevant prior design comparison
 
-After the gate opens, append differences from the frozen reference and justify every adopted or rejected change.
+When an earlier architecture plan is useful, note meaningful differences and why the current evidence supports them.

@@ -1,6 +1,8 @@
 # Teach-Back
 
-Complete this without reading the implementation or architecture reference.
+> **Optional tool:** Use this only when the resulting document will have future value. It is not required for progress.
+
+Use this to consolidate a substantial idea or test whether it transfers to another system. It is not a ceremonial final exam.
 
 ## Plain-language explanation
 
@@ -38,6 +40,6 @@ Choose one changed scale, provider guarantee, ownership rule, or latency target.
 
 Record questions you still cannot answer confidently and the smallest next retrieval or experiment.
 
-## Mastery evidence
+## Useful references
 
-Link the mental model, prediction, experiment, design, first failing test, failure matrix, PR, and incident evidence used for the rubric decision.
+Link only the code, tests, experiments, decisions, or incidents that would help you or a future maintainer reconstruct the reasoning.
