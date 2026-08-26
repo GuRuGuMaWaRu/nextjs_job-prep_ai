@@ -42,6 +42,8 @@ Build a disposable fake checkout provider with only enough behavior to expose on
 
 Then send two overlapping requests that you intend to represent one subscribe action. Observe calls and returned results rather than relying on timing impressions.
 
+Immediately before the meaningful overlapping or lost-response run, make one conversational prediction: how many provider resources will exist, what each caller will observe, and what evidence could prove the prediction wrong.
+
 Keep this tiny. The fake does not need HTTP, React, a reusable provider abstraction, or a realistic Stripe payload unless one of those boundaries becomes the uncertainty under study. The code can be discarded after the behavior is understood.
 
 ## Likely discovery path—not a checklist
@@ -55,6 +57,8 @@ logical intent → duplicate requests → overlapping execution
 ```
 
 We can pause for a direct explanation anywhere prerequisite knowledge is missing. We can also follow an unexpected observation. The purpose is to understand this behavior, not to complete every noun in the diagram.
+
+If duplicate creation is observed, first state the invariant the production system needs. Only then compare mechanisms that might enforce it. That keeps the learning causal instead of solution-first.
 
 ## The lines Petro should own
 

@@ -6,7 +6,7 @@ Nothing here is a prerequisite, assessment, progress gate, or required artifact.
 
 ## Preserved Module 0
 
-- [Original guide](module-0/README-original.md)
+- [Original guide](module-0/README.md)
 - [Backend terms in my own words](module-0/work/backend-terms-in-my-own-words.md)
 - [Current-system observations](module-0/work/current-system-observations.md)
 - [Prerequisite check](module-0/work/prerequisite-check.md)
