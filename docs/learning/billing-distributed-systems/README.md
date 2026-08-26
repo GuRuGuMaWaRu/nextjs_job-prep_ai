@@ -1,62 +1,54 @@
-# Billing Distributed Systems Learning Lab
+# Billing Distributed Systems Apprenticeship
 
-This course uses the project's real Stripe billing subsystem to build a transferable understanding of backend and distributed systems. The working billing system is evidence of learning; it is not the only deliverable.
+This apprenticeship uses the project's real Stripe billing subsystem as the spine for learning backend and distributed systems. The goal is not merely to make billing work. It is to understand why it works, which failures it survives, and where its guarantees end.
 
-The course assumes elementary backend knowledge. Terms such as transaction, idempotency, lease, reconciliation, and outbox are introduced through observation and experiments before they are required in production work.
+The material assumes elementary backend knowledge. We will explain unfamiliar mechanisms when they become relevant, use tiny experiments to make uncertain behavior visible, and then bring the understanding back into production code.
 
 ## Start here
 
-1. Read the [curriculum map](curriculum.md) to understand the sequence, not the solutions.
-2. Read the [AI learning contract](ai-learning-contract.md) before asking AI for help.
-3. Read the [mastery rubric](mastery-rubric.md) before evaluating progress.
-4. Open [Module 0](modules/00-backend-foundations/README.md).
-5. Copy the relevant files from [templates](templates/) into your Module 0 working directory when the guide asks for them.
-6. Update [progress.md](progress.md) only when you have evidence for the new state.
+1. Read the [five learning trails](curriculum.md) for a map of the territory.
+2. Read the [AI teaching contract](ai-learning-contract.md) for how Petro and the tutor work together.
+3. Begin with [Session 1: recoverable checkout intent](sessions/01-recoverable-checkout-intent/README.md).
+4. Use the [journey map](progress.md) to retain context between sessions.
 
-Do not begin by reading the detailed production roadmap. Each module has an architecture-comparison gate. Read the relevant section of the frozen roadmap only after you have recorded your own first model and design.
+These are optional tools, not gates:
 
-## The spiral
+- [Learning checks](learning-checks.md) help decide whether to investigate further or change production code.
+- [Source policy](source-policy.md) explains when documentation is useful.
+- [Reasoning toolbox](templates/) contains reusable prompts and note shapes.
 
-Every module follows the same learning loop:
-
-```text
-observe → model → predict → experiment → design
-→ write the first failing test → build → break
-→ teach back → ship
-```
-
-If a mastery gate does not pass, make the experiment smaller or revisit the model. Time spent does not advance the course automatically.
-
-## AI assistance
-
-AI starts with questions, not solutions:
+## The working loop
 
 ```text
-Level 0 — Socratic questions only
-Level 1 — One directional hint
-Level 2 — Concept explanation using another domain
-Level 3 — Pseudocode or a schema pattern after your attempt
-Level 4 — Help with one explicitly named implementation obstacle
+production question → prediction when useful → tiny experiment
+→ observation → explanation → production guarantee
+→ proportional verification → next exposed problem
 ```
 
-Level 4 permission expires when that obstacle is resolved. Your next activity returns to review-only assistance.
+The loop is a guide, not a form to complete. A direct explanation may replace prediction when prerequisite knowledge is missing. An experiment may be unnecessary when the behavior is already understood. Curiosity may open another trail without requiring the current trail to be "finished."
 
-## Course documents
+## Production discipline
 
-- [Curriculum map](curriculum.md)
-- [AI learning contract](ai-learning-contract.md)
-- [Mastery rubric](mastery-rubric.md)
-- [Progress tracker](progress.md)
-- [Source policy](source-policy.md)
-- [Reasoning templates](templates/)
-- [Approved learning design](../../superpowers/specs/2026-08-21-billing-distributed-systems-learning-design.md)
-- [Frozen production architecture](../../superpowers/plans/2026-08-20-billing-subsystem-hardening-v2.md)
-- [Laboratory safety rules](../../../learning-labs/README.md)
+Production code may be inspected at any time. Change it when you can state the intended guarantee and have enough understanding to do so safely. Otherwise, first use the smallest useful explanation, documentation lookup, or disposable experiment.
+
+A fix is not considered learned merely because it works. Before moving on, be able to explain:
+
+1. What failure does it prevent?
+2. Where does the guarantee come from?
+3. What does it not protect against?
+
+Prefer the lowest-cost test that can actually falsify the guarantee. Local logic may need only a unit test; concurrency, crashes, ordering, persistence, and third-party boundaries must be tested where those behaviors exist.
+
+## Keeping useful knowledge
+
+Documentation is created when it has future value, not to prove that learning occurred. Production guarantees, non-obvious failure assumptions, and operational constraints should live near the code when future maintainers would otherwise have to rediscover them.
+
+The earlier foundations course is preserved in [history](history/) as a record of the first learning approach. It has no gatekeeping role in this apprenticeship.
 
 ## Safety
 
-- Use disposable data in learning laboratories.
+- Use disposable data in learning experiments.
 - Use Stripe test mode.
 - Never copy real customer data, emails, provider payloads, secrets, or tokens into learning notes.
-- A successful experiment is not production-ready until the module's production and failure gates pass.
-- No module may weaken the repository's normal migration, testing, or deployment requirements.
+- Do not weaken the repository's migration, testing, or deployment requirements for an experiment.
+- Add rollout and recovery planning when a change can leave persistent data or deployed versions in incompatible states.
