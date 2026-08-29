@@ -16,13 +16,15 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - Public landing page with marketing content and pricing.
 - Email/password authentication with database-backed sessions.
-- OAuth sign-in via Google, GitHub, and Discord (optional per provider).
+- OAuth sign-in via Google, GitHub, and Discord (optional per provider; only providers with both client id and secret configured appear on auth forms).
+- OAuth last-used provider badge on sign-in/sign-up (`oauth_last_used` cookie highlights the most recent provider with a "Last used" label and ring styling).
 - Job info management (create, edit, delete, view).
 - Interview flows per job info, including generated feedback.
 - Technical question generation and answer feedback.
 - Resume analysis endpoint that evaluates ATS fit and job alignment.
-- Upgrade and subscription management through Stripe Checkout + Billing Portal.
-- Cancel-at-period-end reminder banner for Pro users who canceled but retain access until billing period end.
+- Upgrade and subscription management through Stripe Checkout + Billing Portal, with lazy Stripe subscription reconciliation when the upgrade page loads (webhook fallback; daily cron remains a backstop).
+- Cancel-at-period-end reminder banner for Pro users who canceled but retain access until billing period end (dismissible per subscription cycle via **Hide** for the session or **Don't show again** stored in localStorage).
+- Plan-limit UX varies by feature: inline `PlanLimitAlert` on interview and question pages (questions generation disabled at limit); server redirect to `/app/upgrade` when resume analysis quota is exhausted; upgrade page shows `PlanLimitAlert` when the interview limit is hit.
 - API protection via Arcjet on API routes (middleware shield/bot limits plus per-user token buckets on AI-heavy endpoints).
 - User-friendly error toasts for plan limits, rate limits, Hume unavailability, and resume upload validation (`core/lib/errorToast.tsx`).
 
@@ -30,7 +32,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 ### Runtime and stack
 
-- **Framework:** Next.js App Router (`app/`)
+- **Framework:** Next.js 16 App Router (`app/`)
 - **Language:** TypeScript
 - **Database:** PostgreSQL
 - **ORM/migrations:** Drizzle ORM + Drizzle Kit
@@ -42,14 +44,17 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 ### Project layout
 
 - `app/` - routes, layouts, pages, and route handlers (`app/api/**/route.ts`)
+- `core/components/` - shared UI components (shadcn/ui wrappers, `PlanLimitAlert`, etc.)
 - `core/features/` - feature modules with layered structure
+- `core/test-utils/` - shared Jest helpers (factories, mocks, render wrappers) imported via `@core/test-utils/*`
+- `e2e/` - Playwright specs, fixtures, and global setup
 - `core/dal/` - shared DAL error types, helpers, and `ActionResult` shaping
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
 - `core/data/constants.ts` - shared permission identifiers, plan limits (`PERMISSIONS`, `PLAN_LIMITS`), and domain error tokens (`PLAN_LIMIT_MESSAGE`, `RATE_LIMIT_MESSAGE`, etc.)
 - `core/lib/errorToast.tsx` - maps domain error tokens to user-facing Sonner toasts
-- `proxy.ts` - middleware for auth redirect rules and Arcjet API protection
+- `proxy.ts` - Next.js 16 network boundary (formerly `middleware.ts`) for auth redirect rules and Arcjet API protection
 
 ### Layered feature pattern
 
@@ -66,11 +71,18 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 
 1. Requests pass through `proxy.ts`.
 2. `/api/stripe/webhooks` and `/api/cron/*` skip Arcjet and session auth (`/api/stripe/webhooks` uses Stripe signature verification; cron routes require `Bearer ${CRON_SECRET}` in the handler).
-3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
+3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window; denials return **403 with an empty body**. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`; denials return **429** with `RATE_LIMIT_MESSAGE`.
 4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
 5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
 6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
 7. Features execute service/DAL/database logic and return data or stream AI output.
+
+OAuth sign-in flow (when a provider is configured):
+
+1. Auth pages list only providers returned by `getConfiguredOAuthProviders()` (both client id and secret must be set).
+2. `signInWithOAuthAction` redirects to the provider; callback hits `/api/oauth/[provider]` (redirect URI pattern: `{OAUTH_REDIRECT_URL_BASE}{provider}`, e.g. `http://localhost:3000/api/oauth/google`).
+3. Failures redirect back to sign-in or sign-up with `?oauthError=…` query keys surfaced by `OAuthQueryErrorBanner`.
+4. Successful OAuth sets the `oauth_last_used` cookie for the "Last used" badge on future auth visits.
 
 ### Data model (high level)
 
@@ -80,11 +92,11 @@ Key tables include:
 - `sessions`
 - `user_oauth_accounts` (linked OAuth provider accounts)
 - `job_info`
-- `interviews`
+- `interviews` (plan-limit counting uses rows with a non-null `humeChatId`, i.e. completed voice sessions; draft rows are excluded)
 - `questions`
 - `resume_analyses` (per job info; used for free-plan usage counting and quota reservation)
 - `stripe_events` (webhook idempotency)
-- token tables for verification/password reset workflows
+- `verification_tokens` and `password_reset_tokens` (schema present; no active email-verification or password-reset flows wired up yet)
 
 ## Setup Instructions
 
@@ -138,7 +150,8 @@ Notes:
 - The app builds `DATABASE_URL` internally from `DB_*` vars.
 - `DB_SSLMODE` is optional; omit it for local Docker Postgres.
 - `CRON_SECRET` must be exactly 15 characters.
-- `OAUTH_REDIRECT_URL_BASE` is required even when OAuth providers are not configured.
+- `OAUTH_REDIRECT_URL_BASE` is required even when OAuth providers are not configured. Register each provider redirect URI as `{OAUTH_REDIRECT_URL_BASE}{provider}` (e.g. `http://localhost:3000/api/oauth/github`).
+- OAuth client id/secret pairs (`DISCORD_*`, `GOOGLE_*`, `GITHUB_*`) are optional; omit both values for a provider to hide it from auth forms.
 - Stripe helpers prefer `APP_URL`, then `VERCEL_URL`, then localhost in development.
 - Some Stripe vars are optional at schema level, but required for fully functional checkout/webhooks.
 
@@ -216,7 +229,7 @@ Open [http://localhost:3000](http://localhost:3000).
   - session cookie name/options (`session_token`, `httpOnly`, etc.)
 - `core/data/constants.ts`
   - `PERMISSIONS` identifiers (`interviews`, `questions`, `resume_analyses`)
-  - `PLAN_LIMITS` for `free` and `pro` (free: 1 completed voice interview, 10 generated questions, and 3 resume analyses lifetime — total row counts, not reset monthly; pro: unlimited / `null` limits)
+  - `PLAN_LIMITS` for `free` and `pro` (free: 1 completed voice interview — counted by non-null `humeChatId` — 10 generated questions, and 3 resume analyses lifetime — total row counts, not reset monthly; pro: unlimited / `null` limits)
   - Domain error tokens returned by server actions and API routes (`PLAN_LIMIT_MESSAGE`, `RATE_LIMIT_MESSAGE`, `HUME_UNAVAILABLE_MESSAGE`, `FILE_SIZE_TOO_LARGE_MESSAGE`, `FILE_TYPE_NOT_SUPPORTED_MESSAGE`)
 - `core/lib/errorToast.tsx`
   - Converts domain error tokens into user-facing Sonner toasts (plan-limit toasts include an upgrade link)
@@ -303,7 +316,7 @@ Local `npm run test:e2e` runs Chromium only; Firefox and WebKit projects are ski
 
 `e2e/globalSetup.ts` performs that schema sync and reset. Keep the test database separate: `e2e/resetDatabase.ts` refuses to truncate unless the derived `DATABASE_URL` hostname matches `E2E_DB_HOST` or `DB_HOST`.
 
-CI runs Playwright from [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) on pull requests and pushes to `main`/`master`. It expects a GitHub secret named `E2E_ENV_FILE` containing the full `.env.test` contents. Failed runs upload the `playwright-report` artifact, and traces are collected on the first retry.
+CI runs Playwright from [`.github/workflows/playwright.yml`](.github/workflows/playwright.yml) on pull requests and pushes to `main`/`master`. It expects a GitHub secret named `E2E_ENV_FILE` containing the full `.env.test` contents. Each run uploads the `playwright-report` artifact (retained 30 days); traces are collected on the first retry.
 
 Out of scope for E2E for now:
 
@@ -346,12 +359,15 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 ## Development Notes
 
-- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
-- AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
+- Run tests with `npm test` and coverage with `npm run test:coverage`. Jest runs two projects from `jest.config.mjs`: **`node`** for co-located `*.test.ts` files and **`jsdom`** for `*.test.tsx` client component tests. Shared helpers live under `core/test-utils/` (`@core/test-utils/*`).
+- Arcjet rate limiting has two layers: **`proxy.ts` middleware** (shield, bot detection, 100/min sliding window) returns **403 with an empty body** on denial; **per-user token buckets** on AI routes and interview server actions return **429** with `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`.
 - Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
+- Interview feedback generation (`generateInterviewFeedbackAction`) does not consume the interview plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when starting a new voice interview.
 - Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
 - Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
+- The upgrade page calls `syncSubscriptionOnUpgradePageLoad()` on load to reconcile Stripe subscription state when webhooks were missed; `_RevalidateOnStripeReturn.tsx` refreshes cached user data after Stripe checkout/portal redirects.
 - Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`); free-plan card limits are derived from `PLAN_LIMITS` in `core/data/constants.ts`.
+- Hume voice client errors in `_StartCall.tsx` surface `HUME_UNAVAILABLE_MESSAGE` via `errorToast` when the voice session cannot start.
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
 - A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
 - `proxy.ts` skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
