@@ -6,6 +6,7 @@ import { createdAt, updatedAt } from "../schemaHelpers";
 import { PasswordResetTokenTable, VerificationTokenTable } from "./token";
 import { SessionTable } from "./session";
 import { UserOAuthAccountTable } from "./userOAuthAccount";
+import { CheckoutAttemptTable } from "./checkoutAttempt";
 
 export const userPlans = ["free", "pro"] as const;
 export type UserPlan = (typeof userPlans)[number];
@@ -33,4 +34,5 @@ export const usersRelations = relations(UserTable, ({ many }) => ({
   verificationTokens: many(VerificationTokenTable),
   passwordResetTokens: many(PasswordResetTokenTable),
   sessions: many(SessionTable),
+  checkoutAttempts: many(CheckoutAttemptTable),
 }));

@@ -7,3 +7,4 @@ export * from "./schema/question";
 export * from "./schema/resumeAnalysis";
 export * from "./schema/stripeEvent";
 export * from "./schema/userOAuthAccount";
+export * from "./schema/checkoutAttempt";

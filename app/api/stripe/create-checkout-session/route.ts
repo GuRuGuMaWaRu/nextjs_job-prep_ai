@@ -3,9 +3,12 @@ import { NextResponse } from "next/server";
 import {
   getStripe,
   getStripeBaseUrl,
-  getIdempotencyKeyFromRequest,
   isStripeConfigured,
 } from "@/core/features/billing/stripe";
+import {
+  getOrCreateActiveCheckoutAttempt,
+  saveCheckoutSession,
+} from "@/core/features/billing/utils";
 import { env } from "@/core/data/env/server";
 import { routes } from "@/core/data/routes";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
@@ -75,44 +78,74 @@ export async function POST(request: Request) {
     );
   }
 
-  //** TODO: do I need this explicit typing? */
-  const sessionParams: {
-    mode: "subscription";
-    line_items: [{ price: string; quantity: number }];
-    success_url: string;
-    cancel_url: string;
-    metadata: { userId: string };
-    customer?: string;
-    customer_email?: string;
-  } = {
-    mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${baseUrl}${routes.api.stripeCheckoutReturn}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl}${routes.upgrade}?canceled=true`,
-    metadata: { userId: user.id },
-  };
-
-  if (user.stripeCustomerId != null) {
-    sessionParams.customer = user.stripeCustomerId;
-  } else {
-    sessionParams.customer_email = user.email;
-  }
-
-  const idempotencyKey = await getIdempotencyKeyFromRequest(request);
+  const successUrl = `${baseUrl}${routes.api.stripeCheckoutReturn}?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${baseUrl}${routes.upgrade}?canceled=true`;
 
   try {
-    //** TODO: why make idempotencyKey optional? */
-    const session = await stripe.checkout.sessions.create(
-      sessionParams,
-      idempotencyKey ? { idempotencyKey } : undefined,
-    );
+    const checkoutAttempt = await getOrCreateActiveCheckoutAttempt({
+      userId: user.id,
+      stripePriceId: priceId,
+      successUrl,
+      cancelUrl,
+      stripeCustomerId: user.stripeCustomerId,
+    });
+
+    if (
+      checkoutAttempt.status === "open" &&
+      checkoutAttempt.stripeSessionId &&
+      checkoutAttempt.stripeCheckoutUrl &&
+      checkoutAttempt.stripeExpiresAt &&
+      checkoutAttempt.stripeExpiresAt.getTime() > Date.now()
+    ) {
+      return createRedirectResponse(checkoutAttempt.stripeCheckoutUrl);
+    }
+
+    if (checkoutAttempt.status === "open") {
+      throw new Error(
+        "Open checkout attempt has missing or expired session data",
+      );
+    }
+
+    if (checkoutAttempt.status !== "creating") {
+      throw new Error(
+        "Checkout attempt cannot create a session in its current state",
+      );
+    }
+
+    //** TODO: do I need this explicit typing? */
+    const sessionParams: {
+      mode: "subscription";
+      line_items: [{ price: string; quantity: number }];
+      success_url: string;
+      cancel_url: string;
+      metadata: { userId: string };
+      customer?: string;
+    } = {
+      mode: "subscription",
+      line_items: [{ price: checkoutAttempt.stripePriceId, quantity: 1 }],
+      success_url: checkoutAttempt.successUrl,
+      cancel_url: checkoutAttempt.cancelUrl,
+      metadata: { userId: checkoutAttempt.userId },
+    };
+
+    if (checkoutAttempt.stripeCustomerId != null) {
+      sessionParams.customer = checkoutAttempt.stripeCustomerId;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams, {
+      idempotencyKey: `checkout_attempt_${checkoutAttempt.id}`,
+    });
 
     //** TODO: should I even check for a possibility where session.url is null? */
     if (!session.url) {
-      return createRedirectResponse(
-        `${baseUrl}${routes.upgrade}?error=checkout_failed`,
-      );
+      throw new Error();
     }
+
+    await saveCheckoutSession(checkoutAttempt.id, {
+      stripeSessionId: session.id,
+      stripeCheckoutUrl: session.url,
+      stripeExpiresAt: session.expires_at,
+    });
 
     return createRedirectResponse(session.url);
   } catch (err) {
