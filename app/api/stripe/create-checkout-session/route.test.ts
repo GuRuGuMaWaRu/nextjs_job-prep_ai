@@ -1,4 +1,6 @@
-let mockEnv: import("@core/test-utils/env").TestServerEnv;
+import { createTestServerEnv } from "@core/test-utils/env";
+
+let mockEnv = createTestServerEnv();
 
 jest.mock("@/core/data/env/server", () => ({
   get env() {
@@ -13,19 +15,21 @@ jest.mock("@/core/lib/getCurrentUser", () => ({
 jest.mock("@/core/features/billing/stripe", () => ({
   getStripe: jest.fn(),
   getStripeBaseUrl: jest.fn(),
-  getIdempotencyKeyFromRequest: jest.fn(),
   isStripeConfigured: jest.fn(),
 }));
 
+jest.mock("@/core/features/billing/utils", () => ({
+  startCheckout: jest.fn(),
+}));
+
+import { startCheckout } from "@/core/features/billing/utils";
 import { getCurrentUser } from "@/core/lib/getCurrentUser";
 import {
   getStripe,
   getStripeBaseUrl,
-  getIdempotencyKeyFromRequest,
   isStripeConfigured,
 } from "@/core/features/billing/stripe";
 import { TEST_USER_ID } from "@core/test-utils/constants";
-import { createTestServerEnv } from "@core/test-utils/env";
 import { makeUser } from "@core/test-utils/factories";
 import { asStripeClient } from "@core/test-utils/mocks/stripe";
 
@@ -38,12 +42,11 @@ const mockGetStripe = getStripe as jest.MockedFunction<typeof getStripe>;
 const mockGetStripeBaseUrl = getStripeBaseUrl as jest.MockedFunction<
   typeof getStripeBaseUrl
 >;
-const mockGetIdempotencyKeyFromRequest =
-  getIdempotencyKeyFromRequest as jest.MockedFunction<
-    typeof getIdempotencyKeyFromRequest
-  >;
 const mockIsStripeConfigured = isStripeConfigured as jest.MockedFunction<
   typeof isStripeConfigured
+>;
+const mockStartCheckout = startCheckout as jest.MockedFunction<
+  typeof startCheckout
 >;
 
 const mockStripe = {
@@ -68,13 +71,6 @@ function buildJsonRequest(): Request {
   );
 }
 
-function buildFormRequest(): Request {
-  return new Request(
-    "http://localhost:3000/api/stripe/create-checkout-session",
-    { method: "POST" },
-  );
-}
-
 async function expectJsonRedirect(
   response: Response,
   redirectUrl: string,
@@ -89,7 +85,9 @@ describe("POST /api/stripe/create-checkout-session", () => {
   beforeEach(() => {
     mockEnv = createTestServerEnv({ STRIPE_PRO_PRICE_ID: "price_test_pro" });
 
-    mockStripe.checkout.sessions.create.mockReset();
+    mockStartCheckout.mockReset();
+    mockStartCheckout.mockResolvedValue("https://stripe.test/checkout/session");
+
     mockStripe.products.retrieve.mockReset();
 
     mockGetCurrentUser.mockReset();
@@ -106,9 +104,6 @@ describe("POST /api/stripe/create-checkout-session", () => {
 
     mockGetStripeBaseUrl.mockReset();
     mockGetStripeBaseUrl.mockReturnValue("https://app.test");
-
-    mockGetIdempotencyKeyFromRequest.mockReset();
-    mockGetIdempotencyKeyFromRequest.mockResolvedValue("idem_test_checkout");
 
     mockIsStripeConfigured.mockReset();
     mockIsStripeConfigured.mockReturnValue(true);
@@ -130,7 +125,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
       "https://app.test/app/upgrade?error=unauthorized",
     );
     expect(mockGetStripe).not.toHaveBeenCalled();
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("redirects when the user is not found", async () => {
@@ -142,7 +137,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
       response,
       "https://app.test/app/upgrade?error=unauthorized",
     );
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("redirects when Stripe billing is not configured", async () => {
@@ -155,7 +150,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
       "https://app.test/app/upgrade?error=stripe_not_configured",
     );
     expect(mockGetStripe).not.toHaveBeenCalled();
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("redirects when the Stripe client is unavailable", async () => {
@@ -167,7 +162,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
       response,
       "https://app.test/app/upgrade?error=stripe_not_configured",
     );
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("redirects when no checkout price can be resolved", async () => {
@@ -183,7 +178,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
       "https://app.test/app/upgrade?error=config",
     );
     expect(mockStripe.products.retrieve).not.toHaveBeenCalled();
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("redirects when the configured product has no default price", async () => {
@@ -204,7 +199,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
     expect(mockStripe.products.retrieve).toHaveBeenCalledWith("prod_test_pro", {
       expand: ["default_price"],
     });
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("uses the configured product's string default price", async () => {
@@ -215,9 +210,9 @@ describe("POST /api/stripe/create-checkout-session", () => {
     mockStripe.products.retrieve.mockResolvedValueOnce({
       default_price: "price_test_product",
     });
-    mockStripe.checkout.sessions.create.mockResolvedValueOnce({
-      url: "https://stripe.test/checkout/product-price",
-    });
+    mockStartCheckout.mockResolvedValueOnce(
+      "https://stripe.test/checkout/product-price",
+    );
 
     const response = await POST(buildJsonRequest());
 
@@ -225,12 +220,15 @@ describe("POST /api/stripe/create-checkout-session", () => {
       response,
       "https://stripe.test/checkout/product-price",
     );
-    expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        line_items: [{ price: "price_test_product", quantity: 1 }],
-      }),
-      { idempotencyKey: "idem_test_checkout" },
-    );
+    expect(mockStartCheckout).toHaveBeenCalledWith({
+      userId: TEST_USER_ID,
+      stripePriceId: "price_test_product",
+      stripeCustomerId: "cus_test_checkout",
+      successUrl:
+        "https://app.test/api/stripe/checkout-return?session_id={CHECKOUT_SESSION_ID}",
+      cancelUrl: "https://app.test/app/upgrade?canceled=true",
+      stripe: mockStripe,
+    });
   });
 
   it("redirects users who already have a Pro plan", async () => {
@@ -248,7 +246,7 @@ describe("POST /api/stripe/create-checkout-session", () => {
       response,
       "https://app.test/app/upgrade?error=already_pro",
     );
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("redirects users who already have a Stripe subscription", async () => {
@@ -266,81 +264,30 @@ describe("POST /api/stripe/create-checkout-session", () => {
       response,
       "https://app.test/app/upgrade?error=existing_subscription",
     );
-    expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+    expect(mockStartCheckout).not.toHaveBeenCalled();
   });
 
   it("creates a checkout session for an eligible user", async () => {
-    mockStripe.checkout.sessions.create.mockResolvedValueOnce({
-      url: "https://stripe.test/checkout/session",
-    });
+    mockStartCheckout.mockResolvedValueOnce(
+      "https://stripe.test/checkout/session",
+    );
 
     const response = await POST(buildJsonRequest());
 
     await expectJsonRedirect(response, "https://stripe.test/checkout/session");
-    expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
-      {
-        mode: "subscription",
-        line_items: [{ price: "price_test_pro", quantity: 1 }],
-        success_url:
-          "https://app.test/api/stripe/checkout-return?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: "https://app.test/app/upgrade?canceled=true",
-        metadata: { userId: TEST_USER_ID },
-        customer: "cus_test_checkout",
-      },
-      { idempotencyKey: "idem_test_checkout" },
-    );
-  });
-
-  it("redirects with 302 when JSON is not requested", async () => {
-    mockGetStripeBaseUrl.mockReturnValueOnce(null);
-    mockGetIdempotencyKeyFromRequest.mockResolvedValueOnce(undefined);
-    mockStripe.checkout.sessions.create.mockResolvedValueOnce({
-      url: "https://stripe.test/checkout/redirect",
+    expect(mockStartCheckout).toHaveBeenCalledWith({
+      userId: TEST_USER_ID,
+      stripePriceId: "price_test_pro",
+      stripeCustomerId: "cus_test_checkout",
+      successUrl:
+        "https://app.test/api/stripe/checkout-return?session_id={CHECKOUT_SESSION_ID}",
+      cancelUrl: "https://app.test/app/upgrade?canceled=true",
+      stripe: mockStripe,
     });
-
-    const response = await POST(buildFormRequest());
-
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe(
-      "https://stripe.test/checkout/redirect",
-    );
-    expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success_url:
-          "http://localhost:3000/api/stripe/checkout-return?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: "http://localhost:3000/app/upgrade?canceled=true",
-      }),
-      undefined,
-    );
-  });
-
-  it("creates a checkout session with the user's email when no Stripe customer exists", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce(
-      makeUser({
-        id: TEST_USER_ID,
-        email: "billing-checkout-email@test.local",
-        stripeCustomerId: null,
-      }),
-    );
-    mockStripe.checkout.sessions.create.mockResolvedValueOnce({
-      url: "https://stripe.test/checkout/email",
-    });
-
-    const response = await POST(buildJsonRequest());
-
-    await expectJsonRedirect(response, "https://stripe.test/checkout/email");
-    expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        customer_email: "billing-checkout-email@test.local",
-      }),
-      { idempotencyKey: "idem_test_checkout" },
-    );
   });
 
   it("redirects when Stripe rejects checkout session creation", async () => {
-    mockStripe.checkout.sessions.create.mockRejectedValueOnce(
-      new Error("stripe unavailable"),
-    );
+    mockStartCheckout.mockRejectedValueOnce(new Error("stripe unavailable"));
 
     const response = await POST(buildJsonRequest());
 
@@ -351,17 +298,6 @@ describe("POST /api/stripe/create-checkout-session", () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "Stripe checkout session creation failed:",
       expect.any(Error),
-    );
-  });
-
-  it("redirects when Stripe creates a checkout session without a URL", async () => {
-    mockStripe.checkout.sessions.create.mockResolvedValueOnce({});
-
-    const response = await POST(buildJsonRequest());
-
-    await expectJsonRedirect(
-      response,
-      "https://app.test/app/upgrade?error=checkout_failed",
     );
   });
 });

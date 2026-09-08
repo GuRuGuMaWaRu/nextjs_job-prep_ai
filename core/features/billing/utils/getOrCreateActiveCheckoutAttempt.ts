@@ -18,7 +18,7 @@ function isActiveAttemptConflict(error: unknown) {
   );
 }
 
-type CheckoutAttempt = Pick<
+export type CheckoutAttempt = Pick<
   typeof CheckoutAttemptTable.$inferInsert,
   "userId" | "stripePriceId" | "successUrl" | "cancelUrl"
 > & { stripeCustomerId: string | null };
