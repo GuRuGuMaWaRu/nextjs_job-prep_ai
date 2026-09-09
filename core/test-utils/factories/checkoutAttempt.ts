@@ -27,8 +27,8 @@ export function makeCheckoutAttempt(overrides = {}) {
     stripeExpiresAt: new Date(Date.now() + STRIPE_CHECKOUT_TTL_MS),
     successUrl: "success_url_A",
     cancelUrl: "cancel_url_A",
-    createdAt: new Date(TEST_FIXTURE_NOW_ISO),
-    updatedAt: new Date(TEST_FIXTURE_NOW_ISO),
+    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000), //** 8 hours ago */
+    updatedAt: new Date(Date.now() - 8 * 60 * 60 * 1000), //** 8 hours ago */
     ...overrides,
   };
 }

@@ -155,4 +155,29 @@ describe("startCheckout", () => {
       stripeExpiresAt: stripeSession.expires_at,
     });
   });
+
+  it("rejects when we retrieve a checkout attempt that was created later than 23 hours ago", async () => {
+    const checkoutAttempt = makeCheckoutAttempt({
+      status: "creating",
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), //** 24 hours ago */
+    });
+
+    mockGetOrCreateActiveCheckoutAttempt.mockResolvedValue(checkoutAttempt);
+
+    const params = {
+      userId: checkoutAttempt.userId,
+      stripePriceId: checkoutAttempt.stripePriceId,
+      stripeCustomerId: null,
+      successUrl: checkoutAttempt.successUrl,
+      cancelUrl: checkoutAttempt.cancelUrl,
+      stripe,
+    };
+
+    await expect(startCheckout(params)).rejects.toThrow(
+      "Checkout attempt is more than 23 hours old, needs recovery",
+    );
+
+    expect(mockCreateStripeSession).not.toHaveBeenCalled();
+    expect(mockSaveCheckoutSession).not.toHaveBeenCalled();
+  });
 });

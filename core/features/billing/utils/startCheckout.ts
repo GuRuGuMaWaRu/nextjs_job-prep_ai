@@ -12,6 +12,8 @@ type StartCheckoutParams = {
   stripe: Stripe;
 };
 
+const CHECKOUT_CREATION_RETRY_WINDOW_MS = 23 * 60 * 60 * 1000; //** 23 hours */
+
 export async function startCheckout({
   userId,
   stripePriceId,
@@ -47,6 +49,16 @@ export async function startCheckout({
   if (checkoutAttempt.status !== "creating") {
     throw new Error(
       "Checkout attempt cannot create a session in its current state",
+    );
+  }
+
+  if (
+    checkoutAttempt.createdAt.getTime() + CHECKOUT_CREATION_RETRY_WINDOW_MS <=
+    Date.now()
+  ) {
+    //** not good if older than 23 hours */
+    throw new Error(
+      "Checkout attempt is more than 23 hours old, needs recovery",
     );
   }
 
