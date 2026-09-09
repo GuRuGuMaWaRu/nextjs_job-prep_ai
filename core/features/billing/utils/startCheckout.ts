@@ -62,20 +62,30 @@ export async function startCheckout({
     );
   }
 
+  const metadata:
+    | { userId: string }
+    | { userId: string; checkoutAttemptId: string } =
+    checkoutAttempt.commandVersion === 1
+      ? { userId: checkoutAttempt.userId }
+      : {
+          userId: checkoutAttempt.userId,
+          checkoutAttemptId: checkoutAttempt.id,
+        };
+
   //** TODO: do I need this explicit typing? */
   const sessionParams: {
     mode: "subscription";
     line_items: [{ price: string; quantity: number }];
     success_url: string;
     cancel_url: string;
-    metadata: { userId: string };
+    metadata: typeof metadata;
     customer?: string;
   } = {
     mode: "subscription",
     line_items: [{ price: checkoutAttempt.stripePriceId, quantity: 1 }],
     success_url: checkoutAttempt.successUrl,
     cancel_url: checkoutAttempt.cancelUrl,
-    metadata: { userId: checkoutAttempt.userId },
+    metadata,
   };
 
   if (checkoutAttempt.stripeCustomerId != null) {

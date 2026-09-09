@@ -37,7 +37,7 @@ describe("startCheckout", () => {
     jest.resetAllMocks();
   });
 
-  it("returns a previously saved Stripe Checkout URL when there is an already 'open' checkout attempt", async () => {
+  it("returns a previously saved Stripe Checkout URL when there is an already 'open' Checkout Attempt", async () => {
     const checkoutAttempt = makeCheckoutAttempt();
 
     mockGetOrCreateActiveCheckoutAttempt.mockResolvedValue(checkoutAttempt);
@@ -58,7 +58,7 @@ describe("startCheckout", () => {
     expect(mockSaveCheckoutSession).toHaveBeenCalledTimes(0);
   });
 
-  it("returns a Stripe Session URL for a checkout attempt that was previously saved in database with 'creating' status", async () => {
+  it("returns a Stripe Session URL for a Checkout Attempt that was previously saved in database with 'creating' status", async () => {
     const stripeSession = {
       id: "session_A",
       url: "checkout_url_ABC",
@@ -91,7 +91,10 @@ describe("startCheckout", () => {
         line_items: [{ price: checkoutAttempt.stripePriceId, quantity: 1 }],
         success_url: checkoutAttempt.successUrl,
         cancel_url: checkoutAttempt.cancelUrl,
-        metadata: { userId: checkoutAttempt.userId },
+        metadata: {
+          userId: checkoutAttempt.userId,
+          checkoutAttemptId: checkoutAttempt.id,
+        },
       },
       {
         idempotencyKey: `checkout_attempt_${checkoutAttempt.id}`,
@@ -143,7 +146,10 @@ describe("startCheckout", () => {
         line_items: [{ price: checkoutAttempt.stripePriceId, quantity: 1 }],
         success_url: checkoutAttempt.successUrl,
         cancel_url: checkoutAttempt.cancelUrl,
-        metadata: { userId: checkoutAttempt.userId },
+        metadata: {
+          userId: checkoutAttempt.userId,
+          checkoutAttemptId: checkoutAttempt.id,
+        },
       },
       {
         idempotencyKey: `checkout_attempt_${checkoutAttempt.id}`,
@@ -156,7 +162,7 @@ describe("startCheckout", () => {
     });
   });
 
-  it("rejects when we retrieve a checkout attempt that was created later than 23 hours ago", async () => {
+  it("rejects when we retrieve a Checkout Attempt that was created later than 23 hours ago", async () => {
     const checkoutAttempt = makeCheckoutAttempt({
       status: "creating",
       createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), //** 24 hours ago */
@@ -179,5 +185,94 @@ describe("startCheckout", () => {
 
     expect(mockCreateStripeSession).not.toHaveBeenCalled();
     expect(mockSaveCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it("sends metadata with checkoutAttemptId parameter for Checkout Attempt with command version 2", async () => {
+    const stripeSession = {
+      id: "session_A",
+      url: "checkout_url_ABC",
+      expires_at: Math.floor((Date.now() + STRIPE_CHECKOUT_TTL_MS) / 1000),
+    };
+    const checkoutAttempt = makeCheckoutAttempt({
+      status: "creating",
+      stripeSessionId: null,
+      stripeCheckoutUrl: null,
+      stripeExpiresAt: null,
+      commandVersion: 2,
+    });
+
+    mockGetOrCreateActiveCheckoutAttempt.mockResolvedValue(checkoutAttempt);
+    mockCreateStripeSession.mockResolvedValue(stripeSession);
+
+    const params = {
+      userId: checkoutAttempt.userId,
+      stripePriceId: checkoutAttempt.stripePriceId,
+      stripeCustomerId: null,
+      successUrl: checkoutAttempt.successUrl,
+      cancelUrl: checkoutAttempt.cancelUrl,
+      stripe,
+    };
+
+    await startCheckout(params);
+
+    expect(mockCreateStripeSession).toHaveBeenCalledWith(
+      {
+        mode: "subscription",
+        line_items: [{ price: checkoutAttempt.stripePriceId, quantity: 1 }],
+        success_url: checkoutAttempt.successUrl,
+        cancel_url: checkoutAttempt.cancelUrl,
+        metadata: {
+          userId: checkoutAttempt.userId,
+          checkoutAttemptId: checkoutAttempt.id,
+        },
+      },
+      {
+        idempotencyKey: `checkout_attempt_${checkoutAttempt.id}`,
+      },
+    );
+  });
+
+  it("sends metadata without checkoutAttemptId parameter for Checkout Attempt with command version 1", async () => {
+    const stripeSession = {
+      id: "session_A",
+      url: "checkout_url_ABC",
+      expires_at: Math.floor((Date.now() + STRIPE_CHECKOUT_TTL_MS) / 1000),
+    };
+    const checkoutAttempt = makeCheckoutAttempt({
+      status: "creating",
+      stripeSessionId: null,
+      stripeCheckoutUrl: null,
+      stripeExpiresAt: null,
+      commandVersion: 1,
+    });
+
+    mockGetOrCreateActiveCheckoutAttempt.mockResolvedValue(checkoutAttempt);
+    mockCreateStripeSession.mockResolvedValue(stripeSession);
+
+    const params = {
+      userId: checkoutAttempt.userId,
+      stripePriceId: checkoutAttempt.stripePriceId,
+      stripeCustomerId: null,
+      successUrl: checkoutAttempt.successUrl,
+      cancelUrl: checkoutAttempt.cancelUrl,
+      stripe,
+    };
+
+    await startCheckout(params);
+
+    expect(mockCreateStripeSession).toHaveBeenCalledWith(
+      {
+        mode: "subscription",
+        line_items: [{ price: checkoutAttempt.stripePriceId, quantity: 1 }],
+        success_url: checkoutAttempt.successUrl,
+        cancel_url: checkoutAttempt.cancelUrl,
+        metadata: {
+          userId: checkoutAttempt.userId,
+        },
+      },
+      {
+        idempotencyKey: `checkout_attempt_${checkoutAttempt.id}`,
+      },
+    );
   });
 });

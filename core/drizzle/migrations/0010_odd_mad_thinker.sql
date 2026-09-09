@@ -1,0 +1,1 @@
+ALTER TABLE "checkout_attempts" ADD COLUMN "command_version" integer DEFAULT 2 NOT NULL;

@@ -4,6 +4,7 @@ import {
   varchar,
   timestamp,
   uniqueIndex,
+  integer,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -41,6 +42,7 @@ export const CheckoutAttemptTable = pgTable(
     stripeExpiresAt: timestamp("stripe_expires_at", { withTimezone: true }),
     successUrl: varchar("success_url").notNull(),
     cancelUrl: varchar("cancel_url").notNull(),
+    commandVersion: integer("command_version").notNull().default(1),
     createdAt,
     updatedAt,
   },

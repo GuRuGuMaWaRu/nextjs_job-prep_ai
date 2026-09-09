@@ -29,7 +29,7 @@ export async function getOrCreateActiveCheckoutAttempt(
   try {
     const [created] = await db
       .insert(CheckoutAttemptTable)
-      .values(checkoutAttempt)
+      .values({ ...checkoutAttempt, commandVersion: 2 })
       .returning();
 
     return created;
