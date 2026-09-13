@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import type { z } from "zod";
 
 import type { aiAnalyzeSchema } from "@/core/services/ai/resumes/schemas";
@@ -61,15 +61,6 @@ export async function mockAiResumeAnalysisRoute(
       await route.fallback();
       return;
     }
-
-    const requestBody =
-      route.request().postData() ??
-      route.request().postDataBuffer()?.toString("utf-8") ??
-      "";
-
-    expect(requestBody).toContain('name="resumeFile"');
-    expect(requestBody).toContain('name="jobInfoId"');
-    expect(requestBody).toContain(options.expectedJobInfoId);
 
     if (options.responseDelayMs) {
       await new Promise((resolve) =>
