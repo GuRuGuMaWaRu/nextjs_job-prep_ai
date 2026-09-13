@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { authedTest } from "../fixtures/auth";
@@ -20,9 +21,13 @@ authedTest.describe("AI resume analysis", () => {
 
       await authedPage.goto(`/app/jobInfo/${jobInfo.id}/resume`);
 
-      await authedPage
-        .getByLabel("Upload your resume")
-        .setInputFiles(resolve("e2e/fixtures/sample-resume.txt"));
+      const resumeFixturePath = resolve("e2e/fixtures/sample-resume.txt");
+
+      await authedPage.getByLabel("Upload your resume").setInputFiles({
+        name: "sample-resume.txt",
+        mimeType: "text/plain",
+        buffer: readFileSync(resumeFixturePath),
+      });
 
       await expect(authedPage.getByText("Overall Score: 7/10")).toBeVisible({
         timeout: 15_000,
