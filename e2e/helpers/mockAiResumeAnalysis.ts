@@ -62,8 +62,11 @@ export async function mockAiResumeAnalysisRoute(
       return;
     }
 
-    const requestBody = route.request().postData();
-    expect(requestBody).not.toBeNull();
+    const requestBody =
+      route.request().postData() ??
+      route.request().postDataBuffer()?.toString("utf-8") ??
+      "";
+
     expect(requestBody).toContain('name="resumeFile"');
     expect(requestBody).toContain('name="jobInfoId"');
     expect(requestBody).toContain(options.expectedJobInfoId);

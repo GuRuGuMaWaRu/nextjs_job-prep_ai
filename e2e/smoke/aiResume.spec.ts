@@ -20,11 +20,22 @@ authedTest.describe("AI resume analysis", () => {
 
       await authedPage.goto(`/app/jobInfo/${jobInfo.id}/resume`);
 
+      const analysisResponse = authedPage.waitForResponse(
+        (response) =>
+          response.url().includes("/api/ai/resumes/analyze") &&
+          response.request().method() === "POST" &&
+          response.status() === 200,
+      );
+
       await authedPage
         .getByLabel("Upload your resume")
         .setInputFiles(resolve("e2e/fixtures/sample-resume.txt"));
 
-      await expect(authedPage.getByText("Overall Score: 7/10")).toBeVisible();
+      await analysisResponse;
+
+      await expect(authedPage.getByText("Overall Score: 7/10")).toBeVisible({
+        timeout: 15_000,
+      });
 
       await authedPage
         .getByRole("button", {
