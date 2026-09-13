@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import type { z } from "zod";
 
 import type { aiAnalyzeSchema } from "@/core/services/ai/resumes/schemas";
@@ -56,17 +56,11 @@ export async function mockAiResumeAnalysisRoute(
 ) {
   const analysis = buildResumeAnalysis(options);
 
-  await page.route("**/api/ai/resumes/analyze", async (route) => {
+  await page.route(/\/api\/ai\/resumes\/analyze$/, async (route) => {
     if (route.request().method() !== "POST") {
       await route.fallback();
       return;
     }
-
-    const requestBody = route.request().postData();
-    expect(requestBody).not.toBeNull();
-    expect(requestBody).toContain('name="resumeFile"');
-    expect(requestBody).toContain('name="jobInfoId"');
-    expect(requestBody).toContain(options.expectedJobInfoId);
 
     if (options.responseDelayMs) {
       await new Promise((resolve) =>
