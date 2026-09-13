@@ -21,6 +21,8 @@ authedTest.describe("AI resume analysis", () => {
 
       await authedPage.goto(`/app/jobInfo/${jobInfo.id}/resume`);
 
+      await expect(authedPage.getByLabel("Upload your resume")).toBeVisible();
+
       const resumeFixturePath = resolve("e2e/fixtures/sample-resume.txt");
 
       await authedPage.getByLabel("Upload your resume").setInputFiles({

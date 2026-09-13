@@ -56,7 +56,7 @@ export async function mockAiResumeAnalysisRoute(
 ) {
   const analysis = buildResumeAnalysis(options);
 
-  await page.route("**/api/ai/resumes/analyze", async (route) => {
+  await page.route(/\/api\/ai\/resumes\/analyze$/, async (route) => {
     if (route.request().method() !== "POST") {
       await route.fallback();
       return;

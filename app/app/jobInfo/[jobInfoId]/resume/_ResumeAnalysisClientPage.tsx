@@ -85,7 +85,11 @@ export function ResumeAnalysisClientPage({ jobInfoId }: { jobInfoId: string }) {
       "text/plain",
     ];
 
-    if (!allowedTypes.includes(file.type)) {
+    const isPlainTextFile =
+      file.name.toLowerCase().endsWith(".txt") &&
+      (file.type === "" || file.type === "application/octet-stream");
+
+    if (!allowedTypes.includes(file.type) && !isPlainTextFile) {
       errorToast(FILE_TYPE_NOT_SUPPORTED_MESSAGE);
       return;
     }
