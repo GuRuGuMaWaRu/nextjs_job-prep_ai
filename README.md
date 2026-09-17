@@ -43,7 +43,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - `app/` - routes, layouts, pages, and route handlers (`app/api/**/route.ts`)
 - `core/features/` - feature modules with layered structure
-- `core/dal/` - shared DAL error types, helpers, and `ActionResult` shaping
+- `core/lib/` - shared helpers (`getCurrentUser`, `requireUser`, `assertUUID`), domain errors (`errors.ts`), `ActionResult` types (`types.ts`), and UI error mapping (`errorToast.tsx`)
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
@@ -60,7 +60,7 @@ Most domain features are structured as:
 3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
 4. `db.ts` - direct Drizzle queries
 
-This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Plan limits are defined in `core/data/constants.ts`; `core/features/auth/permissions.ts` exposes `hasPermission()`, and feature modules (`interviews`, `questions`, `resumeAnalysis`) delegate to it from their own `permissions.ts` files. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`permissions.ts` + `db.ts`; the analyze API route reserves quota before streaming AI output).
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Feature `service.ts` modules enforce authentication with `requireUser()` and plan limits with `hasPermission()` from `core/features/auth/permissions.ts` (limits from `PLAN_LIMITS` in `core/data/constants.ts`). Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`service.ts` + `db.ts`; the analyze API route calls `reserveResumeAnalysisUsageService` before streaming AI output).
 
 ### Request and auth flow
 
@@ -68,9 +68,9 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 2. `/api/stripe/webhooks` and `/api/cron/*` skip Arcjet and session auth (`/api/stripe/webhooks` uses Stripe signature verification; cron routes require `Bearer ${CRON_SECRET}` in the handler).
 3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
 4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
-5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
-6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
-7. Features execute service/DAL/database logic and return data or stream AI output.
+5. Private `/app/**` routes require a `session_token` cookie; missing cookies redirect to `/sign-in`. The authenticated app shell in `app/app/layout.tsx` loads the user with `getCurrentUser()` and redirects invalid sessions via `routes.api.evictSession`.
+6. Server actions, route handlers, and server components resolve the signed-in user with `getCurrentUser()`; feature services use `requireUser()` and throw `UnauthorizedError` when there is no session.
+7. Services run business logic, permission checks, and rate limiting; actions validate input and map errors to `ActionResult`; DAL/db layers handle persistence and cache tags.
 
 ### Data model (high level)
 
@@ -221,9 +221,9 @@ Open [http://localhost:3000](http://localhost:3000).
 - `core/lib/errorToast.tsx`
   - Converts domain error tokens into user-facing Sonner toasts (plan-limit toasts include an upgrade link)
 - `core/features/auth/permissions.ts`
-  - `hasPermission()` — centralized plan-limit checks against current usage counts
+  - `hasPermission(permission, user)` — centralized plan-limit checks against current usage counts (called from feature `service.ts` modules)
   - `getUserPlan()` and `getUserSubscriptionInfo()` for upgrade and billing UI
-- Feature modules (`interviews`, `questions`, `resumeAnalysis`) expose thin `permissions.ts` wrappers that call `hasPermission()` with the matching `PERMISSIONS` key
+- `core/lib/requireUser.ts` — loads the signed-in user or throws `UnauthorizedError` (used by services that require auth)
 - `next.config.ts`
   - `cacheComponents: true`
 
@@ -346,11 +346,11 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 ## Development Notes
 
-- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
-- AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
+- Run tests with `npm test` and coverage with `npm run test:coverage`. Tests use Jest + React Testing Library, typically as `*.test.ts`/`*.test.tsx` next to the source or under a co-located `__tests__/` directory (for example `core/features/interviews/__tests/`).
+- AI-heavy endpoints and interview flows apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback logic in `core/features/interviews/service.ts` (invoked by server actions in `actions.ts`). Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
 - Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
 - Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
-- Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
+- Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsageService`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
 - Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`); free-plan card limits are derived from `PLAN_LIMITS` in `core/data/constants.ts`.
 - Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
 - A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
