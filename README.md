@@ -47,7 +47,6 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - `core/features/billing/` - Stripe client helpers, plan card copy, webhook utilities
 - `core/features/users/` - user lookup service and Stripe subscription reconciliation helpers
 - `core/components/` - shared UI (`PlanLimitAlert`, `ThemeToggle`, shadcn wrappers)
-- `core/dal/` - shared DAL error types, helpers, and `ActionResult` shaping
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
@@ -56,6 +55,7 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - `core/lib/getCurrentUser.ts` - React-cached session → user resolution for server code
 - `core/lib/requireUser.ts` - throws when no signed-in user (used in service layers and API routes)
 - `core/lib/errors.ts` - typed errors (`UnauthorizedError`, `PermissionError`, `RateLimitError`, etc.)
+- `core/lib/types.ts` - shared server-side types such as `ActionResult`
 - `core/lib/errorToast.tsx` - maps domain error tokens to user-facing Sonner toasts
 - `proxy.ts` - Next.js request middleware for auth redirect rules and Arcjet API protection (there is no `middleware.ts`; the middleware export lives in this file)
 - `ARCHITECTURE.md` - mermaid diagram and request-flow reference
