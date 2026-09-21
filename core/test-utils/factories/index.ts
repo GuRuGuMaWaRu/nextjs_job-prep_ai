@@ -16,3 +16,4 @@ export {
   makeCheckoutAttempt,
   makeExpiredCheckoutAttempt,
 } from "./checkoutAttempt";
+export { makeStripeSession } from "./stripeSession";
