@@ -2,6 +2,10 @@ jest.mock("@/core/features/billing/stripe", () => ({
   getStripe: jest.fn(),
 }));
 
+jest.mock("@/core/features/billing/utils", () => ({
+  processCheckoutAttempt: jest.fn(),
+}));
+
 jest.mock("@/core/drizzle/db", () => ({
   db: {
     insert: jest.fn(),
@@ -19,6 +23,7 @@ import type Stripe from "stripe";
 
 import { db } from "@/core/drizzle/db";
 import { getStripe } from "@/core/features/billing/stripe";
+import { processCheckoutAttempt } from "@/core/features/billing/utils";
 import { updateUserPlanAndStripeIdsDal } from "@/core/features/users/dal";
 import {
   makeStripeCheckoutSession,
@@ -53,6 +58,7 @@ const stripe = {
 } as unknown as Stripe;
 
 const mockGetStripe = jest.mocked(getStripe);
+const mockProcessCheckoutAttempt = jest.mocked(processCheckoutAttempt);
 const mockUpdateUserPlanAndStripeIdsDal = jest.mocked(
   updateUserPlanAndStripeIdsDal,
 );
@@ -151,6 +157,7 @@ describe("fulfillCheckoutSession", () => {
 
     await expect(fulfillCheckoutSession(session)).resolves.toBe(false);
 
+    expect(mockProcessCheckoutAttempt).toHaveBeenCalledWith(session);
     expect(retrieveSubscription).not.toHaveBeenCalled();
     expect(mockUpdateUserPlanAndStripeIdsDal).not.toHaveBeenCalled();
     expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -335,14 +342,17 @@ describe("claimEvent", () => {
     ["processed", "duplicate_processed"],
     ["remediation_required", "duplicate_remediation"],
     ["processing", "duplicate_in_progress"],
-  ] as const)("returns %s duplicate state when the event row already exists", async (state, expectedResult) => {
-    primeInsertReturning([]);
-    primeSelectRows([{ state }]);
+  ] as const)(
+    "returns %s duplicate state when the event row already exists",
+    async (state, expectedResult) => {
+      primeInsertReturning([]);
+      primeSelectRows([{ state }]);
 
-    await expect(
-      claimEvent("evt_test_duplicate", "customer.subscription.updated"),
-    ).resolves.toBe(expectedResult);
-  });
+      await expect(
+        claimEvent("evt_test_duplicate", "customer.subscription.updated"),
+      ).resolves.toBe(expectedResult);
+    },
+  );
 
   it("treats repeatedly missing rows as an in-progress duplicate", async () => {
     for (let attempt = 0; attempt < 5; attempt++) {

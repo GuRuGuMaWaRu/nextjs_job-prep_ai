@@ -7,6 +7,7 @@ import type Stripe from "stripe";
 import { db } from "@/core/drizzle/db";
 import { StripeEventTable } from "@/core/drizzle/schema";
 import { getStripe } from "@/core/features/billing/stripe";
+import { processCheckoutAttempt } from "@core/features/billing/utils";
 import { updateUserPlanAndStripeIdsDal } from "@/core/features/users/dal";
 
 const REMEDIATION_DETAIL_MAX_LEN = 512;
@@ -154,6 +155,8 @@ export async function unclaimEvent(eventId: string): Promise<void> {
 export async function fulfillCheckoutSession(
   session: Stripe.Checkout.Session,
 ): Promise<boolean> {
+  await processCheckoutAttempt(session);
+
   if (session.payment_status === "unpaid") {
     return false;
   }
