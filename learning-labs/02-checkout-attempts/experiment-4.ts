@@ -135,8 +135,6 @@ async function getCheckoutAttempt(id: string) {
   return await db.select().from(testTable).where(eq(testTable.id, id));
 }
 
-// npx dotenv -e .env -- npx tsx learning-labs/02-checkout-attempts/experiment-4.ts
-
 async function main() {
   const [attempt_A] = await createCheckoutAttempt({
     idempotencyKey: "key_A",
@@ -176,4 +174,63 @@ async function main() {
   console.log("final_row:", final_row.status);
 }
 
-main();
+async function main2() {
+  const [attempt_A] = await createCheckoutAttempt({
+    idempotencyKey: "key_A",
+    userId: "user_A",
+    priceId: "price_A",
+  });
+  const [attempt_B] = await createCheckoutAttempt({
+    idempotencyKey: "key_B",
+    userId: "user_B",
+    priceId: "price_B",
+  });
+  const [attempt_C] = await createCheckoutAttempt({
+    idempotencyKey: "key_C",
+    userId: "user_C",
+    priceId: "price_C",
+  });
+
+  await Promise.all([
+    recordCheckoutPaymentPending({
+      checkoutAttemptId: attempt_A.id,
+      stripeSessionId: "session_A",
+    }),
+    recordCheckoutCompleted({
+      checkoutAttemptId: attempt_A.id,
+      stripeSessionId: "session_A",
+    }),
+  ]);
+  await Promise.all([
+    recordCheckoutPaymentPending({
+      checkoutAttemptId: attempt_B.id,
+      stripeSessionId: "session_B",
+    }),
+    recordCheckoutCompleted({
+      checkoutAttemptId: attempt_B.id,
+      stripeSessionId: "session_B",
+    }),
+  ]);
+  await Promise.all([
+    recordCheckoutPaymentPending({
+      checkoutAttemptId: attempt_C.id,
+      stripeSessionId: "session_C",
+    }),
+    recordCheckoutCompleted({
+      checkoutAttemptId: attempt_C.id,
+      stripeSessionId: "session_C",
+    }),
+  ]);
+
+  const [final_row_A] = await getCheckoutAttempt(attempt_A.id);
+  const [final_row_B] = await getCheckoutAttempt(attempt_B.id);
+  const [final_row_C] = await getCheckoutAttempt(attempt_C.id);
+
+  console.log("final_row_A:", final_row_A.status);
+  console.log("final_row_B:", final_row_B.status);
+  console.log("final_row_C:", final_row_C.status);
+}
+
+main2();
+
+// npx dotenv -e .env -- npx tsx learning-labs/02-checkout-attempts/experiment-4.ts
