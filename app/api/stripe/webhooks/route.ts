@@ -103,7 +103,8 @@ export async function POST(request: Request) {
 
   try {
     switch (event.type) {
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted: {
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted:
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutPaymentSucceeded: {
         const session = event.data.object as Stripe.Checkout.Session;
         await fulfillCheckoutSession(session);
         break;

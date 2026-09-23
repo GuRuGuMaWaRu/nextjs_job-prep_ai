@@ -271,6 +271,29 @@ describe("POST /api/stripe/webhooks — event handlers", () => {
     expect(mockUnclaimEvent).not.toHaveBeenCalled();
   });
 
+  it("fulfills the checkout on checkout.session.async_payment_succeeded and marks the event processed", async () => {
+    const session = makeStripeCheckoutSession({
+      userId: "user-async_payment_succeeded",
+      customerId: "cus_test_async_payment_succeeded",
+      subscriptionId: "sub_test_async_payment_succeeded",
+    });
+    const event = makeStripeEvent({
+      type: STRIPE_WEBHOOK_EVENT_TYPES.checkoutPaymentSucceeded,
+      object: session,
+    });
+    primeHappyPath(event);
+
+    const response = await POST(
+      buildWebhookRequest("{}", { "stripe-signature": VALID_SIGNATURE_HEADER }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockFulfill).toHaveBeenCalledTimes(1);
+    expect(mockFulfill).toHaveBeenCalledWith(session);
+    expect(mockMarkProcessed).toHaveBeenCalledWith(event.id);
+    expect(mockUnclaimEvent).not.toHaveBeenCalled();
+  });
+
   it("syncs the subscription on customer.subscription.updated", async () => {
     const subscription = makeStripeSubscription({
       id: "sub_test_updated",
