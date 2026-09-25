@@ -5,8 +5,6 @@ jest.mock("@/core/features/billing/utils/recordCheckoutPaymentPending", () => ({
   recordCheckoutPaymentPending: jest.fn(),
 }));
 
-import Stripe from "stripe";
-
 import { recordCheckoutCompleted } from "@/core/features/billing/utils/recordCheckoutCompleted";
 import { recordCheckoutPaymentPending } from "@/core/features/billing/utils/recordCheckoutPaymentPending";
 import {
