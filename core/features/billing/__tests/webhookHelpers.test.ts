@@ -28,6 +28,7 @@ import { updateUserPlanAndStripeIdsDal } from "@/core/features/users/dal";
 import {
   makeStripeCheckoutSession,
   makeStripeSubscription,
+  makeCheckoutAttempt,
 } from "@/core/test-utils/factories";
 import {
   createDrizzleMutationChainMock,
@@ -128,6 +129,41 @@ describe("fulfillCheckoutSession", () => {
         stripeSubscriptionId: "sub_test_active",
       },
     );
+  });
+
+  it("updates the user on the second attempt after the first attempt fails unexpectedly", async () => {
+    const dbError = new Error("DB failed");
+    const session = makeStripeCheckoutSession({
+      userId: "user-test",
+      customerId: "cus_test_active",
+      subscriptionId: "sub_test_active",
+    });
+    const processedCheckoutAttempt = makeCheckoutAttempt({
+      id: "attempt_A",
+      stripeSessionId: session.id,
+      status: "completed",
+    });
+
+    retrieveSubscription.mockResolvedValue(
+      makeStripeSubscription({
+        id: "sub_test_active",
+        customer: "cus_test_active",
+        status: "active",
+      }),
+    );
+
+    mockUpdateUserPlanAndStripeIdsDal.mockRejectedValueOnce(dbError);
+    mockProcessCheckoutAttempt.mockResolvedValueOnce(processedCheckoutAttempt);
+
+    await expect(fulfillCheckoutSession(session)).rejects.toBe(dbError);
+
+    mockUpdateUserPlanAndStripeIdsDal.mockResolvedValue();
+    mockProcessCheckoutAttempt.mockResolvedValueOnce(processedCheckoutAttempt);
+
+    await expect(fulfillCheckoutSession(session)).resolves.toBe(true);
+
+    expect(mockProcessCheckoutAttempt).toHaveBeenCalledTimes(2);
+    expect(mockUpdateUserPlanAndStripeIdsDal).toHaveBeenCalledTimes(2);
   });
 
   it("does not re-grant Pro when an old paid checkout success points at a canceled subscription", async () => {

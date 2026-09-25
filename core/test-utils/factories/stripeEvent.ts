@@ -91,6 +91,7 @@ export type MakeStripeCheckoutSessionOverrides = {
   userId?: string | null;
   customerId?: string | null;
   subscriptionId?: string | null;
+  status?: Stripe.Checkout.Session.Status;
   paymentStatus?: Stripe.Checkout.Session.PaymentStatus;
 };
 
@@ -109,6 +110,7 @@ export function makeStripeCheckoutSession(
   const session = {
     id: overrides.id ?? `cs_test_${index}`,
     object: "checkout.session" as const,
+    status: overrides.status ?? "complete",
     payment_status: overrides.paymentStatus ?? "paid",
     metadata: userId === null ? {} : { userId },
     customer:
