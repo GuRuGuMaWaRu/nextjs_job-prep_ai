@@ -70,7 +70,7 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 
 1. Requests pass through `proxy.ts`.
 2. `/api/stripe/webhooks` and `/api/cron/*` skip Arcjet and session auth (`/api/stripe/webhooks` uses Stripe signature verification; cron routes require `Bearer ${CRON_SECRET}` in the handler).
-3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
+3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy API routes and interview services add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
 4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session cookie. If a `session_token` cookie is present on a public route, middleware redirects to `/app` (cookie presence only; validity is checked later on the server).
 5. Private routes require a `session_token` cookie; missing cookies redirect to `/` (landing).
 6. `app/app/layout.tsx` validates the session with `getCurrentUser()` and redirects invalid or expired sessions to `/api/auth/evict` (clears the cookie, then sends the user to `/`).
@@ -351,8 +351,8 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 ## Development Notes
 
-- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
-- AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
+- Run tests with `npm test` and coverage with `npm run test:coverage`. Jest uses React Testing Library; most feature tests live under per-module `__tests__/` folders (for example `core/features/auth/__tests/`), while API route tests sit next to their `route.ts` files. Shared helpers are documented in `core/test-utils/README.md`.
+- AI-heavy endpoints and interview services apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and `createInterviewService` / `generateInterviewFeedbackService` in `core/features/interviews/service.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
 - Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
 - Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
 - Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsageService`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
