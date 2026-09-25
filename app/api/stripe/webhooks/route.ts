@@ -30,6 +30,7 @@ import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventT
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 import { getStripe } from "@/core/features/billing/stripe";
 import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
+import { recordCheckoutExpired } from "@/core/features/billing/utils";
 
 export async function POST(request: Request) {
   //** TODO: I think here as in other places with env variables we should rather rely on checking envs on load with Zod or similar */
@@ -107,6 +108,20 @@ export async function POST(request: Request) {
       case STRIPE_WEBHOOK_EVENT_TYPES.checkoutPaymentSucceeded: {
         const session = event.data.object as Stripe.Checkout.Session;
         await fulfillCheckoutSession(session);
+        break;
+      }
+
+      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionExpired: {
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        if (!session.metadata?.checkoutAttemptId) {
+          break;
+        }
+
+        await recordCheckoutExpired({
+          checkoutAttemptId: session.metadata.checkoutAttemptId,
+          stripeSessionId: session.id,
+        });
         break;
       }
 

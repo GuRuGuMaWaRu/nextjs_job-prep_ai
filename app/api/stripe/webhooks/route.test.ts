@@ -38,6 +38,10 @@ jest.mock("@/core/features/billing/webhookHelpers", () => ({
   markStripeEventRemediationRequired: jest.fn(),
 }));
 
+jest.mock("@/core/features/billing/utils", () => ({
+  recordCheckoutExpired: jest.fn(),
+}));
+
 jest.mock("@/core/features/users/stripeSync", () => ({
   syncSubscriptionFromStripe: jest.fn(),
 }));
@@ -51,6 +55,7 @@ import {
   markStripeEventRemediationRequired,
   unclaimEvent,
 } from "@/core/features/billing/webhookHelpers";
+import { recordCheckoutExpired } from "@/core/features/billing/utils";
 import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 
 import { POST } from "./route";
@@ -62,6 +67,7 @@ const mockFulfill = jest.mocked(fulfillCheckoutSession);
 const mockMarkProcessed = jest.mocked(markStripeEventProcessed);
 const mockMarkRemediation = jest.mocked(markStripeEventRemediationRequired);
 const mockSyncSubscription = jest.mocked(syncSubscriptionFromStripe);
+const mockRecordCheckoutExpired = jest.mocked(recordCheckoutExpired);
 
 const VALID_SIGNATURE_HEADER = "t=1,v1=test-signature";
 
