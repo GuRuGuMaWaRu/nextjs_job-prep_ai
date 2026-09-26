@@ -43,7 +43,10 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 - `app/` - routes, layouts, pages, and route handlers (`app/api/**/route.ts`)
 - `core/features/` - feature modules with layered structure
-- `core/dal/` - shared DAL error types, helpers, and `ActionResult` shaping
+- `core/lib/errors.ts` - shared error classes (`UnauthorizedError`, `PermissionError`, etc.)
+- `core/lib/types.ts` - shared types, including `ActionResult`
+- `core/lib/getCurrentUser.ts` - cached session-backed user resolution
+- `core/lib/requireUser.ts` - throws when the caller requires an authenticated user
 - `core/services/` - external service integrations (AI/Hume)
 - `core/drizzle/` - schema, db client, migrations
 - `core/data/env/` - typed env validation and derived runtime config
@@ -55,12 +58,12 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 
 Most domain features are structured as:
 
-1. `actions.ts` - input validation + user-facing error shaping
-2. `service.ts` - business logic + permission checks
+1. `actions.ts` - input validation + user-facing error shaping (`ActionResult`, UUID checks)
+2. `service.ts` - business logic, auth (`requireUser()`), plan permissions, ownership checks, and rate limiting where applicable
 3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
-4. `db.ts` - direct Drizzle queries
+4. `db.ts` - direct Drizzle queries (where split out from `dal.ts`)
 
-This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Plan limits are defined in `core/data/constants.ts`; `core/features/auth/permissions.ts` exposes `hasPermission()`, and feature modules (`interviews`, `questions`, `resumeAnalysis`) delegate to it from their own `permissions.ts` files. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`permissions.ts` + `db.ts`; the analyze API route reserves quota before streaming AI output).
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, `users`, and `resumeAnalysis`. Plan limits are defined in `core/data/constants.ts`; `core/features/auth/permissions.ts` exposes `hasPermission(permission, user)` against current usage counts. Feature services call `requireUser()` and pass the user into `hasPermission()`. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`service.ts` + `db.ts`; the analyze API route reserves quota before streaming AI output).
 
 ### Request and auth flow
 
@@ -69,7 +72,7 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
 4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
 5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
-6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
+6. Routes under `app/app/` enforce session presence in `app/app/layout.tsx` (missing sessions redirect via `routes.api.evictSession`). Server actions, route handlers, and server components resolve the current user with `getCurrentUser()`; privileged feature work uses `requireUser()` in the service layer.
 7. Features execute service/DAL/database logic and return data or stream AI output.
 
 ### Data model (high level)
@@ -221,9 +224,9 @@ Open [http://localhost:3000](http://localhost:3000).
 - `core/lib/errorToast.tsx`
   - Converts domain error tokens into user-facing Sonner toasts (plan-limit toasts include an upgrade link)
 - `core/features/auth/permissions.ts`
-  - `hasPermission()` — centralized plan-limit checks against current usage counts
+  - `hasPermission(permission, user)` — plan-limit checks against current usage counts for the given user
   - `getUserPlan()` and `getUserSubscriptionInfo()` for upgrade and billing UI
-- Feature modules (`interviews`, `questions`, `resumeAnalysis`) expose thin `permissions.ts` wrappers that call `hasPermission()` with the matching `PERMISSIONS` key
+- `core/lib/requireUser.ts` — loads the session-backed user via `getCurrentUser()` and throws `UnauthorizedError` when absent
 - `next.config.ts`
   - `cacheComponents: true`
 
@@ -346,8 +349,8 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 
 ## Development Notes
 
-- Run tests with `npm test` and coverage with `npm run test:coverage`. Follow the workspace convention (`Jest` + React Testing Library, one `*.test.ts`/`*.test.tsx` file per source file, co-located next to the source).
-- AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
+- Run tests with `npm test` and coverage with `npm run test:coverage`. Jest + React Testing Library; tests are mostly co-located as `*.test.ts` / `*.test.tsx` next to source, with larger feature suites grouped under `__tests/` (for example `core/features/interviews/__tests/`).
+- AI-heavy endpoints and interview flows apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback logic in `core/features/interviews/service.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
 - Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
 - Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
 - Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
