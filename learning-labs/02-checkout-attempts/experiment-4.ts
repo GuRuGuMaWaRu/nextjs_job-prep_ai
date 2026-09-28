@@ -84,7 +84,7 @@ async function recordCheckoutPaymentPending({
   return result;
 }
 
-export async function recordCheckoutCompleted({
+async function recordCheckoutCompleted({
   checkoutAttemptId,
   stripeSessionId,
 }: {

@@ -31,8 +31,28 @@ export async function recordCheckoutExpired({
     .returning();
 
   if (!updated) {
+    const [existing] = await db
+      .select()
+      .from(CheckoutAttemptTable)
+      .where(eq(CheckoutAttemptTable.id, checkoutAttemptId));
+
+    if (!existing) {
+      throw new Error(
+        "recordCheckoutExpired: Checkout Attempt with the given ID is not found",
+      );
+    }
+
+    if (
+      existing.stripeSessionId !== null &&
+      existing.stripeSessionId !== stripeSessionId
+    ) {
+      throw new Error(
+        "recordCheckoutExpired: Session ID conflicts with the saved Session",
+      );
+    }
+
     throw new Error(
-      "recordCheckoutExpired: relevant Checkout Attempt not found",
+      `recordCheckoutExpired: expiration was not applied; current attempt status is ${existing.status}`,
     );
   }
 
