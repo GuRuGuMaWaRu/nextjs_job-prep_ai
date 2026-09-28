@@ -117,7 +117,7 @@ async function main() {
       stripeSessionId: "session_A",
     });
   } catch (error) {
-    console.log(error.message);
+    console.log(error instanceof Error ? error.message : String(error));
   }
 
   //** there is conflict with the saved Session ID  */
@@ -127,7 +127,7 @@ async function main() {
       stripeSessionId: "session_ABC",
     });
   } catch (error) {
-    console.log(error.message);
+    console.log(error instanceof Error ? error.message : String(error));
   }
 
   //** saved checkout attempt has an unexpirable status  */
@@ -137,7 +137,7 @@ async function main() {
       stripeSessionId: "session_B",
     });
   } catch (error) {
-    console.log(error.message);
+    console.log(error instanceof Error ? error.message : String(error));
   }
 }
 
