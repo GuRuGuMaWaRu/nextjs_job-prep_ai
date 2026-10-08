@@ -1,4 +1,10 @@
-import { pgEnum, pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgEnum,
+  pgTable,
+  varchar,
+  timestamp,
+  jsonb,
+} from "drizzle-orm/pg-core";
 
 /**
  * Lifecycle of a Stripe webhook event row in `stripe_events`.
@@ -10,6 +16,7 @@ import { pgEnum, pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
  *   removed; Stripe retries must not treat this as a successful duplicate.
  */
 export const stripeEventStateEnum = pgEnum("stripe_event_state", [
+  "pending",
   "processing",
   "processed",
   "remediation_required",
@@ -26,9 +33,8 @@ export const StripeEventTable = pgTable("stripe_events", {
   id: varchar().primaryKey(),
   type: varchar({ length: 255 }).notNull(),
   state: stripeEventStateEnum("state").notNull().default("processed"),
-  processedAt: timestamp("processed_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  payload: jsonb(),
+  processedAt: timestamp("processed_at", { withTimezone: true }),
   /** Short, ops-facing note (e.g. unclaim failure); not for end users. */
   remediationDetail: varchar("remediation_detail", { length: 512 }),
 });

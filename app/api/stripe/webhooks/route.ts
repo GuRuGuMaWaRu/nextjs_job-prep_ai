@@ -23,14 +23,11 @@ import {
   markStripeEventRemediationRequired,
   claimEvent,
   unclaimEvent,
-  fulfillCheckoutSession,
   markStripeEventProcessed,
 } from "@/core/features/billing/webhookHelpers";
-import { STRIPE_WEBHOOK_EVENT_TYPES } from "@/core/features/billing/stripeEventTypes";
-import { syncSubscriptionFromStripe } from "@/core/features/users/stripeSync";
 import { getStripe } from "@/core/features/billing/stripe";
 import { toSafeErrorMeta } from "@/core/lib/toSafeErrorMeta";
-import { recordCheckoutExpired } from "@/core/features/billing/utils";
+import { processStripeEvent } from "@/core/features/billing/utils/processStripeEvent";
 
 export async function POST(request: Request) {
   //** TODO: I think here as in other places with env variables we should rather rely on checking envs on load with Zod or similar */
@@ -103,40 +100,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    switch (event.type) {
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionCompleted:
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutPaymentSucceeded: {
-        const session = event.data.object as Stripe.Checkout.Session;
-        await fulfillCheckoutSession(session);
-        break;
-      }
-
-      case STRIPE_WEBHOOK_EVENT_TYPES.checkoutSessionExpired: {
-        const session = event.data.object as Stripe.Checkout.Session;
-
-        if (!session.metadata?.checkoutAttemptId) {
-          break;
-        }
-
-        await recordCheckoutExpired({
-          checkoutAttemptId: session.metadata.checkoutAttemptId,
-          stripeSessionId: session.id,
-        });
-        break;
-      }
-
-      case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionUpdated:
-      case STRIPE_WEBHOOK_EVENT_TYPES.subscriptionDeleted: {
-        const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscriptionFromStripe(subscription);
-        break;
-      }
-
-      default:
-        console.warn(`[stripe:webhook] unhandled event type: ${event.type}`);
-        break;
-    }
-
+    await processStripeEvent(event);
     await markStripeEventProcessed(event.id);
   } catch (error) {
     try {

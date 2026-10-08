@@ -294,7 +294,10 @@ describe("markStripeEventProcessed", () => {
     ).resolves.toBeUndefined();
 
     expect(mockDb.update).toHaveBeenCalledTimes(1);
-    expect(updateChain.set).toHaveBeenCalledWith({ state: "processed" });
+    expect(updateChain.set).toHaveBeenCalledWith({
+      state: "processed",
+      processedAt: expect.any(Date),
+    });
     expect(updateChain.where).toHaveBeenCalledTimes(1);
   });
 });

@@ -7,7 +7,6 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { and, or, eq, inArray, isNull } from "drizzle-orm";
-import { randomUUID } from "crypto";
 
 const statusEnum = pgEnum("status", [
   "creating",

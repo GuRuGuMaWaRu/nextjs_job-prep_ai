@@ -73,7 +73,7 @@ export async function markStripeEventRemediationRequired(
 export async function markStripeEventProcessed(eventId: string): Promise<void> {
   await db
     .update(StripeEventTable)
-    .set({ state: "processed" })
+    .set({ state: "processed", processedAt: new Date() })
     .where(eq(StripeEventTable.id, eventId));
 }
 
