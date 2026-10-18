@@ -49,6 +49,8 @@ It also supports plan-based access (`free` vs `pro`) and keeps user progress tie
 - `core/data/env/` - typed env validation and derived runtime config
 - `core/data/constants.ts` - shared permission identifiers, plan limits (`PERMISSIONS`, `PLAN_LIMITS`), and domain error tokens (`PLAN_LIMIT_MESSAGE`, `RATE_LIMIT_MESSAGE`, etc.)
 - `core/lib/errorToast.tsx` - maps domain error tokens to user-facing Sonner toasts
+- `core/lib/getCurrentUser.ts` - React-cached session lookup used by layouts, API routes, and services
+- `core/lib/requireUser.ts` - throws `UnauthorizedError` when no valid session (feature services)
 - `proxy.ts` - middleware for auth redirect rules and Arcjet API protection
 
 ### Layered feature pattern
@@ -60,16 +62,16 @@ Most domain features are structured as:
 3. `dal.ts` - data access boundary + DB error translation, cache tags, and post-write cache revalidation
 4. `db.ts` - direct Drizzle queries
 
-This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Plan limits are defined in `core/data/constants.ts`; `core/features/auth/permissions.ts` exposes `hasPermission()`, and feature modules (`interviews`, `questions`, `resumeAnalysis`) delegate to it from their own `permissions.ts` files. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`permissions.ts` + `db.ts`; the analyze API route reserves quota before streaming AI output).
+This separation is used in modules like `jobInfos`, `questions`, `interviews`, and `users`. Plan limits are defined in `core/data/constants.ts`; `core/features/auth/permissions.ts` exposes `hasPermission(permission, user)`, and feature `service.ts` modules (`interviews`, `questions`, `resumeAnalysis`) call it after `requireUser()`. Resume analysis quota and persistence live in `core/features/resumeAnalysis/` (`service.ts` + `db.ts`; the analyze API route calls `reserveResumeAnalysisUsageService` before streaming AI output).
 
 ### Request and auth flow
 
 1. Requests pass through `proxy.ts`.
 2. `/api/stripe/webhooks` and `/api/cron/*` skip Arcjet and session auth (`/api/stripe/webhooks` uses Stripe signature verification; cron routes require `Bearer ${CRON_SECRET}` in the handler).
 3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
-4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
-5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
-6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
+4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/app`.
+5. Private routes require a `session_token` cookie; missing cookies redirect to `/` (landing).
+6. The authenticated app shell (`app/app/layout.tsx`) resolves the user via cached `getCurrentUser()`; invalid or expired sessions redirect to `/api/auth/evict` (clears the cookie, then redirects to landing). Feature services and API routes use `requireUser()` or `getCurrentUser()` as needed; pages under `/app/**` rely on the layout for session gating rather than repeating auth checks.
 7. Features execute service/DAL/database logic and return data or stream AI output.
 
 ### Data model (high level)
@@ -221,9 +223,9 @@ Open [http://localhost:3000](http://localhost:3000).
 - `core/lib/errorToast.tsx`
   - Converts domain error tokens into user-facing Sonner toasts (plan-limit toasts include an upgrade link)
 - `core/features/auth/permissions.ts`
-  - `hasPermission()` — centralized plan-limit checks against current usage counts
+  - `hasPermission(permission, user)` — centralized plan-limit checks against current usage counts (callers pass the authenticated user from `requireUser()`)
   - `getUserPlan()` and `getUserSubscriptionInfo()` for upgrade and billing UI
-- Feature modules (`interviews`, `questions`, `resumeAnalysis`) expose thin `permissions.ts` wrappers that call `hasPermission()` with the matching `PERMISSIONS` key
+- Feature `service.ts` modules expose permission helpers (for example `checkInterviewPermissionService`) that delegate to `hasPermission()` with the matching `PERMISSIONS` key
 - `next.config.ts`
   - `cacheComponents: true`
 
@@ -335,7 +337,7 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - `app/api/ai/resumes/analyze/route.ts`
 - `app/api/ai/questions/generate-question/route.ts`
 - `app/api/ai/questions/generate-feedback/route.ts`
-- `app/api/auth/validate-session/route.ts`
+- `app/api/auth/evict/route.ts`
 - `app/api/oauth/[provider]/route.ts`
 - `app/api/stripe/create-checkout-session/route.ts`
 - `app/api/stripe/checkout-return/route.ts`
@@ -350,9 +352,10 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - AI-heavy endpoints and interview server actions apply a per-user Arcjet token bucket (capacity 12, refill 4/day) in addition to middleware limits. Affected surfaces: `/api/ai/questions/generate-question`, `/api/ai/questions/generate-feedback`, `/api/ai/resumes/analyze`, and interview create/feedback actions in `core/features/interviews/actions.ts`. Denied requests return `RATE_LIMIT_MESSAGE` (HTTP 429 for API routes; `ActionResult` for server actions) and surface via `errorToast`.
 - Question feedback generation does not consume the questions plan limit; it only checks authentication and the per-user rate bucket. Plan limits apply when generating new questions.
 - Resume uploads are validated in `core/features/resumeAnalysis/schemas.ts` (max 10MB; PDF, DOC, DOCX, or plain text). Validation failures return `FILE_SIZE_TOO_LARGE_MESSAGE` or `FILE_TYPE_NOT_SUPPORTED_MESSAGE`, which `errorToast` maps to friendly copy.
-- Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsage`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
+- Free-plan resume analysis limits are enforced atomically: `/api/ai/resumes/analyze` calls `reserveResumeAnalysisUsageService`, which uses `tryInsertResumeAnalysisDb` to lock the user row and insert within a transaction so concurrent requests cannot exceed the quota.
 - Landing and upgrade plan cards pull copy from `core/features/billing/plans.ts` (`PUBLIC_PLANS`, `PRODUCT_FEATURES`); free-plan card limits are derived from `PLAN_LIMITS` in `core/data/constants.ts`.
-- Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe.
+- Stripe Checkout success hits `/api/stripe/checkout-return` (Stripe `success_url`); the route fulfills the session via `fulfillCheckoutSession` in `core/features/billing/webhookHelpers.ts`, then redirects to the upgrade page. Webhooks remain the primary path for subscription lifecycle updates.
+- Stripe webhook handling is explicitly idempotent via the `stripe_events` table and re-fetching subscription state from Stripe (`core/features/users/stripeSync.ts` for subscription sync).
 - A Vercel Cron job (`vercel.json`, schedule `0 12 * * *`) calls `/api/cron/sync-stripe-subscriptions` daily at 12:00 UTC to reconcile Stripe subscription state for users with missed webhooks. The route requires a `Bearer ${CRON_SECRET}` authorization header.
 - `proxy.ts` skips Arcjet for all `/api/stripe/*` routes and applies Arcjet mainly to other `/api/**` traffic (shield, bot detection, 100 requests/minute sliding window). Stripe webhooks and `/api/cron/*` also skip session auth; webhooks use Stripe signatures and cron uses `Bearer ${CRON_SECRET}` in the route handler.
 - Neon is a strong fit for Vercel deployments because it provides managed Postgres with straightforward hosted connection management (no containerized DB required in production).
