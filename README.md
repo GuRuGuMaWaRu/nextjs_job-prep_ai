@@ -67,10 +67,11 @@ This separation is used in modules like `jobInfos`, `questions`, `interviews`, a
 1. Requests pass through `proxy.ts`.
 2. `/api/stripe/webhooks` and `/api/cron/*` skip Arcjet and session auth (`/api/stripe/webhooks` uses Stripe signature verification; cron routes require `Bearer ${CRON_SECRET}` in the handler).
 3. Arcjet protects other `/api/**` routes except all `/api/stripe/*` paths (those routes validate requests in their handlers). Middleware applies shield, bot detection, and a 100 requests/minute sliding window. AI-heavy routes and interview server actions add a second per-user token bucket (capacity 12, refill 4/day) keyed by `userId`.
-4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`) allow access without a session; if a `session_token` cookie is present, the visitor is redirected to `/api/auth/validate-session` (valid sessions go to `/app`, invalid cookies are cleared).
-5. Private routes require a `session_token` cookie; missing cookies redirect to `/sign-in`.
-6. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
-7. Features execute service/DAL/database logic and return data or stream AI output.
+4. Public routes (`/`, `/sign-in`, `/sign-up`, `/api/oauth`, including nested paths such as `/sign-in/callback` and `/api/oauth/google`) allow access without a session cookie. If a `session_token` cookie is already present on one of these routes, middleware redirects the visitor to `/app`.
+5. Private routes require a `session_token` cookie; without one, middleware redirects to `/` (the landing page).
+6. The `/app` layout resolves the signed-in user via `getCurrentUser()`. When the cookie does not map to a valid session, it redirects to `GET /api/auth/evict`, which clears the session cookie and redirects back to `/`.
+7. Server actions, route handlers, and server components resolve session validity and user context via `getCurrentUser()` / `getCurrentUserWithProfileAction()`.
+8. Features execute service/DAL/database logic and return data or stream AI output.
 
 ### Data model (high level)
 
@@ -335,7 +336,7 @@ Copy the printed signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
 - `app/api/ai/resumes/analyze/route.ts`
 - `app/api/ai/questions/generate-question/route.ts`
 - `app/api/ai/questions/generate-feedback/route.ts`
-- `app/api/auth/validate-session/route.ts`
+- `app/api/auth/evict/route.ts`
 - `app/api/oauth/[provider]/route.ts`
 - `app/api/stripe/create-checkout-session/route.ts`
 - `app/api/stripe/checkout-return/route.ts`
